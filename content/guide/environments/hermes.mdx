@@ -1,0 +1,49 @@
+---
+title: Hermes Agent
+description: Nous Research's open-source agent treats goals as persistent objectives with a configurable judge model, a turn cap and kanban for multi-goal work.
+icon: Feather
+---
+
+**Hermes Agent** is Nous Research's open-source agent, released in February 2026 with the tagline "the agent that grows with you" and a focus on multi-level memory and a gateway that puts every client behind one endpoint ([MarkTechPost](https://www.marktechpost.com/2026/02/26/nous-research-releases-hermes-agent-to-fix-ai-forgetfulness-with-multi-level-memory-and-dedicated-remote-terminal-access-support/), [AlphaSignal](https://alphasignal.ai/news/nous-research-s-hermes-agent-unifies-every-client-behind-one-gateway)). By late 2026 its repository had reportedly passed 100,000 GitHub stars ([release tracker](https://petronellatech.com/blog/hermes-agent-ai-guide-2026/)). <Evidence level="secondary" />
+
+## Persistent Goals (`/goal`)
+
+The Hermes docs are unusually direct about lineage: `/goal` is "our take on the Ralph loop" ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals), [source](https://github.com/nousresearch/hermes-agent/blob/main/website/docs/user-guide/features/goals.md)).
+
+<Defs
+  items={[
+    ['Standing objective', 'The goal persists across turns; after each turn a judge decides whether it is done, and if not, a continuation prompt is submitted.'],
+    ['Judge model', 'Runs as the goal_judge auxiliary task. Defaults to your main model, but you can route it to a cheap one (the docs\' example is a Gemini Flash model). The call is small, about 200 output tokens per turn.'],
+    ['Turn cap', 'goals.max_turns defaults to 20. When hit, the goal auto-pauses ("⏸ Goal paused, 20/20 turns used") and waits for you. Not to be confused with agent.max_turns, which is unlimited by default.'],
+    ['Judge failure', 'If the judge model errors, the verdict defaults to continue, so the turn cap is the real backstop.'],
+    ['Goal expansion', 'The docs suggest letting Hermes expand a one-line goal into a fuller contract before starting.'],
+    ['When not to use it', 'Tasks where the agent does one turn and stops do not need /goal.'],
+  ]}
+/>
+
+<Callout type="warn" title="About /subgoal and cross-session persistence">
+  Some write-ups describe a `/subgoal` command for extra acceptance criteria and goals that persist across sessions. The
+  `/subgoal` description appears in a [community fork's docs](https://meapri.github.io/hermes-agent-plus/docs/user-guide/features/goals/)
+  rather than the upstream Nous docs, so check the version you run. <Evidence level="contested" />
+</Callout>
+
+## Goals × kanban × cron
+
+Hermes draws a clear line between one goal and many:
+
+- **One task that should keep iterating** → `/goal`, or a kanban card created with `--goal`.
+- **Many independent tasks with dependencies, handoffs or several profiles** → **Kanban**. Each card can be its own goal loop; the board is the orchestrator.
+- **Recurring or conditional work** → **cron**. Community posts describe combining cron with goals for "personal AI operating system" setups ([YanXbt](https://yanxbt.substack.com/p/hermes-agent-as-a-personal-ai-operating), [Hermes Bible](https://www.hermesbible.com/flows/hermes-as-personal-ai-operating-system)).
+
+A viral post claimed one `/goal` produced "100 landing pages, a map of clinics, and 100 drafted emails. … Zero babysitting." ([X](https://x.com/IBuzovskyi/status/2067479409645257075)) <Evidence level="anecdotal" />
+
+## Cost controls
+
+The cheap-judge routing is a cost lever in its own right. Release coverage says v0.23 added **hard spending limits at the gateway layer**, one of the few dollar-denominated budgets among the major tools ([release tracker](https://petronellatech.com/blog/hermes-agent-ai-guide-2026/)). <Evidence level="secondary" />
+
+## Further reading
+
+- [Hermes Agent configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) and [learning path](https://hermes-agent.nousresearch.com/docs/getting-started/learning-path)
+- [Hermes Agent explained](https://www.layer3labs.io/guides/hermes-agent-explained)
+- [Hermes Agent from Nous Research](https://www.i-scoop.eu/hermes-agent-from-nous-research/)
+- [Nous Research](https://nousresearch.com/)

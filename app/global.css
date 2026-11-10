@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/*
+ * loop.fun palette
+ * - silver (light) / graphite (dark) surfaces
+ * - lobster red as the single brand accent
+ * - hermes blue for informational accents and the "second" colour in diagrams
+ */
+@theme {
+  --color-fd-background: hsl(220, 9%, 92%);
+  --color-fd-foreground: hsl(220, 16%, 11%);
+  --color-fd-muted: hsl(220, 9%, 87.5%);
+  --color-fd-muted-foreground: hsl(220, 7%, 37%);
+  --color-fd-popover: hsl(220, 10%, 96%);
+  --color-fd-popover-foreground: hsl(220, 16%, 12%);
+  --color-fd-card: hsl(220, 11%, 95.5%);
+  --color-fd-card-foreground: hsl(220, 16%, 11%);
+  --color-fd-border: hsla(220, 9%, 52%, 0.32);
+  --color-fd-primary: hsl(7, 76%, 45%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-secondary: hsl(220, 9%, 88%);
+  --color-fd-secondary-foreground: hsl(220, 16%, 12%);
+  --color-fd-accent: hsla(7, 76%, 45%, 0.1);
+  --color-fd-accent-foreground: hsl(7, 72%, 33%);
+  --color-fd-ring: hsl(7, 76%, 45%);
+
+  --color-loop-red: hsl(7, 76%, 45%);
+  --color-loop-blue: hsl(212, 80%, 44%);
+  --color-loop-silver: hsl(220, 8%, 70%);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+}
+
+@theme static {
+  --color-fd-info: hsl(212, 80%, 48%);
+}
+
+.dark {
+  --color-fd-background: hsl(220, 7%, 7.5%);
+  --color-fd-foreground: hsl(220, 10%, 88%);
+  --color-fd-muted: hsl(220, 6%, 12.5%);
+  --color-fd-muted-foreground: hsl(220, 7%, 63%);
+  --color-fd-popover: hsl(220, 7%, 10.5%);
+  --color-fd-popover-foreground: hsl(220, 10%, 88%);
+  --color-fd-card: hsl(220, 7%, 10%);
+  --color-fd-card-foreground: hsl(220, 10%, 90%);
+  --color-fd-border: hsla(220, 9%, 55%, 0.2);
+  --color-fd-primary: hsl(8, 88%, 61%);
+  --color-fd-primary-foreground: hsl(220, 7%, 7%);
+  --color-fd-secondary: hsl(220, 6%, 13.5%);
+  --color-fd-secondary-foreground: hsl(220, 10%, 88%);
+  --color-fd-accent: hsla(8, 88%, 61%, 0.13);
+  --color-fd-accent-foreground: hsl(8, 92%, 78%);
+  --color-fd-ring: hsl(8, 88%, 61%);
+  --color-fd-info: hsl(212, 90%, 64%);
+
+  --color-loop-red: hsl(8, 88%, 61%);
+  --color-loop-blue: hsl(212, 90%, 64%);
+  --color-loop-silver: hsl(220, 7%, 40%);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted: hsl(220, 6%, 14%);
+  --color-fd-secondary: hsl(220, 6%, 15.5%);
+  --color-fd-muted-foreground: hsl(220, 7%, 68%);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Subtle brushed-metal grain on the home page hero. */
+.loop-hero-bg {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% 0%, color-mix(in oklab, var(--color-loop-red) 14%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, color-mix(in oklab, var(--color-fd-foreground) 3%, transparent) 0 1px, transparent 1px 48px);
+}
+
+@keyframes loop-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loop-orbit {
+  transform-origin: center;
+  transform-box: view-box;
+  animation: loop-orbit 9s linear infinite;
+}
+
+.loop-orbit-slow {
+  transform-origin: center;
+  transform-box: view-box;
+  animation: loop-orbit 24s linear infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loop-orbit,
+  .loop-orbit-slow {
+    animation: none;
+  }
+}

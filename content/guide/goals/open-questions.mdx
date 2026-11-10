@@ -1,0 +1,44 @@
+---
+title: Open questions
+description: The problems around goals that nobody has fully solved. This is a research agenda you can add to.
+icon: Telescope
+---
+
+Goals are where loop design gets genuinely hard. Below are the open problems as they appear across vendor docs, practitioner writing and research, grouped so you can pick one and dig in.
+
+## The goal problem space
+
+| Problem | The research question |
+|---|---|
+| **Definition** | How do we turn ambiguous intentions into objectives a machine can check, without the spec taking longer than the task? |
+| **Persistence** | Where does the goal live when sessions restart, devices sleep, or you switch tools? |
+| **Drift** | How do we stop the agent gradually reinterpreting the original objective, especially after retries and compactions? |
+| **Subgoals** | How are dependencies, ordering and acceptance criteria represented? (Hermes reportedly has `/subgoal` in a fork <Evidence level="contested" />; kanban cards with goals are another approach.) |
+| **Evaluation** | Is the agent judging itself, or is there an independent judge? Does the judge see the transcript or the world? |
+| **Budget** | What should happen when a goal can't be met in budget? Keep partial work, escalate, or roll back? |
+| **Prioritisation** | With several subgoals open, which should the agent tackle next? |
+| **Intervention** | Can a human edit a goal mid-flight without restarting it and losing context? |
+| **Pacing** | How does a goal express "waiting, nothing to do" without spinning? |
+| **Interop** | Could a goal be a portable artefact that works across Claude Code, Codex, Hermes and Antigravity? |
+| **Integrity** | How do we stop injected content from rewriting goals stored in memory or files? |
+| **Pruning** | How do standing goals get retired once nobody needs them? |
+
+## Five questions worth a paper each
+
+1. **Can we predict when a loop has stopped making progress?** The September 2026 paper [AgentLoop: Runtime Control of Slot-closed Execution Loops](https://arxiv.org/abs/2609.33315) tracks which information requirements have enough evidence and stops when further iterations add nothing new. It reports up to 88% fewer tokens against its baselines. <Evidence level="primary" /> That points toward loops that are aware of their own state rather than driven only by the model.
+2. **Can goal evaluation be separated from execution without excessive overhead?** Anthropic found a per-sprint evaluator stopped paying for itself once the model improved, but still helped on the hardest parts ([Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps)).
+3. **What is the right balance between model intelligence, number of iterations and total cost?** A cheap model that needs 30 tries can cost more than a strong one that needs 3.
+4. **What is the minimum state needed to reliably resume after any interruption?** The [arXiv adoption study](https://arxiv.org/abs/2608.21884) found almost no loop state files committed to repositories. In practice, state lives outside version control.
+5. **Can autonomous task completion be measured objectively,** rather than by the agent's own declaration? This is the core of [Judges](/guide/goals/judges).
+
+## Related reading
+
+- [Failure Modes in Agentic AI](https://aclanthology.org/2026.emnlp-tutorials.1/) is an EMNLP 2026 tutorial covering error cascades, reward hacking, memory drift, reasoning collapse and over-reasoning loops.
+- [What agents need from infrastructure](https://www.loams.dev/blog/what-agents-need-from-infrastructure): memory you can selectively forget, durable execution that doesn't redo paid work, sandboxes and a harness that enforces permissions.
+- [Defining AI Agents: A Compendium of Criteria, Metrics, and Benchmarks](https://arxiv.org/pdf/2609.11018) (arXiv)
+- [Awesome Agent Loop Papers](https://github.com/js-lee-AI/awesome-agent-loop-papers), an index of papers and implementations.
+
+<Callout type="idea" title="Working on one of these?">
+  Add a link to your experiment, paper or prototype on the [idea board](/guide/field-notes/idea-board), or use "Improve
+  this page" to add a question we missed.
+</Callout>

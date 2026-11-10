@@ -1,0 +1,74 @@
+---
+title: Cost, tokens and quotas
+description: Why loops are expensive in ways a single prompt never is, with real numbers (handled with care) and the levers that help.
+icon: Coins
+---
+
+## Why loops multiply cost
+
+Per-token prices keep falling, but loops make far more calls per task. Secondary sources quoting Gartner put agent token use at **5–30× a chatbot call per task** ([Spheron](https://www.spheron.network/blog/agentic-ai-inference-cost-2026/)); others claim up to 50× ([LeanOps](https://leanopstech.com/blog/agentic-ai-cost-runaway-token-budget-2026/)). <Evidence level="secondary" /> The mechanics:
+
+- **Every step re-sends accumulated context.** The bill compounds with every action ([Unblocked: the auto-loop tax](https://getunblocked.com/blog/agent-auto-loop-token-cost/)).
+- **Every continuation re-reads everything.** In a goal loop, turn 30 pays for turns 1–29 again (minus cache discounts).
+- **Waiting turns into polling.** A goal loop with no notion of "sleep" re-fires while CI runs. See [the Codex pacing analysis](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits).
+- **Ambient loops pay to do nothing.** A heartbeat that finds nothing still pays for a model call, unless the harness skips it.
+- **Fan-out is invisible.** One goal can spawn 10+ model calls through sub-agents ([AI Builder Club](https://www.aibuilderclub.com/blog/antigravity-cli-guide)).
+
+## The numbers people cite
+
+<Callout type="warn" title="Treat these as stories, not statistics">
+  Most dollar figures in the 2026 discourse come from single blog posts without primary data. They're useful as an
+  illustration of failure modes, not as base rates.
+</Callout>
+
+| Story | Figure | Source |
+|---|---|---|
+| Codex goal mode share of input tokens | 52 of 3,808 sessions ate about half of all input tokens | [relux.works](https://relux.works/en/blog/codex-goal-token-burn/) <Evidence level="anecdotal" /> |
+| A waiting goal loop | 173 continuations in 48 min, each re-reading 120k–470k tokens | [relux.works](https://relux.works/en/blog/codex-goal-token-burn/) <Evidence level="anecdotal" /> |
+| Two agents ping-ponging | 264 hours, about $47,000, stopped only when someone saw the billing dashboard | [cost horror stories](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/) <Evidence level="anecdotal" /> |
+| A long weekend | about $4,200 from one forgotten agent | same <Evidence level="anecdotal" /> |
+| Anthropic's 3-agent harness | about 6 h and $200, roughly 22× a solo run | [Ruh AI](https://www.ruh.ai/blogs/anthropic-3-agent-harness-design) <Evidence level="secondary" /> |
+| Annual budgets | Teams over annual token budgets by spring | [TrustGate](https://www.trustgateai.io/blog/token-bill-runaway-agents) <Evidence level="anecdotal" /> |
+
+## Subscription quotas: the cost you feel first
+
+For most individuals the binding constraint isn't dollars but **plan limits**:
+
+- Anthropic introduced weekly limits in 2025 specifically to curb 24/7 background use ([TechCrunch](https://techcrunch.com/2025/07/28/anthropic-unveils-new-rate-limits-to-curb-claude-code-power-users/)). Users report exhausting them in one or two days, and some cancelled ([#9424](https://github.com/anthropics/claude-code/issues/9424), [#76006](https://github.com/anthropics/claude-code/issues/76006), [The Register](https://www.theregister.com/2026/01/05/claude_devs_usage_limits/), [DEV](https://dev.to/arseniydev/claude-approaching-weekly-limit-15j8)).
+- Codex users report "burning half a week overnight" ([DEV](https://dev.to/melonape/codex-ate-my-weekly-limit-in-a-day-what-people-are-actually-doing-about-it-af1), [#14593](https://github.com/openai/codex/issues/14593)).
+- Pricing is adapting: the new Claude **Ultra** plan drops the five-hour window for verified accounts (weekly limits stay) ([vanja.io](https://vanja.io/claude-ultra/), [Online Tech Tips](https://www.online-tech-tips.com/anthropic-claude-code-five-hour-limit-removed-ultra/)).
+
+## Levers that help
+
+<Accordions>
+<Accordion title="Measure tokens per successful outcome, not tokens">
+Raw token totals tell you nothing. "Tokens per successful business event" is a better early-warning metric ([TrustGate](https://www.trustgateai.io/blog/token-bill-runaway-agents), [Waxell](https://waxell.ai/blog/ai-agent-token-budget-enforcement)).
+</Accordion>
+<Accordion title="Hard budgets per loop and per agent">
+Turn caps, token caps, dollar caps. Hermes added gateway spending limits; Codex supports per-goal token budgets. See [Budgets](/guide/goals/budgets-and-lifecycle).
+</Accordion>
+<Accordion title="Pace waiting loops">
+Sleep, back off or wake on events while waiting for CI or deploys. Don't poll with a model.
+</Accordion>
+<Accordion title="Check deterministically before calling a model">
+If the goal is "tests pass", read the exit code first. Only ask a model when the answer isn't mechanical.
+</Accordion>
+<Accordion title="Route models by step">
+A cheap judge, cheap routine steps, strong models for planning and recovery. See [Model choice](/guide/shortcomings/model-choice).
+</Accordion>
+<Accordion title="Exploit caching">
+Loops re-send long prefixes, so **cache-hit pricing** often dominates loop economics ([Fastino](https://fastino.ai/blog/how-to-use-open-weight-models)). Keep stable content (instructions, tool definitions) at the front of the context.
+</Accordion>
+<Accordion title="Circuit breakers">
+Stop after N identical errors. Stop when nothing measurable has improved in M iterations. The [AgentLoop paper](https://arxiv.org/abs/2609.33315) reports large savings from stopping when iterations stop adding information.
+</Accordion>
+</Accordions>
+
+## Cost is also a security issue
+
+Runaway loops can be triggered on purpose. Prompt-injected agents can be made to spend, which is why token costs are increasingly framed as a security risk ([Sondera](https://blog.sondera.ai/p/ai-agent-token-costs-security-risk)). One May 2026 paper even claims providers could inflate billed token counts without detection. That's a single research claim, not a documented pattern.
+
+## Further reading
+
+- [The hidden cost of agentic AI: why most projects still die before production](https://www.splunk.com/en_us/blog/observability/why-most-projects-still-die-before-production.html) (Splunk)
+- [Token limits: Codex /goal and Claude Code](https://cool-solution.com/en/blog/token-limits-codex-claude-code-2026)

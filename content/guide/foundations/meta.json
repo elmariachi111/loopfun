@@ -1,0 +1,6 @@
+{
+  "title": "Foundations",
+  "icon": "Compass",
+  "defaultOpen": true,
+  "pages": ["what-is-a-loop", "four-layers", "anatomy", "three-loops", "timeline", "glossary"]
+}

@@ -1,0 +1,72 @@
+---
+title: Context, state and memory
+description: Long runs collect noise, compaction loses information, and work has to survive resets and crashes. These are related problems with different fixes.
+icon: Brain
+---
+
+## Context rot
+
+The context window is not a hard drive. Models get worse at using information in their context **as the context grows, well before the window is full** ([Hamza Shabbir](https://hamzashabbir.dev/article/context-rot-compaction-playbook-long-running-agent), [Blake Crosley](https://blakecrosley.com/blog/agent-memory-degradation)). A goal loop that keeps one session alive for hours accumulates stale tool output, abandoned plans and contradicting notes, and quality degrades.
+
+## Three strategies
+
+<Tabs items={['Compaction', 'Fresh context + files', 'Sub-agents']}>
+<Tab value="Compaction">
+
+**Summarize the conversation so far and continue in a fresh window.** One article calls it the approach the major labs converged on in 2026 ([Medium](https://medium.com/@pankaj_pandey/compaction-how-long-running-agents-beat-the-context-rot-problem-fc12d4cdeb7b)). It's often triggered well before the window fills (one playbook suggests at 80%).
+
+**Costs:** each compaction is an extra model call, and **errors in the summary persist**: whatever it drops is gone and whatever it gets wrong becomes "fact" ([rate–distortion view of memory compaction](https://arxiv.org/pdf/2607.08032)). Research is moving toward validated or learned compaction ([Slipstream](https://arxiv.org/pdf/2605.08580)).
+
+</Tab>
+<Tab value="Fresh context + files">
+
+**The Ralph approach.** Every iteration starts empty, reads its plan and progress from files, does one step and writes back. A `PROGRESS.md` and auto-commits give each reset a known checkpoint ([The files are the memory](https://agenticthinking.ai/blog/the-files-are-the-memory/)). One practitioner found this the most effective fix, at a 15–20% orientation overhead ([Blake Crosley](https://blakecrosley.com/blog/agent-memory-degradation)). <Evidence level="anecdotal" />
+
+**Costs:** orientation overhead every pass, and it is only as good as the state files. For short loops it isn't worth it ([agenticthinking.ai](https://agenticthinking.ai/blog/the-files-are-the-memory/)).
+
+</Tab>
+<Tab value="Sub-agents">
+
+**Keep the main context clean by delegating noisy work.** A sub-agent explores, runs tools, and returns only a summary ([Gemini CLI subagents](https://developers.googleblog.com/en/subagents-have-arrived-in-gemini-cli/)).
+
+**Costs:** more model calls, and the summary is another lossy boundary.
+
+</Tab>
+</Tabs>
+
+Anthropic's long-running harness research shows **compaction alone isn't enough** for multi-session work; agents also need incremental progress, explicit artefacts and a disciplined division of work ([Anthropic](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)).
+
+## State is not memory
+
+These two get confused all the time:
+
+| Information | Kind | Lives in |
+|---|---|---|
+| Current iteration number | State | Harness |
+| The active goal | State | Harness / thread / file |
+| Completed subgoals | State | Progress file, task list |
+| Last good checkpoint | State | Git |
+| Previous failed approaches | Memory | Notes, memory store |
+| User preferences | Memory | Memory store |
+| Knowledge about the codebase | Memory | Docs, CLAUDE.md, skills |
+| Reusable procedures | Skills | Skill files |
+
+**State** has to be exact and current, so a wrong iteration count breaks resumption. **Memory** has to be relevant and trustworthy, so a wrong memory misleads every future run. They need different storage, retention and validation.
+
+## The resumption problem
+
+What's the minimum state needed to resume a task reliably after an arbitrary interruption, such as a crash, a laptop lid closing or a quota running out?
+
+- Codex persists goals on the thread but only runs while a session is open. Claude Code background sessions stop on sleep or shutdown and come back with `claude respawn --all`.
+- Anthropic's Managed Agents keep the **session log outside the harness**, so a harness crash loses nothing ([Anthropic](https://anthropic.com/engineering/managed-agents)).
+- The [arXiv adoption study](https://arxiv.org/abs/2608.21884) found **no loop state files on the default branches** it scanned. State lives outside version control, so it is invisible and fragile.
+
+## Memory as liability
+
+Persistent memory is also persistent attack surface and persistent error. A wrong "lesson" written to memory gets applied forever, and an injected one gets *executed* forever ([arXiv: stealthy memory injection](https://arxiv.org/pdf/2607.05189)). Being able to **selectively forget** is listed as a core infrastructure requirement ([Loams](https://www.loams.dev/blog/what-agents-need-from-infrastructure)), and almost nobody has it.
+
+## Further reading
+
+- [Agent loops and state management](https://www.ml4devs.com/what-is/agent-loops/)
+- [AI agent memory degradation: why multi-turn LLMs collapse](https://blakecrosley.com/blog/agent-memory-degradation)
+- [EchoPath: execution-level replayable memory for GUI agents](https://arxiv.org/pdf/2609.16635) (arXiv)

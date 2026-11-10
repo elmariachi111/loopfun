@@ -1,0 +1,86 @@
+---
+title: Writing goals that can be checked
+description: The hardest part of a goal loop is writing the goal, and turning intent into something a machine can check is a skill.
+icon: PenLine
+---
+
+A goal loop is only as good as its goal. If the condition can't be checked, the loop can't stop. Claude Code's own docs warn that an underspecified or impossible goal can keep Claude looping indefinitely ([docs](https://code.claude.com/docs/en/goal), [XDA's "I was using it completely wrong"](https://www.xda-developers.com/finally-understood-claude-code-goal-command/)).
+
+## What makes a goal checkable
+
+The guidance across vendor docs and practitioner guides converges on a few rules ([MindStudio](https://www.mindstudio.ai/blog/agentic-loop-design-goals-verification-criteria), [Daily Dose of DS](https://blog.dailydoseofds.com/p/claude-codes-goal-command), [Hermes docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)):
+
+1. **Describe a state of the world, not an activity.** "All tests in `test/auth` pass and `npm run build` exits 0" rather than "work on the auth tests".
+2. **Reference concrete commands or outputs.** The judge needs something to look at.
+3. **Put the scope in the goal.** "…without modifying files under `test/`" closes the most common loophole (see [reward hacking](/guide/shortcomings/verification)).
+4. **Avoid conditions that need taste.** "The code is readable" or "the UI looks good" need a human or a carefully designed rubric.
+5. **Split big goals into sub-conditions you can check separately.** "Refactor the whole codebase" can be valid but rarely finishes reliably in one run.
+
+<Tabs items={['Weak', 'Better', 'Strong']}>
+<Tab value="Weak">
+
+```text
+/goal make the checkout flow production ready
+```
+
+No observable end state. The judge will either accept the agent's claim or never be satisfied.
+
+</Tab>
+<Tab value="Better">
+
+```text
+/goal checkout tests pass and there are no TypeScript errors
+```
+
+Checkable, but the agent can satisfy it by weakening the tests or adding `// @ts-ignore`.
+
+</Tab>
+<Tab value="Strong">
+
+```text
+/goal `npm test -- checkout` exits 0, `tsc --noEmit` exits 0,
+no files under test/ or *.d.ts were modified, and no new ts-ignore
+or eslint-disable comments were added. Stop and report if a fix
+requires changing the public API of src/payments.
+```
+
+A state of the world, concrete commands, scope constraints, guards against gaming, and an escalation clause.
+
+</Tab>
+</Tabs>
+
+## Let the agent draft the contract
+
+Two of the more interesting ideas involve *not* writing the full goal yourself:
+
+- **Hermes** suggests letting the agent expand a one-line goal into a fuller contract before starting ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)). You review the contract, not the code.
+- **Anthropic's long-running harness** has the generator and evaluator negotiate a **sprint contract** before each chunk of work, listing the specific behaviours that will be tested ([Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps), [summary](https://victorinollc.com/thinking/harness-design-long-running-apps)). A planner turns a short instruction into a detailed spec first, because without it the generator under-scoped.
+
+Both treat goal-writing as its own step in the loop, done before any of the work.
+
+## The "loopability" test
+
+A useful way to sort tasks, from the arXiv paper [Stop Hand-Holding Your Coding Agent](https://arxiv.org/pdf/2607.00038):
+
+| Task | Loopable? | Why |
+|---|---|---|
+| Make the failing CI job green | Yes | Exit codes are a deterministic check |
+| Reduce p95 latency of endpoint X below 200 ms | Yes | A metric with a threshold |
+| Migrate all callers from API v1 to v2 | Mostly | A grep plus the test suite gets close |
+| Improve the onboarding UX | Partly | Needs a rubric, a model judge or a human checkpoint |
+| Write a Nobel-worthy novel | No | No reproducible check to stop on |
+
+<Callout type="warn" title="Spec effort is real">
+  Several practitioners note that defining a good loop can take more work than doing the task once by hand
+  ([Firecrawl](https://www.firecrawl.dev/blog/loop-engineering), [HN](https://news.ycombinator.com/item?id=48643180)). Goal
+  loops pay off for tasks that repeat, run long or are tedious, not for one-off five-minute fixes. The Hermes docs say the
+  same: tasks where the agent does one turn and stops don't need `/goal`.
+</Callout>
+
+## Further reading
+
+- [Agentic Loop Design: How to Define Goals and Verification Criteria That Actually Work](https://www.mindstudio.ai/blog/agentic-loop-design-goals-verification-criteria)
+- [How to Use Claude Code's /goal Command to Run Agents Until Completion](https://www.mindstudio.ai/blog/claude-code-goal-command-autonomous-agents)
+- [Claude Code /goal: A Field Guide with Games](https://medium.com/@jason.croucher/claude-code-goal-a-field-guide-with-games-f6f3b617ce5b)
+- [How to Use Codex /goal: steps, commands and objective examples](https://smartscope.blog/en/generative-ai/chatgpt/codex-goal-practical-guide/)
+- [What Is Your Agent's GPA? Evaluating Goal-Plan-Action alignment](https://arxiv.org/pdf/2510.08847) (arXiv)

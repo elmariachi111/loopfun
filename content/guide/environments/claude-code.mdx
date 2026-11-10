@@ -1,0 +1,55 @@
+---
+title: Claude Code
+description: Anthropic's agent has the widest set of loop primitives, including a goal loop with a separate evaluator, interval loops, routines, Stop hooks, background sessions and agent teams.
+icon: Terminal
+---
+
+Claude Code is where many loop patterns were first tried, partly because its team uses it this way. Boris Cherny, who leads Claude Code, reportedly said in June 2026: "I don't prompt Claude anymore. I have loops prompting Claude and figuring what to do" ([The New Stack](https://thenewstack.io/loop-engineering/), [Paweł Huryn on X](https://x.com/PawelHuryn/status/2069363303952818474)). <Evidence level="secondary" />
+
+## The primitives
+
+<Defs
+  items={[
+    ['/goal', <>Sets a completion condition. After every turn, a <strong>separate evaluator model</strong> (Haiku by default) reads the transcript and decides whether the condition is met. If not, Claude starts another turn instead of handing back control. Ends when met, when judged impossible, or on error. Also works headless: <code>claude -p "/goal …"</code>. (<a href="https://code.claude.com/docs/en/goal">docs</a>)</>],
+    ['/loop', 'Repeats a prompt on an interval, for example /loop 5m /babysit. Good for babysitting things that change over time.'],
+    ['Routines / scheduled tasks', 'Run prompts on a schedule. Per the team, the first routines were code review, PR babysitting, CI fixes and rebases.'],
+    ['Stop hook', 'A hook that runs when Claude tries to finish; exit code 2 blocks the stop. This is how the official ralph-loop plugin worked before /goal.'],
+    ['Background sessions', <>Start with <code>claude --bg "task"</code> or <code>/bg</code>; edits can be isolated in a git worktree.</>],
+    ['Agent View', <><code>claude agents</code> shows one screen listing every background session, its state and which ones need input. Research preview since May 2026 (<a href="https://cobusgreyling.substack.com/p/claude-code-agent-view">Cobus Greyling</a>).</>],
+    ['Agent teams / subagents', 'Teams share a task list and message each other; subagents isolate context for side quests.'],
+  ]}
+/>
+
+## How the goal loop behaves
+
+<Cycle steps={['Claude works', 'Tries to stop', 'Evaluator checks', 'Not met: continue']} highlight={2} center="/goal" />
+
+The evaluator is the interesting design choice. Because it's a **different, smaller model**, it's cheap to run every turn and doesn't share the worker's optimism about its own work. But it reads the **transcript**, not the world, so it judges what the agent *reported*. That makes [checkable goals](/guide/goals/writing-goals) that point at concrete commands (whose output appears in the transcript) much more reliable than vague ones.
+
+Guides consistently warn about two failure modes: goals the evaluator can't check (so the loop can't stop), and impossible goals (Claude can loop indefinitely) ([XDA](https://www.xda-developers.com/finally-understood-claude-code-goal-command/), [MindStudio](https://www.mindstudio.ai/blog/claude-code-goal-command-autonomous-agents)).
+
+## Which primitive for which job?
+
+| You want… | Use |
+|---|---|
+| "Keep going until the tests pass" | `/goal` |
+| "Check this every 10 minutes" | `/loop` |
+| "Every weekday at 9" | Routines / scheduled tasks |
+| "Run this in the background while I do other things" | `--bg` plus Agent View |
+| "Several agents on one big project" | Agent teams, worktrees |
+| "Custom logic for whether to stop" | A Stop hook |
+
+[MindStudio's comparison](https://www.mindstudio.ai/blog/claude-code-goal-routines-loop-autonomous-scheduling) goes deeper on `/goal` vs. routines vs. `/loop`.
+
+## Limits and pricing
+
+Loops are what pushed Anthropic to add **weekly limits** in 2025, aimed at continuous 24/7 use ([TechCrunch](https://techcrunch.com/2025/07/28/anthropic-unveils-new-rate-limits-to-curb-claude-code-power-users/)). Heavy loop users have reported exhausting weekly limits in one or two days ([issue #9424](https://github.com/anthropics/claude-code/issues/9424), [#76006](https://github.com/anthropics/claude-code/issues/76006), [The Register](https://www.theregister.com/2026/01/05/claude_devs_usage_limits/)). In late October 2026 Max 20x was renamed **Ultra**, and the five-hour limit was removed for verified Ultra accounts; weekly limits remain. Sources disagree on whether that covers interactive Claude Code sessions ([Developer's Digest](https://www.developersdigest.tech/blog/claude-ultra-plan-max-20x-rename-five-hour-limit-2026), [Requesty](https://www.requesty.ai/blog/claude-max-plans-5-hour-limit-removed)). <Evidence level="contested" />
+
+## Further reading
+
+- Docs: [Keep Claude working toward a goal](https://code.claude.com/docs/en/goal) and [Run agents in parallel](https://code.claude.com/docs/en/agents)
+- [Claude Code's creators explain agent loops and how they code](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/)
+- [How the Claude Code team works](https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works)
+- [Claude Code's /goal command](https://blog.dailydoseofds.com/p/claude-codes-goal-command) on Daily Dose of DS
+- [Claude Loop Engineering: automate tasks while you sleep](https://youmind.com/landing/x-viral-articles/claude-code-loop-engineering-guide)
+- [Agent View guide](https://claudefa.st/blog/guide/agents/agent-view)

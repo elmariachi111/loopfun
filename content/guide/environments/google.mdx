@@ -1,0 +1,39 @@
+---
+title: Google (Antigravity, Gemini)
+description: Google is consolidating its agents into Antigravity, with a goal mode, schedules, async sub-agents, multi-day Teamwork and Managed Agents in the Gemini API.
+icon: Globe
+---
+
+Google's agent story went through a consolidation in 2026. The asynchronous coding agent **Jules** is being folded into **Antigravity** (active sessions until November 11; product winds down December 31), and **Gemini CLI** users are asked to move to the **Antigravity CLI** (`agy`) ([Jules shutdown guide](https://www.explainx.ai/blog/google-jules-shutdown-december-31-antigravity-export-guide-2026), [DEV digest](https://dev.to/hiroki-ii-ai/ai-daily-digest-november-1-2026-google-folds-jules-into-antigravity-claude-ultra-drops-the-3e5e)). <Evidence level="secondary" />
+
+## Antigravity CLI: `/goal`
+
+The `agy` CLI runs a task "autonomously until the goal is verified complete, without intermediate pauses" ([neurals](https://neurals.ca/tech/gemini/antigravity/goal-mode/), [Alfredo Bautista](https://alfredobs97.medium.com/from-babysitting-ai-to-trusting-it-how-fully-autonomous-goal-execution-in-antigravity-cli-works-9db6d6b0e39e)). It sits next to `/boost` (deeper multi-agent reasoning) and `/schedule` ([CLI reference](https://antigravity.google/docs/cli/reference/), [DataCamp](https://www.datacamp.com/tutorial/antigravity-cli), [AI Builder Club](https://www.aibuilderclub.com/blog/antigravity-cli-guide)).
+
+- **Permissions still apply.** Even in goal mode, it asks once before first using a tool class, and shell commands go through your permission rules.
+- **Fan-out is invisible.** One guide warns that a single plain-English goal can spin up a nested loop of 10+ model calls without asking.
+- **It defaults to Gemini 3.5 Flash.** Community projects like [loop-antigravity](https://github.com/PerryLink/loop-antigravity) add circuit breakers and cost caps.
+
+## Background work and sub-agents
+
+Google's [I/O 2026 deep dive](https://antigravity.google/blog/google-io-2026-feature-deep-dive/) describes **asynchronous task management**: long operations (installing packages, builds) run in the background so they don't block the main agent loop, and sub-agents can run in the background while control returns to you. Google's earlier [subagents in Gemini CLI](https://developers.googleblog.com/en/subagents-have-arrived-in-gemini-cli/) post made the case for sub-agents with isolated contexts and specialised tools, so the main agent doesn't accumulate every intermediate result.
+
+## Teamwork: hours or days
+
+[Antigravity Teamwork](https://blog.google/innovation-and-ai/technology/developers-tools/antigravity-teamwork-multi-agent/) (August 2026) is a framework where autonomous agent teams work on long-horizon math and engineering problems for hours or days. It's Google's version of [graphs and teams](/guide/patterns/graphs-and-teams).
+
+## Managed Agents in the Gemini API
+
+Announced May 19, 2026: a single API call provisions a **remote Linux environment** in which the Antigravity agent runs, available via the Interactions API and AI Studio ([Google blog](https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/), [quickstart](https://ai.google.dev/gemini-api/docs/managed-agents-quickstart)). This is the same "harness as a service" direction as Anthropic's [Managed Agents](https://anthropic.com/engineering/managed-agents).
+
+## Known rough edges
+
+Users on Google's developer forum report Antigravity agents stuck in **endless file-reading loops** with Gemini models ([forum thread](https://discuss.ai.google.dev/t/antigravity-agent-stuck-in-endless-file-reading-loop-gemini-models/188526)). This is a reminder that loops can fail inside the harness, not just in your goal. See [Reliability](/guide/shortcomings/reliability).
+
+## Further reading
+
+- [I/O 2026 developer highlights](https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/)
+- [Google I/O 2026: the start of the agentic Gemini era](https://www.datacamp.com/blog/google-i-o-2026)
+- [Closing the loop on Gemma 4 using Antigravity](https://connected-environments.org/blog/2026-07-10-antigravity-and-gemma-4/) (UCL)
+- [Mastering slash commands of Antigravity 2.0](https://codelabs.developers.google.com/codelabs/devsite/codelabs/mastering-slash-commands-antigravity) (Codelab)
+- [Antigravity CLI cheat sheet](https://cheatsheets.zip/antigravity-cli)

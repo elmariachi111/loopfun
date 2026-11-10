@@ -1,0 +1,86 @@
+---
+title: Anatomy of a loop
+description: The building blocks that keep turning up in well-designed loops, and the shift from "model → tool → model" to "goal → evidence → evaluation".
+icon: Puzzle
+---
+
+The June 2026 essays on loop engineering ([Steinberger via Firecrawl](https://www.firecrawl.dev/blog/loop-engineering), [Osmani via AI Builder Club](https://www.aibuilderclub.com/blog/loop-engineering-addy-osmani), [O'Reilly Radar](https://www.oreilly.com/radar/loop-engineering/)) disagree on how to count the pieces (five? six?) but agree on what the pieces are. The [academic review of the practice](https://arxiv.org/abs/2608.21884) found "broad agreement on the building blocks". Here they are.
+
+## The building blocks
+
+<Steps>
+<Step>
+### Trigger: what starts an iteration
+
+A person typing, a schedule, a webhook (a PR comment, a failed CI run), or another loop. The trigger decides whether the loop is **interactive** (you're watching), **asynchronous** (you'll look later) or **ambient** (nobody is looking unless it raises a flag).
+</Step>
+<Step>
+### Context and skills: what the agent knows when it wakes
+
+Instructions, project conventions, skills (reusable procedures), and the state left by previous runs. A fresh context window that reads well-structured state often beats a long, polluted one. See [Context and memory](/guide/shortcomings/context-and-memory).
+</Step>
+<Step>
+### Isolation: where it's allowed to act
+
+Git worktrees so parallel agents don't collide, sandboxes and containers so a mistake (or an injected instruction) has a limited blast radius, and tool permissions. Practitioner summaries of Steinberger's setup describe worktrees per agent as a baseline ([Firecrawl](https://www.firecrawl.dev/blog/loop-engineering)).
+</Step>
+<Step>
+### Action: the agent's actual work
+
+The [inner tool loop](/guide/foundations/four-layers#layer-1--the-inner-tool-loop). This is the part people used to focus on, and the part that needs the least design now.
+</Step>
+<Step>
+### Verification: is the work actually good?
+
+Tests, type checks, builds, a browser clicking through the UI, a second model reviewing the diff. The [arXiv study](https://arxiv.org/abs/2608.21884) found **maker/checker separation** (the thing doing the work is not the thing grading it) to be the most emphasized building block. See [Maker/checker](/guide/patterns/maker-checker).
+</Step>
+<Step>
+### Stop condition and budget: when does it end?
+
+A completion check (deterministic if possible), plus a hard cap on turns, tokens, dollars or wall-clock time as a fallback. Without both, a loop that can't succeed runs until someone notices the bill. See [Budgets and lifecycle](/guide/goals/budgets-and-lifecycle).
+</Step>
+<Step>
+### State: what carries over
+
+Progress files, feature lists, git commits, structured JSON, a session log outside the harness. This is how iteration 40 knows what iteration 39 did, and how a crashed loop resumes. Anthropic's [Managed Agents post](https://anthropic.com/engineering/managed-agents) keeps the session log *outside* the harness for this reason: nothing in the harness has to survive a crash.
+</Step>
+</Steps>
+
+## From "model → tool" to "goal → evidence"
+
+The older mental model of an agent is a chain:
+
+<Flow steps={['model', 'tool', 'model', 'tool', 'model', 'answer']} />
+
+The 2026 mental model of a loop is a cycle where each pass has to *produce evidence* that something improved:
+
+<Cycle steps={['Goal', 'Execute', 'Evidence', 'Evaluate', 'Update state']} highlight={0} center="converge" caption="Each iteration has to produce evidence that can be evaluated against the goal, and leave updated state for the next one." />
+
+The difference is more than cosmetic. In the first model, the model's own judgment is the only thing deciding whether to continue. In the second, there's a **goal outside the model**, **evidence** that can be checked without trusting the model's word, and an explicit **state transition** that the next iteration builds on.
+
+This is why the [Goals](/guide/goals) section of this guide exists. Once you design loops this way, the goal stops being a prompt and becomes a control object with acceptance criteria, a judge, a budget and a lifecycle.
+
+## A worked example: Anthropic's long-running harness
+
+Anthropic's [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (late 2025) is the clearest public example of these blocks working together. The problem it addresses is that long tasks span many context windows, and "each new session begins with no memory of what came before."
+
+| Building block | How the harness implements it |
+|---|---|
+| Trigger | An **initializer agent** runs once to set up the environment; a **coding agent** is invoked repeatedly after that. |
+| Context | A feature list, a progress file and git history, all written for the *next* session to read. |
+| Action | Each coding session works on a small increment rather than trying to do everything. |
+| Verification | Features are marked done only after they are tested. |
+| State | Progress file and commits form the handoff between sessions. |
+
+Several commentators note the "two agents" are the same model under different prompts ([ZenML summary](https://www.zenml.io/llmops-database/long-running-agent-harness-for-multi-context-software-development), [Beri](https://www.beri.net/learning/anthropic-effective-harnesses-long-running-agents)). What matters is the structure, not the number of models.
+
+The follow-up, [Harness design for long-running apps](https://www.anthropic.com/research/harness-design-long-running-apps) (March 2026), adds a **planner** that writes detailed specs (without it, the generator under-scoped) and an **evaluator** that tests the running app with Playwright instead of just reading code. Before each chunk of work, generator and evaluator agree on a "sprint contract" defining what done means. That is a goal with acceptance criteria, negotiated in advance. See [Writing goals](/guide/goals/writing-goals).
+
+## Further reading
+
+- [Loop Engineering: Building Blocks, Adoption, and Impact](https://arxiv.org/abs/2608.21884) (also as [PDF](https://ctreude.ca/pdf/loop-engineering-building-blocks-adoption-2026.pdf)): the academic review.
+- [Designing Loops: A Practitioner's Short Field Guide](https://interestingengineering.substack.com/p/designing-loops-a-practitioners-short)
+- [The Anatomy of an Agent Loop](https://stevekinney.com/writing/agent-loops) by Steve Kinney
+- [You Could've Invented Claude Code](https://nader.substack.com/p/you-couldve-invented-claude-code)
+- [Agent Harnesses with Claude: Intuitively and Exhaustively Explained](https://iaee.substack.com/p/agent-harnesses-with-claude-intuitively)
+- [The Agentic Loop: A Practical Field Guide](https://dev.to/truongpx396/the-agentic-loop-a-practical-field-guide-mnc) on DEV

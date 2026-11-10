@@ -1,0 +1,58 @@
+---
+title: Ambient loops
+description: Heartbeats, /loop, routines and cron. These are agents that wake themselves up, and they're what makes an agent feel "always on".
+icon: HeartPulse
+---
+
+A goal loop runs until it's done. An **ambient loop** runs because it's time, or because something happened. This is what turns an agent from a tool you use into something that runs in the background.
+
+## The shapes
+
+<Tabs items={['Interval', 'Schedule', 'Heartbeat', 'Event']}>
+<Tab value="Interval">
+
+**Repeat a prompt every N minutes.** Claude Code's `/loop` is the canonical example: an often-cited setup is `/loop 5m /babysit` to keep PRs moving ([unofficial catalogue](https://howborisusesclaudecode.com/), [MindStudio](https://www.mindstudio.ai/blog/what-is-claude-code-loop-command-recurring-tasks)). One guide uses it to check a live site every 30 minutes.
+
+Good for: babysitting something that changes on a known rhythm.
+
+</Tab>
+<Tab value="Schedule">
+
+**Run at fixed times.** Claude Code routines and scheduled tasks, Antigravity's `/schedule` ([DataCamp](https://www.datacamp.com/tutorial/antigravity-cli)), Hermes cron. According to Anthropic's team, routines became the first obvious use of the Agent SDK: code review, PR babysitting, CI fixes, rebasing ([The Neuron](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/)).
+
+Good for: daily or weekly chores.
+
+</Tab>
+<Tab value="Heartbeat">
+
+**Wake up regularly, read a checklist, act only if needed.** OpenClaw's heartbeat fires every 30 minutes by default; the agent reads `HEARTBEAT.md` and replies `HEARTBEAT_OK` if there's nothing to do, which the gateway then drops ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/), [explainer](https://openclawconsult.com/lab/openclaw-heartbeat-md)).
+
+Good for: personal-assistant style agents with many small standing goals.
+
+</Tab>
+<Tab value="Event">
+
+**React to something.** A PR comment, a failed CI run, a new email, a webhook. The loop is just "wait for event → run agent". Several harnesses deliver GitHub activity into a session to drive this.
+
+Good for: work that should happen *because* of something rather than *when*.
+
+</Tab>
+</Tabs>
+
+## What makes ambient loops feel alive
+
+Claire Vo's observation about OpenClaw: it "feels alive even though it's not … this AI has a heartbeat but not a brain" ([X](https://x.com/clairevo/status/2017741569521271175)). One analysis credits the **gateway** more than the heartbeat: it routes every input channel to the agent and sends output wherever it needs to go, and the heartbeat is just another input on a timer ([Bibek Poudel](https://bibek-poudel.medium.com/how-openclaw-works-understanding-ai-agents-through-a-real-architecture-5d59cc7a4764)).
+
+## The design problems
+
+- **Silence.** An ambient loop that reports every cycle is noise. Write explicit silence criteria ([Panaversity](https://agentfactory.panaversity.org/docs/Building-OpenClaw-Apps/meet-your-personal-ai-employee/make-it-proactive)).
+- **Idle cost.** 48 heartbeats a day add up even when nothing happens. Some setups skip the run entirely, with no API call, when there's nothing to check; others use cron for routine checks and keep the model call for real work ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/)). Anthropic's loop guide recommends **smaller, faster models for routine proactive loops** ([Anthropic](https://claude.com/resources/articles/getting-started-with-loops)).
+- **Lifetimes.** One guide reports `/loop` tasks running unattended for up to 3 days <Evidence level="anecdotal" />; Claude Code background sessions stop when the machine sleeps or shuts down, and come back with `claude respawn --all` ([guide](https://claudefa.st/blog/guide/agents/agent-view)).
+- **Stale goals and injection.** See [Standing goals](/guide/goals/standing-goals) and [Security](/guide/shortcomings/security).
+
+## Further reading
+
+- [The Complete Guide to /goal, /loop, /schedule & Stop Hooks in Claude Code](https://x.com/sairahul1/article/2054820977226457301) (X article)
+- [Stop Being the Loop: how to make Claude work while you sleep](https://x.com/Raytar/article/2069212188619805179) (X article)
+- [How to use /goal and /loop in Claude Code for autonomous long-running workflows](https://www.mindstudio.ai/blog/how-to-use-goal-and-loop-claude-code-autonomous-workflows)
+- [Claude Code background agents: how to use them](https://drydock.si/guides/claude-code-background-agents)

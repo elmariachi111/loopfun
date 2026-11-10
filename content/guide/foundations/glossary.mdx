@@ -1,0 +1,42 @@
+---
+title: Glossary
+description: The vocabulary of agentic loops, in plain language.
+icon: BookA
+---
+
+<Defs
+  items={[
+    ['Agentic loop', 'Any structure that repeatedly invokes an agent and decides, after each step, whether to continue. Comes in four layers.'],
+    ['Inner (tool) loop', 'Model → tool call → observation → model, until the model returns a final answer. Inside every agent.'],
+    ['Goal loop', 'Re-prompts the agent across turns until a completion condition holds. Ralph, /goal.'],
+    ['Ralph loop', 'Named after Ralph Wiggum. Feed the same prompt to an agent forever, with progress kept in files. Geoffrey Huntley, July 2025.'],
+    ['/goal', 'The built-in goal loop in Codex, Claude Code, Hermes and Antigravity CLI. Takes a condition; continues until it is judged met or a budget runs out.'],
+    ['Completion condition', 'The statement the loop checks to decide whether it is done. Best when it can be checked by a machine: "all tests in test/auth pass".'],
+    ['Completion promise', 'In the Ralph plugin, a string the agent must output to signal it is done. A self-declared stop signal.'],
+    ['Judge / evaluator', 'The thing that decides whether the goal is met: a deterministic check, a separate (often smaller) model, or a human.'],
+    ['Maker/checker', 'Separating the agent that does the work from the one that grades it. The most-emphasized building block of loop engineering.'],
+    ['Sprint contract', 'In Anthropic\'s long-running harness, an agreement between generator and evaluator, before work starts, on what "done" means.'],
+    ['Budget', 'A hard cap on turns, tokens, dollars or time that ends a loop even if the goal is not met.'],
+    ['Continuation', 'One extra turn the goal loop injects because the goal is not yet met.'],
+    ['Stop hook', 'A Claude Code hook that runs when the agent tries to finish. Returning exit code 2 blocks the stop.'],
+    ['Scheduled loop', 'A loop triggered by time: /loop, routines, cron, /schedule.'],
+    ['Heartbeat', 'OpenClaw\'s timer (30 min by default) that wakes the agent to read HEARTBEAT.md and act if needed.'],
+    ['Standing goal', 'A goal that never "completes": keep CI green, watch my inbox. Needs triggers and silence criteria, not a stop condition.'],
+    ['Ambient agent', 'An agent that runs in the background on triggers, not when a person starts it.'],
+    ['Harness', 'Everything around the model: tools, permissions, sandbox, context assembly, compaction, hooks, budgets, scheduling.'],
+    ['Loop engineering', 'Designing the system that prompts agents instead of prompting them yourself. The term took off in June 2026.'],
+    ['Graph engineering', 'Wiring several agents or loops into a graph with shared state. Largely a rebrand of multi-agent orchestration (July 2026).'],
+    ['Context rot', 'A model gets worse at using its context as the context grows, well before the window is full.'],
+    ['Compaction', 'Summarizing the conversation so far to free up the context window. Lossy, and costs an extra model call.'],
+    ['Progress file', 'A file (PROGRESS.md, a JSON state file) where an agent records what it has done, for the next iteration or session.'],
+    ['State vs. memory', 'State: what is happening now (iteration, goal, done subgoals). Memory: what should be kept for the future (failed approaches, preferences).'],
+    ['Reward hacking', 'An agent satisfies the check without doing the task, for example by deleting a failing test.'],
+    ['Overclaiming', 'An agent says it is done when it is not, without tampering with the checks.'],
+    ['Comprehension debt', 'The growing gap between how much code exists and how much of it people understand (Addy Osmani).'],
+    ['Cognitive surrender', 'People stop thinking critically because the loop runs smoothly.'],
+    ['Agent View', 'Claude Code\'s dashboard listing all background sessions and which need input.'],
+    ['Managed agents', 'Vendor-hosted agent runtimes (Anthropic, Google) that come with a sandbox and a session log.'],
+  ]}
+/>
+
+Missing a term? Use "Improve this page" below.

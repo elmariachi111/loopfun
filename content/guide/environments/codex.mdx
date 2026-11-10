@@ -1,0 +1,44 @@
+---
+title: OpenAI Codex
+description: Codex was first to ship /goal as a built-in Ralph loop, with persisted goals, explicit lifecycle states and optional token budgets.
+icon: Code
+---
+
+OpenAI's coding agent runs on one shared harness across all its surfaces, built on the Responses API. The January 2026 post [Unrolling the Codex agent loop](https://openai.com/index/unrolling-the-codex-agent-loop/) by Michael Bolin is the best public description of how a production inner loop assembles context and uses prompt caching ([Technology.org summary](https://www.technology.org/2026/01/27/openai-engineers-reveal-the-inner-workings-of-their-ai-coding-agent-codex-cli/)).
+
+## `/goal` (since 0.128.0, April 30, 2026)
+
+Simon Willison's one-line description: a built-in **Ralph loop** that keeps going until the goal is judged complete or the configured token budget runs out ([blog](https://simonwillison.net/2026/Apr/30/codex-goals/)).
+
+<Defs
+  items={[
+    ['Continuation', 'A continuation prompt template is inserted every turn, telling the model to take the next step if the goal is not yet achieved. The working model judges its own progress.'],
+    ['Budget', <>An optional token budget per goal (unset by default). When hit, a budget-limit prompt tells the model to stop and report. Reports disagree on exact syntax and defaults. <Evidence level="contested" /></>],
+    ['States', 'pursuing, paused, achieved, unmet and budget-limited. /goal pause keeps the full audit context.'],
+    ['Persistence', 'The goal is stored on the thread, so it survives a crash or reboot, but the agent only runs while a session is open.'],
+    ['Status', 'features.goals defaults to true and is marked stable; one source says it left experimental status in a May 21 changelog entry.'],
+  ]}
+/>
+
+Sources: [Daniel Vaughan on goal mode](https://codex.danielvaughan.com/2026/05/03/codex-cli-goal-mode-persistent-objectives-token-budgets-agentic-loops/) and [on pause/resume/budgets](https://codex.danielvaughan.com/2026/05/07/codex-cli-goal-command-persisted-long-horizon-workflows-pause-resume-budget/), [SmartScope](https://smartscope.blog/en/blog/codex-goal-ralph-loop/), [Codex Insider](https://codexinsider.com/guides/codex-goals/), [AI Catchup](https://aicatchup.com/news/codex-cli-0-128-persisted-goal), [JD Hodges' hands-on review](https://www.jdhodges.com/blog/codex-goal-feature-review/).
+
+## The token-burn controversy
+
+Codex goal mode is also the source of the most detailed complaints about loop cost:
+
+- An analysis by [relux.works](https://relux.works/en/blog/codex-goal-token-burn/) of 3,808 sessions found that the **52 goal-mode sessions consumed about half of all input tokens**. Its explanation: goal mode re-fires about 0.03 s after each turn, and when the agent is waiting (for CI, a deploy) each poll re-reads the whole context. One run made 173 continuations in 48 minutes, each re-reading 120k–470k tokens, until a 429. <Evidence level="anecdotal" />
+- Separate reports of burning a weekly limit in a day point to other causes too, such as a regression around 0.111.0 involving Fast mode defaults and more aggressive multi-agent spawning ([issue #14593](https://github.com/openai/codex/issues/14593), [DEV](https://dev.to/melonape/codex-ate-my-weekly-limit-in-a-day-what-people-are-actually-doing-about-it-af1), [qcode](https://qcode.cc/en/codex-weekly-limit-burned)). <Evidence level="contested" />
+
+The general lesson, a goal loop needs a way to *wait* without spinning, is covered in [Budgets and lifecycle](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits).
+
+## Beyond `/goal`
+
+By November 2026, Codex lists **goals, memories, hooks and plugins** as core features, and spawns parallel sub-agents with a configurable thread cap ([Morph comparison](https://www.morphllm.com/comparisons/codex-vs-claude-code)). Hooks (lifecycle scripts around tasks, including before/after compaction) reached general availability in May ([Developer's Digest](https://www.developersdigest.tech/blog/codex-changelog-april-2026)). OpenAI's developer blog describes long-horizon work as a plan → edit → run tools → observe → repair loop ([Run long horizon tasks with Codex](https://developers.openai.com/blog/run-long-horizon-tasks-with-codex)).
+
+## Further reading
+
+- [Everything about Codex (2026): the complete guide](https://bhavishyapandit9.substack.com/p/everything-about-codex-the-complete)
+- [/goal: the six-hour Codex run that survived a five-hour pause](https://tectontide.com/en/blog/codex-goal-six-hour-run/)
+- [Codex CLI agent review loop: the 2026 workflow](https://ralphable.com/blog/codex-cli-agent-review-loop-2026)
+- [OpenAI Codex /goal: the new long-horizon mode](https://kingy.ai/ai/openai-codex-goal-the-new-long-horizon-mode-for-agentic-coding/)
+- [Complete guide to Codex /goal](https://note.com/masa_wunder/n/n921f90791621?hl=en) (Japanese)

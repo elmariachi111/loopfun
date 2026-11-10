@@ -1,0 +1,149 @@
+---
+title: Source library
+description: Every source screened for this guide, grouped by type. Start with the primary sources.
+icon: Library
+---
+
+The guide links its sources inline; this page collects them in one place. **Start with the primary sources.** Much of the secondary material is practitioner blogging and vendor content of mixed quality, useful for picking up the mood but not for facts.
+
+Missing something good? Use "Improve this page" at the bottom.
+
+## Start here: the essential reading
+
+| Source | Why it matters |
+|---|---|
+| [Anthropic: Getting started with loops](https://claude.com/resources/articles/getting-started-with-loops) | Practical intro to turn-, goal-, time-based and proactive loops |
+| [Anthropic: Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | Concrete multi-session problems and fixes |
+| [Anthropic: Harness design for long-running apps](https://www.anthropic.com/research/harness-design-long-running-apps) | Planner → generator → evaluator; sprint contracts |
+| [OpenAI: Unrolling the Codex agent loop](https://openai.com/index/unrolling-the-codex-agent-loop/) | The inner loop of a production harness |
+| [Simon Willison: Codex CLI 0.128.0 adds /goal](https://simonwillison.net/2026/Apr/30/codex-goals/) | The moment `/goal` became a product feature |
+| [Claude Code docs: Keep Claude working toward a goal](https://code.claude.com/docs/en/goal) | Goal loop with a separate evaluator |
+| [Hermes docs: Persistent Goals](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals) | Goals with a judge model, turn caps and kanban |
+| [Loop Engineering: Building Blocks, Adoption, and Impact](https://arxiv.org/abs/2608.21884) | The only systematic study of the practice so far |
+| [Andrew Ng: The Batch, issue 359](https://www.deeplearning.ai/the-batch/issue-359) | Three nested loops |
+| [O'Reilly Radar: Loop Engineering](https://www.oreilly.com/radar/loop-engineering/) | The concept as a discipline |
+
+## Vendor primary sources
+
+**Anthropic**
+- [Building agents with the Claude Agent SDK](https://anthropic.com/engineering/building-agents-with-the-claude-agent-sdk)
+- [Managed Agents](https://anthropic.com/engineering/managed-agents)
+- [Building a C compiler](https://www.anthropic.com/engineering/building-c-compiler)
+- [Engineering blog index](https://www.anthropic.com/engineering)
+- [Announcement of the harness design post on X](https://x.com/AnthropicAI/status/2036481033621623056)
+- Claude Code docs: [goals](https://code.claude.com/docs/en/goal), [running agents in parallel](https://code.claude.com/docs/en/agents)
+- Ralph plugin: [mirror](https://github.com/AI-App/Anthropics.Claude-Code/tree/main/plugins/ralph-wiggum), [DeepWiki](https://deepwiki.com/anthropics/claude-code/5.5-ralph-wiggum-plugin), [listing](https://claudecowork.im/resources/official/ralph-loop)
+- [Natural emergent misalignment from reward hacking in production RL](https://arxiv.org/pdf/2511.18397)
+
+**OpenAI**
+- [Run long-horizon tasks with Codex](https://developers.openai.com/blog/run-long-horizon-tasks-with-codex)
+- [Shell, skills and compaction](https://developers.openai.com/blog/skills-shell-tips)
+- [The next evolution of the Agents SDK](https://openai.com/index/the-next-evolution-of-the-agents-sdk/)
+- GitHub: [openai/codex issue #14593 (token burn)](https://github.com/openai/codex/issues/14593)
+
+**Google**
+- [Introducing Managed Agents in the Gemini API](https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/) and [quickstart](https://ai.google.dev/gemini-api/docs/managed-agents-quickstart)
+- [Antigravity Teamwork](https://blog.google/innovation-and-ai/technology/developers-tools/antigravity-teamwork-multi-agent/)
+- [I/O 2026 developer highlights](https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/)
+- [Antigravity I/O feature deep dive](https://antigravity.google/blog/google-io-2026-feature-deep-dive/)
+- [Antigravity CLI reference](https://antigravity.google/docs/cli/reference/)
+- [Subagents have arrived in Gemini CLI](https://developers.googleblog.com/en/subagents-have-arrived-in-gemini-cli/)
+- [Antigravity slash commands Codelab](https://codelabs.developers.google.com/codelabs/devsite/codelabs/mastering-slash-commands-antigravity)
+- [Developer forum: endless file-reading loop](https://discuss.ai.google.dev/t/antigravity-agent-stuck-in-endless-file-reading-loop-gemini-models/188526)
+
+**Nous Research (Hermes)**
+- [Persistent Goals](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals) and [source on GitHub](https://github.com/nousresearch/hermes-agent/blob/main/website/docs/user-guide/features/goals.md)
+- [Configuration](https://hermes-agent.nousresearch.com/docs/user-guide/configuration), [learning path](https://hermes-agent.nousresearch.com/docs/getting-started/learning-path)
+- [Nous Research](https://nousresearch.com/)
+- Community fork docs: [hermes-agent-plus goals](https://meapri.github.io/hermes-agent-plus/docs/user-guide/features/goals/)
+
+## Research papers
+
+- [Loop Engineering: Building Blocks, Adoption, and Impact](https://arxiv.org/abs/2608.21884) ([PDF](https://ctreude.ca/pdf/loop-engineering-building-blocks-adoption-2026.pdf))
+- [AgentLoop: Runtime Control of Slot-closed Execution Loops](https://arxiv.org/abs/2609.33315)
+- [Stop Hand-Holding Your Coding Agent: Engineering the Loops that Replace Step-by-Step Prompting](https://arxiv.org/pdf/2607.00038)
+- [Failure Modes in Agentic AI (EMNLP 2026 tutorial)](https://aclanthology.org/2026.emnlp-tutorials.1/)
+- [Reward Hacking Benchmark](https://arxiv.org/pdf/2605.02964)
+- [The Verification Horizon](https://arxiv.org/pdf/2606.26300)
+- [Slipstream: trajectory-grounded compaction validation](https://arxiv.org/pdf/2605.08580)
+- [What to keep, what to forget: rate–distortion view of memory compaction](https://arxiv.org/pdf/2607.08032)
+- [Code as Agent Harness](https://arxiv.org/pdf/2605.18747)
+- [When Claws Remember but Do Not Tell: stealthy memory injection](https://arxiv.org/pdf/2607.05189)
+- [Agent safety benchmark incl. sandbox escape (2605.22321)](https://arxiv.org/pdf/2605.22321)
+- [arXiv 2603.10387 (agent sandbox security)](https://arxiv.org/html/2603.10387)
+- [Channel Fracture: silent delivery failures in multi-agent systems](https://arxiv.org/pdf/2606.04896)
+- [3100 opinions on code review in an AI world](https://arxiv.org/pdf/2607.07980)
+- [What is your agent's GPA? Goal-Plan-Action alignment](https://arxiv.org/pdf/2510.08847)
+- [Defining AI Agents: criteria, metrics and benchmarks](https://arxiv.org/pdf/2609.11018)
+- [EchoPath: replayable memory for GUI agents](https://arxiv.org/pdf/2609.16635)
+- [Form without function: Moltbook network](https://arxiv.org/pdf/2604.13052)
+- [Awesome Agent Loop Papers](https://github.com/js-lee-AI/awesome-agent-loop-papers), an index
+
+## Essays and analysis
+
+**Loop engineering**
+- [Addy Osmani: Long-running agents](https://addyosmani.com/blog/long-running-agents/) · [Agentic Code Review](https://addyo.substack.com/p/agentic-code-review) · [O'Reilly version](https://www.oreilly.com/radar/agentic-code-review/)
+- [Firecrawl: Should you stop prompting agents and start designing loops?](https://www.firecrawl.dev/blog/loop-engineering)
+- [Designing Loops: a practitioner's short field guide](https://interestingengineering.substack.com/p/designing-loops-a-practitioners-short)
+- [Cobus Greyling: Loop Engineering](https://cobusgreyling.medium.com/loop-engineering-62926dd6991c) · [Substack](https://cobusgreyling.substack.com/p/loop-engineering)
+- [Loop engineering minus the hype](https://dev.to/isaachagoel/loop-engineering-minus-the-hype-4ibn)
+- [An honest verdict from someone who actually runs agent loops](https://blackmatter.vc/lab/loop-engineering-an-honest-verdict-from-someone-who-actually-runs-agent-loops)
+- [Loop Engineering: real practice or just hype?](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/) · [What is loop engineering](https://futureagi.com/blog/loop-engineering/what-is-loop-engineering/)
+- [Loop engineering explained: real use cases vs. hype](https://www.v12labs.io/blog/2026-07-18-loop-engineering-explained)
+- [Loop engineering is the new AI buzzword](https://claudefolio.com/blog/loop-engineering-is-the-new-ai-buzzword-heres-whats-real-and-whats-hype)
+- [The week the industry stopped prompting](https://agentconn.com/blog/loop-engineering/)
+- [Loop engineering: a guide for engineers and practitioners](https://medium.com/@adnanmasood/loop-engineering-a-guide-for-engineers-and-practitioners-893bb65ea943)
+- [Addy Osmani's 5 components](https://www.aibuilderclub.com/blog/loop-engineering-addy-osmani) · [Loop engineering guide 2026](https://www.aibuilderclub.com/blog/loop-engineering-guide-2026)
+- [Loop engineering for AI coding agents](https://lushbinary.com/blog/loop-engineering-ai-coding-agents-guide/)
+- [From prompt to harness engineering](https://tosea.ai/blog/loop-engineering-ai-agents-complete-guide-2026)
+
+**Agent loops in general**
+- [Steve Kinney: The anatomy of an agent loop](https://stevekinney.com/writing/agent-loops) · [Entering the mind of Ralph Wiggum](https://stevekinney.com/writing/the-ralph-loop)
+- [Oracle: What is the AI agent loop?](https://blogs.oracle.com/developers/what-is-the-ai-agent-loop-the-core-architecture-behind-autonomous-ai-systems)
+- [You could've invented Claude Code](https://nader.substack.com/p/you-couldve-invented-claude-code)
+- [Agent harnesses with Claude, intuitively explained](https://iaee.substack.com/p/agent-harnesses-with-claude-intuitively)
+- [The agentic loop: a practical field guide](https://dev.to/truongpx396/the-agentic-loop-a-practical-field-guide-mnc)
+- [Agentic loops 2026: self-looping AI agents explained](https://www.heyuan110.com/posts/ai/2026-07-03-agentic-loops/)
+- [Agentic loops explained](https://tecadrise.ai/blog/agentic-loops-autonomous-ai-agents-2026) · [What are agentic loops?](https://likeone.ai/blog/what-are-agentic-loops-explained/)
+- [AI loops explained: Codex, Claude Code and LLMs in real workflows](https://kingy.ai/news/ai-loops-codex-claude-code-llm-workflows/)
+- [What agents need from infrastructure](https://www.loams.dev/blog/what-agents-need-from-infrastructure)
+- [Loops, graphs and the layer that matters](https://iii.dev/blog/loops-graphs-and-the-layer-that-matters/)
+
+**Graph engineering**
+- [Towards Data Science](https://towardsdatascience.com/graph-engineering-for-ai-agents-from-prompts-and-loops-to-workflows/) · [Louis Bouchard](https://www.louisbouchard.ai/graph-engineering-explained/) · [Zero Future Tech](https://zerofuturetech.substack.com/p/graph-engineering-why-ai-agents-are) · [Data Engineer Things](https://blog.dataengineerthings.org/graph-engineering-explained-like-youre-new-here-018973b9b52e) · [Analytics Vidhya](https://www.analyticsvidhya.com/blog/2026/08/agent-harness-loop-graph-engineering/) · [WiLine](https://wec.wiline.com/docs/news/loop-engineering-graph-engineering-what-survives/) · [KuCoin news (low confidence)](https://www.kucoin.com/news/flash/peter-steinberger-announces-end-of-loop-engineering-era-shift-to-graph-engineering)
+
+**Three loops**
+- [Agent Patterns: the three loops of agentic coding](https://agentpatterns.ai/loop-engineering/three-loops-agentic-coding/) · [explainx summary](https://explainx.ai/blog/andrew-ng-three-loops-0-to-1-products-2026) · [Three loops in a trench coat (HN)](https://hn.nuxt.dev/item/48907672)
+
+## Tool guides
+
+**Claude Code:** [XDA on /goal](https://www.xda-developers.com/finally-understood-claude-code-goal-command/) · [Daily Dose of DS](https://blog.dailydoseofds.com/p/claude-codes-goal-command) · [MindStudio: /goal](https://www.mindstudio.ai/blog/claude-code-goal-command-autonomous-agents) · [MindStudio: /goal vs routines vs /loop](https://www.mindstudio.ai/blog/claude-code-goal-routines-loop-autonomous-scheduling) · [MindStudio: /loop](https://www.mindstudio.ai/blog/what-is-claude-code-loop-command-recurring-tasks) · [/goal field guide with games](https://medium.com/@jason.croucher/claude-code-goal-a-field-guide-with-games-f6f3b617ce5b) · [Agent View (Cobus Greyling)](https://cobusgreyling.substack.com/p/claude-code-agent-view) · [Agent View guide](https://claudefa.st/blog/guide/agents/agent-view) · [Background agents](https://drydock.si/guides/claude-code-background-agents) · [How Boris uses Claude Code (unofficial)](https://howborisusesclaudecode.com/) · [How the Claude Code team works](https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works)
+
+**Codex:** [Daniel Vaughan: goal mode](https://codex.danielvaughan.com/2026/05/03/codex-cli-goal-mode-persistent-objectives-token-budgets-agentic-loops/) · [pause/resume/budgets](https://codex.danielvaughan.com/2026/05/07/codex-cli-goal-command-persisted-long-horizon-workflows-pause-resume-budget/) · [v0.128 release](https://codex.danielvaughan.com/2026/04/30/codex-cli-v0128-goal-workflows-keymap-self-update/) · [SmartScope](https://smartscope.blog/en/blog/codex-goal-ralph-loop/) · [JD Hodges review](https://www.jdhodges.com/blog/codex-goal-feature-review/) · [Codex Insider](https://codexinsider.com/guides/codex-goals/) · [relux: token burn](https://relux.works/en/blog/codex-goal-token-burn/) · [Codex changelog April 2026](https://www.developersdigest.tech/blog/codex-changelog-april-2026) · [Codex vs Claude Code (Nov 2026)](https://www.morphllm.com/comparisons/codex-vs-claude-code)
+
+**Hermes:** [YanXbt: personal AI OS](https://yanxbt.substack.com/p/hermes-agent-as-a-personal-ai-operating) · [Hermes Bible](https://www.hermesbible.com/flows/hermes-as-personal-ai-operating-system) · [Layer3 Labs](https://www.layer3labs.io/guides/hermes-agent-explained) · [release tracker](https://petronellatech.com/blog/hermes-agent-ai-guide-2026/) · [MarkTechPost launch](https://www.marktechpost.com/2026/02/26/nous-research-releases-hermes-agent-to-fix-ai-forgetfulness-with-multi-level-memory-and-dedicated-remote-terminal-access-support/)
+
+**Antigravity:** [neurals: /goal](https://neurals.ca/tech/gemini/antigravity/goal-mode/) · [DataCamp tutorial](https://www.datacamp.com/tutorial/antigravity-cli) · [AI Builder Club guide](https://www.aibuilderclub.com/blog/antigravity-cli-guide) · [Medium: autonomous goal execution](https://alfredobs97.medium.com/from-babysitting-ai-to-trusting-it-how-fully-autonomous-goal-execution-in-antigravity-cli-works-9db6d6b0e39e) · [Jules shutdown guide](https://www.explainx.ai/blog/google-jules-shutdown-december-31-antigravity-export-guide-2026)
+
+**OpenClaw:** [How OpenClaw works](https://bibek-poudel.medium.com/how-openclaw-works-understanding-ai-agents-through-a-real-architecture-5d59cc7a4764) · [Heartbeat guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/) · [HEARTBEAT.md](https://openclawconsult.com/lab/openclaw-heartbeat-md) · [Heartbeat scheduling](https://sfailabs.com/guides/openclaw-heartbeat-scheduling) · [Make it proactive](https://agentfactory.panaversity.org/docs/Building-OpenClaw-Apps/meet-your-personal-ai-employee/make-it-proactive)
+
+**Ralph:** [geocod.io](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops) · [Sid Bharath](https://sidbharath.com/blog/ralph-wiggum-claude-code/) · [Kingy AI](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/) · [open-ralph-wiggum](https://github.com/Th0rgal/open-ralph-wiggum) · [ralph-claude-code](https://github.com/frankbria/ralph-claude-code)
+
+## Costs, limits and models
+
+- [Spheron: agents burn 5–30× tokens](https://www.spheron.network/blog/agentic-ai-inference-cost-2026/) · [Unblocked: auto-loop tax](https://getunblocked.com/blog/agent-auto-loop-token-cost/) · [TrustGate: token bill came due](https://www.trustgateai.io/blog/token-bill-runaway-agents) · [Cost horror stories](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/) · [Waxell: budget enforcement](https://waxell.ai/blog/ai-agent-token-budget-enforcement) · [Sondera: costs as security risk](https://blog.sondera.ai/p/ai-agent-token-costs-security-risk) · [Splunk](https://www.splunk.com/en_us/blog/observability/why-most-projects-still-die-before-production.html)
+- Limits: [TechCrunch](https://techcrunch.com/2025/07/28/anthropic-unveils-new-rate-limits-to-curb-claude-code-power-users/) · [The Register](https://www.theregister.com/2026/01/05/claude_devs_usage_limits/) · [claude-code #9424](https://github.com/anthropics/claude-code/issues/9424) · [#76006](https://github.com/anthropics/claude-code/issues/76006) · [Claude Ultra (Developer's Digest)](https://www.developersdigest.tech/blog/claude-ultra-plan-max-20x-rename-five-hour-limit-2026) · [vanja.io](https://vanja.io/claude-ultra/) · [Requesty](https://www.requesty.ai/blog/claude-max-plans-5-hour-limit-removed) · [Codex weekly limit (DEV)](https://dev.to/melonape/codex-ate-my-weekly-limit-in-a-day-what-people-are-actually-doing-about-it-af1)
+- Models: [OpenRouter: open-weight models that matter](https://openrouter.ai/blog/insights/the-open-weight-models-that-matter-june-2026/) · [GLM vs DeepSeek vs Qwen](https://www.developersdigest.tech/blog/glm-5-2-vs-deepseek-v4-vs-qwen3-open-weights-coding-showdown) · [Cheapest models ranked](https://www.creative-tim.com/blog/ai-agent/cheapest-ai-models-real-per-token-prices-ranked/) · [Cheapest models for agents](https://www.betterclaw.io/blog/cheapest-ai-models-for-agents) · [Cost per ticket](https://particula.tech/blog/deepseek-v4-vs-kimi-k2-6-vs-glm-5-1-open-weight-coding)
+
+## Memory, review, security
+
+- Memory: [The files are the memory](https://agenticthinking.ai/blog/the-files-are-the-memory/) · [Memory degradation](https://blakecrosley.com/blog/agent-memory-degradation) · [Compaction vs context rot](https://medium.com/@pankaj_pandey/compaction-how-long-running-agents-beat-the-context-rot-problem-fc12d4cdeb7b) · [Compaction playbook](https://hamzashabbir.dev/article/context-rot-compaction-playbook-long-running-agent) · [Agent loops and state](https://www.ml4devs.com/what-is/agent-loops/)
+- Review: [Comprehension debt](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/) · [Verify, don't review](https://agentconn.com/blog/verify-dont-review-coding-agents-2026/) · [CodeRabbit](https://www.coderabbit.ai/guides/agentic-engineering) · [ReviewDebt talk](https://ai.engineer/talks/TJPInBjhE4Q-reviewdebt-practical-framework-scoring-every-pull) · [Agentic fatigue](https://explainx.ai/blog/agentic-fatigue-vibe-coding-ai-developer-productivity-paradox)
+- Verification: [Stop reward-hacking your own checks](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn) · [Vector Labs](https://vector-labs.ai/insights/when-your-ai-agent-lies-to-you-what-reward-hacking-and-overclaiming-mean-for-production-deployments) · [SpecStory](https://specstory.com/learning/verification/reward-hacking) · [RedHub](https://blog.redhub.ai/reward-hacking) · [MindStudio: goals and verification](https://www.mindstudio.ai/blog/agentic-loop-design-goals-verification-criteria)
+- Security: [SoftwareSeni](https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/) · [RedFox](https://www.redfoxsec.com/blog/agentic-ai-security-why-autonomous-ai-systems-are-the-next-big-attack-surface) · [DEV: unsandboxed agents](https://dev.to/serenitiesai/ai-agents-run-unsandboxed-code-how-to-fix-it-2026-1np4) · [Notebookcheck: fallbacks](https://notebookcheck.net/Claude-Fable-5-2-fallbacks-make-AI-agents-more-vulnerable.1446771.0.html)
+
+## Social and press
+
+- X: [Paweł Huryn on Cherny](https://x.com/PawelHuryn/status/2069315068664197315) · [the 16-minute version](https://x.com/PawelHuryn/status/2069363303952818474) · [Claire Vo on OpenClaw](https://x.com/clairevo/status/2017741569521271175) · [Hermes /goal claim](https://x.com/IBuzovskyi/status/2067479409645257075) · [Stop Being the Loop](https://x.com/Raytar/article/2069212188619805179) · [Guide to /goal, /loop, /schedule & Stop hooks](https://x.com/sairahul1/article/2054820977226457301)
+- Hacker News: [The Coming Loop](https://news.ycombinator.com/item?id=48643180)
+- Press: [The New Stack: Cherny writes loops](https://thenewstack.io/loop-engineering/) · [The Neuron](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/) · [ADTmag](https://adtmag.com/articles/2026/07/01/loop-engineering-emerges-as-developers-put-ai-coding-agents-on-repeat.aspx) · [Pure AI](https://pureai.com/articles/2026/06/23/the-loop-is-the-engine-inside-every-agentic-ai-system-that-makes-an-ai-agent-an-ai-agent.aspx) · [Fortune: Karpathy](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/) · [The New Stack: voice agents](https://thenewstack.io/cursor-antigravity-voice-agents) · [Technology.org: Codex internals](https://www.technology.org/2026/01/27/openai-engineers-reveal-the-inner-workings-of-their-ai-coding-agent-codex-cli/) · [ZenML LLMOps database](https://www.zenml.io/llmops-database/long-running-agent-harness-for-multi-context-software-development)

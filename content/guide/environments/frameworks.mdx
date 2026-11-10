@@ -1,0 +1,74 @@
+---
+title: SDKs, frameworks and DIY
+description: Build your own loop with agent SDKs, managed runtimes, graph frameworks or plain shell scripts, and the infrastructure every loop eventually needs.
+icon: Wrench
+---
+
+Not every loop runs inside a packaged agent. Many of the most interesting ones are custom: a script around a headless agent, a service built on an agent SDK, or a graph in an orchestration framework.
+
+## The options
+
+<Tabs items={['Shell', 'Agent SDKs', 'Managed runtimes', 'Graph frameworks']}>
+<Tab value="Shell">
+
+The [Ralph loop](/guide/patterns/ralph) in its purest form. Any agent with a headless mode works: `claude -p`, `codex exec`, OpenCode and others ([open-ralph-wiggum](https://github.com/Th0rgal/open-ralph-wiggum), [OpenCode loop write-up](https://levelup.gitconnected.com/no-plugins-needed-i-built-a-fully-automated-coding-loop-in-opencode-9a7955b5d3f8)).
+
+**Gives you:** total control and transparency. **You build:** stop conditions, budgets, rate limits, state handling.
+
+</Tab>
+<Tab value="Agent SDKs">
+
+The **Claude Agent SDK** exposes the same loop that powers Claude Code, gather context → act → verify → repeat ([Anthropic](https://anthropic.com/engineering/building-agents-with-the-claude-agent-sdk)). According to the Claude Code team, routines (code review, PR babysitting, CI fixes) were the SDK's first obvious use.
+
+OpenAI's **Agents SDK** moved toward sandbox-aware orchestration, configurable memory, filesystem operations and MCP integrations ([The next evolution of the Agents SDK](https://openai.com/index/the-next-evolution-of-the-agents-sdk/)), alongside hosted shells, skills and compaction for long-running execution ([Shell, skills and compaction](https://developers.openai.com/blog/skills-shell-tips)).
+
+**Gives you:** a production inner loop. **You build:** the outer loops.
+
+</Tab>
+<Tab value="Managed runtimes">
+
+Both Anthropic and Google now host agents for you:
+
+- Anthropic's [Managed Agents](https://anthropic.com/engineering/managed-agents) splits the agent into a **session log**, a **harness** that routes tool calls, and a **sandbox**. The log sits outside the harness, so nothing in the harness needs to survive a crash.
+- Google's [Managed Agents in the Gemini API](https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/) provisions a remote Linux environment per agent in a single call ([quickstart](https://ai.google.dev/gemini-api/docs/managed-agents-quickstart)).
+
+**Gives you:** durable sessions and sandboxes. **You build:** goals and triggers.
+
+</Tab>
+<Tab value="Graph frameworks">
+
+[LangGraph](https://github.com/langchain-ai/langgraph) and similar frameworks model agents as graphs with **checkpointing**, durable graph state, resumability and long-term memory. These were the tools behind multi-agent orchestration long before "[graph engineering](/guide/patterns/graphs-and-teams#graph-engineering)" trended.
+
+**Gives you:** explicit state and resumability. **You build:** the nodes and their stop logic.
+
+</Tab>
+</Tabs>
+
+## What every loop eventually needs from infrastructure
+
+An October 2026 analysis, [What agents need from infrastructure](https://www.loams.dev/blog/what-agents-need-from-infrastructure), boils it down to four requirements:
+
+1. **Memory that survives sessions and can be selectively forgotten.** Remembering is easy; forgetting on purpose is hard.
+2. **Durable execution** that doesn't repeat already-paid work after a crash.
+3. **Sandboxes** that limit what execution can touch.
+4. **A trustworthy harness** that enforces tool permissions independently of the model.
+
+It also flags persistent memory as an attack surface: malicious information can be retained and influence future actions. See [Security](/guide/shortcomings/security).
+
+## A minimal checklist for a DIY loop
+
+- [ ] A completion check that doesn't rely on the agent's word
+- [ ] A hard cap (iterations, tokens, dollars or time)
+- [ ] A circuit breaker for "same error N times in a row"
+- [ ] Backoff or sleep when waiting on something external
+- [ ] State written to files or a store after every iteration
+- [ ] An isolated workspace (worktree, container) per loop
+- [ ] A log a human can read afterwards
+- [ ] A way to pause it without losing progress
+
+## Further reading
+
+- [Code as Agent Harness](https://arxiv.org/pdf/2605.18747) (arXiv)
+- [Agent loops and state management in AI agents](https://www.ml4devs.com/what-is/agent-loops/)
+- [Loops, graphs and the layer that matters](https://iii.dev/blog/loops-graphs-and-the-layer-that-matters/)
+- [Long-running agents](https://addyosmani.com/blog/long-running-agents/) by Addy Osmani

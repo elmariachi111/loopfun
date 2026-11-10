@@ -1,0 +1,44 @@
+---
+title: Standing goals
+description: Some goals never complete. "Keep CI green" and "watch my inbox" need triggers and silence rules, not stop conditions.
+icon: Radar
+---
+
+Most `/goal` discussion assumes **task goals**: a finish line, after which the loop ends. A second kind is just as common in practice: the **standing goal**, which has no finish line.
+
+<Defs
+  items={[
+    ['Task goal', 'Ends when met. "Migrate all callers to API v2." Needs a completion condition and a budget.'],
+    ['Standing goal', 'Never "met", only maintained. "Keep main green." "Tell me if a customer churns." Needs a trigger, a check and a rule for when to stay silent.'],
+  ]}
+/>
+
+## How standing goals are implemented today
+
+Standing goals live in [Layer 3](/guide/foundations/four-layers#layer-3--the-scheduled-or-ambient-loop): scheduled and ambient loops.
+
+- **OpenClaw** keeps them in plain files. Every heartbeat (30 minutes by default) the agent reads `HEARTBEAT.md`, a checklist of things to keep an eye on. A sample checklist even includes reviewing `memory/goals.md` and suggesting outdated goals to remove ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/), [HEARTBEAT.md explainer](https://openclawconsult.com/lab/openclaw-heartbeat-md)).
+- **Claude Code** uses `/loop` for intervals, plus routines and scheduled tasks. Per Anthropic's team, the first routines were code review, PR babysitting, CI fixes and rebasing ([The Neuron](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/)).
+- **Hermes** combines cron with goals and kanban. **Antigravity** has `/schedule`.
+
+## Silence is a feature
+
+The defining problem of standing goals is **noise**. A heartbeat that reports on every cycle is useless. OpenClaw solves this with a convention: if nothing needs attention, the agent replies `HEARTBEAT_OK`, and the gateway strips the token and drops the message ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/)). Guides advise writing **silence criteria** into the checklist explicitly ([Panaversity](https://agentfactory.panaversity.org/docs/Building-OpenClaw-Apps/meet-your-personal-ai-employee/make-it-proactive)).
+
+The same idea applies anywhere: a standing goal needs both "what counts as a problem" and "what counts as nothing to report".
+
+## Standing goals go stale
+
+Task goals end; standing goals pile up. Six months in, an agent may be dutifully checking things nobody cares about any more, and paying for it every 30 minutes. Few harnesses help here. The OpenClaw sample that asks the agent to suggest outdated goals is the closest thing to goal *pruning* in the wild.
+
+## Standing goals are an attack surface
+
+`HEARTBEAT.md` is an ordinary file in the workspace that the agent reads on every wake-up. An [arXiv paper on persistent personal agents](https://arxiv.org/pdf/2607.05189) points out this makes it a persistent injection target: anything written there gets re-executed indefinitely. See [Security](/guide/shortcomings/security).
+
+## Further reading
+
+- [How OpenClaw works: understanding AI agents through a real architecture](https://bibek-poudel.medium.com/how-openclaw-works-understanding-ai-agents-through-a-real-architecture-5d59cc7a4764)
+- [OpenClaw heartbeat scheduling](https://sfailabs.com/guides/openclaw-heartbeat-scheduling)
+- [How I added an agentic heartbeat to Claude Code using built-in tools](https://dev.to/simplemindedrobot/giving-claude-code-a-heart-beat-55ja)
+- [Claude Code /goal vs /routines vs /loop](https://www.mindstudio.ai/blog/claude-code-goal-routines-loop-autonomous-scheduling)
+- [What is the Claude Code /loop command?](https://www.mindstudio.ai/blog/what-is-claude-code-loop-command-recurring-tasks)

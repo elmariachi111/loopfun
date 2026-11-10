@@ -1,0 +1,53 @@
+---
+title: Model choice and routing
+description: Different steps in a loop need very different capabilities. Routing helps, but cheap per token is not cheap per task.
+icon: Cpu
+---
+
+A loop isn't one kind of work. Planning a refactor, running a test, deciding whether a goal is met and noticing that nothing changed since the last heartbeat need very different amounts of intelligence. Running all of them on the strongest model is expensive and quota-bound; running all of them on the cheapest is a false economy.
+
+## A plausible routing table
+
+| Loop component | What it needs |
+|---|---|
+| Planning, spec expansion | Strongest reasoning model |
+| Task execution | Strong coding/reasoning model |
+| Goal evaluation (judge) | Small, inexpensive model, or no model |
+| Progress classification ("did anything change?") | Small model or deterministic logic |
+| Independent review | Strong model with **fresh context** |
+| Routine monitoring (heartbeats) | Small, fast model |
+| Recovery from a complex failure | Strong model |
+
+This mirrors what the tools do. Claude Code's `/goal` judge defaults to Haiku; Hermes lets you route `goal_judge` to a Flash-class model ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)); Anthropic recommends smaller, faster models for routine proactive loops and the strongest model for judgment calls ([Getting started with loops](https://claude.com/resources/articles/getting-started-with-loops)).
+
+<Callout title="The cheapest model call is the one you don't make">
+  If the question is "did the tests pass?", read the exit code. Only escalate to a model when the answer genuinely needs
+  judgment.
+</Callout>
+
+## Open-weight models in loops
+
+Cheap open-weight models are a natural fit for high-volume loop steps. Mid-2026 comparisons ([OpenRouter](https://openrouter.ai/blog/insights/the-open-weight-models-that-matter-june-2026/), [Developer's Digest](https://www.developersdigest.tech/blog/glm-5-2-vs-deepseek-v4-vs-qwen3-open-weights-coding-showdown), [Creative Tim](https://www.creative-tim.com/blog/ai-agent/cheapest-ai-models-real-per-token-prices-ranked/), [Telnyx](https://telnyx.com/resources/best-open-source-llms)) suggest a split:
+
+- **Flash tier for routine steps.** GLM-5.3-Flash and DeepSeek V4.1 Flash at around $0.15/M input tokens.
+- **Stronger open models for planning and long-horizon work.** GLM-5.2 tops one open-weight index; Kimi is positioned for long sessions and sub-agent orchestration, but costs considerably more per task.
+
+<Evidence level="secondary" /> Prices and rankings change monthly, so check current rate cards.
+
+## Why cheap per token isn't cheap per task
+
+- **Retries.** A model that needs 30 attempts can cost more than one that needs 3. Cost per task depends on how many attempts a model needs ([Particula](https://particula.tech/blog/deepseek-v4-vs-kimi-k2-6-vs-glm-5-1-open-weight-coding)).
+- **Token appetite.** Some cheap models are verbose, so budget above the raw rate ([BetterClaw](https://www.betterclaw.io/blog/cheapest-ai-models-for-agents)).
+- **Failure cost.** A weaker model that confidently declares "done" creates review work for a human, which is the most expensive resource in the loop.
+- **Caching.** In loops, cache-hit pricing can matter more than list price ([Fastino](https://fastino.ai/blog/how-to-use-open-weight-models)).
+
+## Model upgrades change the harness
+
+A good harness for one model generation can be overbuilt for the next. Anthropic simplified its planner/generator/evaluator harness when moving to a stronger model, dropping the per-sprint evaluator ([Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps)). The reverse also happens: fallbacks to an older model can bring back weaknesses. Notebookcheck reported that, per the Claude Fable 5.2 system card, requests handed to an older fallback model were more vulnerable to prompt injection ([Notebookcheck](https://notebookcheck.net/Claude-Fable-5-2-fallbacks-make-AI-agents-more-vulnerable.1446771.0.html)). <Evidence level="secondary" />
+
+## Further reading
+
+- [Best open-weight LLM for agentic coding in 2026](https://howaiworks.ai/blog/best-open-weight-llm-agentic-coding)
+- [Best Chinese AI models (2026): DeepSeek, Qwen, GLM, Kimi](https://geotoolbox.ai/blog/chinese-ai-models-compared)
+- [GLM-5.2 vs DeepSeek V4 vs Kimi K2.6](https://tech-insider.org/glm-5-2-vs-deepseek-v4-vs-kimi-k2-2026/)
+- [Occamy-1.0: open Pareto-frontier 35B intelligence for co-work](https://arxiv.org/pdf/2609.11977) (arXiv)

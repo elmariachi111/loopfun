@@ -1,0 +1,54 @@
+---
+title: What holds loops back
+description: People are embracing agentic loops, but they haven't yet solved the operational discipline needed to make them dependable. Here is the map of problems.
+icon: TriangleExclamationPoint
+---
+
+## Are people still embracing loops?
+
+**Yes, but less naively.** Every major harness shipped a goal loop within about six months. Google is consolidating its async agent into its loop-centric Antigravity, and Anthropic's Ultra plan drops the five-hour wall that long runs kept hitting. The June 2026 hype wave was followed by a July backlash, and what survived is a more modest practice: **bounded loops with hard checks**.
+
+Two caveats keep this honest:
+
+- **Enthusiasm isn't adoption.** The [August 2026 study](https://arxiv.org/abs/2608.21884) mined 36,710 repositories and confirmed only a couple of hundred autonomous loop implementations (217 of 256 flagged, per a [summary](https://github.com/TianCai19/llmNote/pull/45)) <Evidence level="secondary" />, and found almost no committed loop state files. Loops are used, but mostly privately and without measurement.
+- **The evidence is thin.** The same study found "no systematic evidence" for the claimed benefits; claims rest "almost entirely on anecdotes and self-reported productivity numbers."
+
+## The problem map
+
+| Domain | The fundamental issue | Read more |
+|---|---|---|
+| **Verification** | Self-reported success isn't success. Agents declare victory early or game the check. | [Verification](/guide/shortcomings/verification) |
+| **Termination** | The loop doesn't know when it's genuinely finished, or that it has stopped making progress. | [Verification](/guide/shortcomings/verification), [Reliability](/guide/shortcomings/reliability) |
+| **Cost** | Context is re-read on every turn, poll loops spin, idle wake-ups add up, and quotas run out. | [Cost](/guide/shortcomings/cost) |
+| **Context and memory** | Long runs collect noise; compaction is lossy; handoffs between sessions are conventions, not standards. | [Context and memory](/guide/shortcomings/context-and-memory) |
+| **Model choice** | Different steps need different capability and cost; cheap per token isn't cheap per task. | [Model choice](/guide/shortcomings/model-choice) |
+| **Security** | Unattended runs, plus tools, plus untrusted input, plus persistent memory, give prompt injection room to act. | [Security](/guide/shortcomings/security) |
+| **Humans** | Review capacity, comprehension debt, fatigue, and the effort of writing specs. | [The human bottleneck](/guide/shortcomings/humans) |
+| **Reliability and observability** | Errors compound across iterations; operators can't see what happened or why. | [Reliability](/guide/shortcomings/reliability) |
+| **Credibility** | Is "loop engineering" a discipline or a buzzword? | [The hype debate](/guide/shortcomings/the-hype-debate) |
+
+## They're connected
+
+These problems don't sit in neat boxes. Fixing one tends to move the bottleneck to another:
+
+- A stronger **judge** reduces false "done" but adds **cost** per turn.
+- A tighter **budget** controls cost but leaves more half-finished work for **humans** to review.
+- **Fresh context** fixes context rot but adds orientation overhead and depends on good **state** files.
+- More **autonomy** reduces human effort but enlarges the **security** blast radius.
+- A cheap **model** lowers cost per token but may raise cost per task through retries, which hurts **reliability**.
+
+<Callout title="If you only fix one thing">
+  Make completion **checkable without trusting the agent**. A cheap loop that never finishes isn't efficient, and an
+  expensive loop that falsely reports success is worse. Verification is upstream of almost everything else on this
+  list.
+</Callout>
+
+## Three kinds of cost
+
+It helps to split "cost" in three, because they have different fixes:
+
+1. **Iteration cost.** The model calls themselves.
+2. **Context cost.** Repeatedly re-supplying history, instructions, tool descriptions and state.
+3. **Failure cost.** Iterations that produce no useful progress, plus recovering from mistakes.
+
+A 30-iteration loop isn't necessarily more productive than a 5-iteration one. The third kind is the one that hurts most and is measured least.

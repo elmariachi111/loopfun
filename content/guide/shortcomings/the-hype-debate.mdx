@@ -1,0 +1,46 @@
+---
+title: The hype debate
+description: Is "loop engineering" a discipline or a buzzword for a while loop? Both sides have a point.
+icon: Megaphone
+---
+
+## The case against
+
+Within weeks of the June 2026 essays, the backlash arrived ([FutureAGI's roundup](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/), [Claudefolio](https://claudefolio.com/blog/loop-engineering-is-the-new-ai-buzzword-heres-whats-real-and-whats-hype)):
+
+- **It's a while loop.** A large Hacker News thread argued agents are "just a while loop with an LLM call". A satire site mapped the new vocabulary back to undergraduate CS terms.
+- **It serves vendors.** The Register argued in June 2026 that the term is largely hype, partly because more agent usage means more revenue for the people promoting it.
+- **The demos hide the steering.** Real runs still need human course-correction that doesn't make it into the threads.
+- **The savings shrink once planning is counted.** Specifying what you want still takes real time ([HN](https://news.ycombinator.com/item?id=48643180)).
+- **The output is bad.** Some commenters judged the code such loops produce as poor.
+- **There's no evidence.** The [academic review](https://arxiv.org/abs/2608.21884) found benefit claims rest "almost entirely on anecdotes and self-reported productivity numbers".
+
+## The case for
+
+- **The criticism targets weak loops.** Every serious objection above applies to a loop with no checks, no budget and no state. That's an argument for doing the engineering, not against it ([FutureAGI](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/)).
+- **The building blocks are real and consistent.** Independent practitioners converged on the same parts: triggers, isolation, maker/checker, budgets, state.
+- **Vendors are betting on it.** Every major harness shipped goal loops, and pricing is adapting.
+- **Some results are hard to dismiss.** Karpathy's autoresearch, Anthropic's long-running harnesses and a C compiler built across about 2,000 sessions.
+
+## A balanced read
+
+<Callout title="Our take">
+  The **mechanism** is trivial and was never the point. The **discipline** (writing checkable goals, separating maker
+  from checker, budgeting, keeping state, limiting blast radius) is real, unevenly practised and under-measured. The
+  name may not survive. The problems it points at will.
+</Callout>
+
+Honest middle-ground takes: [Loop engineering minus the hype](https://dev.to/isaachagoel/loop-engineering-minus-the-hype-4ibn), [An honest verdict from someone who actually runs agent loops](https://blackmatter.vc/lab/loop-engineering-an-honest-verdict-from-someone-who-actually-runs-agent-loops), [Real use cases vs. hype](https://www.v12labs.io/blog/2026-07-18-loop-engineering-explained), and [The week the industry stopped prompting](https://agentconn.com/blog/loop-engineering/).
+
+## And then: "graph engineering"
+
+The July 2026 attempt to declare loops dead in favour of graphs mostly showed that the field likes new names. A loop is a graph with a self-edge; graphs coordinate loops rather than replacing them. See [Graphs and teams](/guide/patterns/graphs-and-teams#graph-engineering).
+
+## Does it matter what we call it?
+
+Somewhat. A buzzword attracts tooling, funding and attention, as well as cynicism. If "loop engineering" helps people realise the hard part is the **stop condition**, not the `while`, the name has done its job.
+
+<Callout type="idea" title="Where do you stand?">
+  Do loops work for you, or not? A [field note](/guide/field-notes/how-to-contribute) with real numbers, good or bad, is worth
+  more than another opinion piece.
+</Callout>

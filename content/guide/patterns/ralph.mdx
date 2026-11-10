@@ -1,0 +1,68 @@
+---
+title: The Ralph loop
+description: Feed the same prompt to an agent forever, with progress kept in files. The bash one-liner that started the loop discourse.
+icon: RefreshCw
+---
+
+<Quote by="A common description of the technique" where="Sid Bharath" href="https://sidbharath.com/blog/ralph-wiggum-claude-code/">
+  The dumbest smart way to run coding agents.
+</Quote>
+
+## The idea
+
+Named after Ralph Wiggum, the Simpsons character known for cheerful, oblivious persistence, the technique was described by **Geoffrey Huntley** in July 2025. In its purest form:
+
+```bash
+while :; do cat PROMPT.md | claude -p; done
+```
+
+`PROMPT.md` describes the whole job, for example "implement the spec in `SPEC.md`, one item at a time; update `PROGRESS.md`; commit when tests pass." The agent runs headless, does some work, exits, and is immediately started again with the **same prompt and a fresh context window**.
+
+## Why it works better than it should
+
+<Steps>
+<Step>
+### Fresh context every iteration
+
+No context rot. Each run starts clean, reads the plan and the progress file, does one chunk of work, and writes back. A practitioner who measured this found fresh-context iteration with state on the filesystem was the most effective fix for degradation, at a 15–20% "orient" overhead per pass ([Blake Crosley](https://blakecrosley.com/blog/agent-memory-degradation)). <Evidence level="anecdotal" />
+</Step>
+<Step>
+### The workspace is the memory
+
+Each iteration re-enters a workspace that already contains evidence of the previous attempts: commits, test output, notes ([Steve Kinney](https://stevekinney.com/writing/the-ralph-loop)). "[The files are the memory](https://agenticthinking.ai/blog/the-files-are-the-memory/)."
+</Step>
+<Step>
+### Mistakes are cheap to retry
+
+A bad iteration is one iteration. The next one starts fresh and can see that the tests are red.
+</Step>
+</Steps>
+
+## Where it breaks
+
+- **It only works if the agent can verify its own work.** Without tests, type checks or another signal, Ralph happily loops on broken code ([Sid Bharath](https://sidbharath.com/blog/ralph-wiggum-claude-code/)).
+- **It never stops on its own.** The naive loop burns API credits and produces inconsistent results ([Kingy AI](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/)).
+- **It can thrash.** A stuck loop can hammer the same error for hours.
+
+## From hack to feature
+
+The evolution of Ralph mirrors the evolution of the whole field:
+
+1. **The bash loop.** No exit, no budget. Ctrl+C is the judge.
+2. **Hardened scripts.** Community versions such as [frankbria/ralph-claude-code](https://github.com/frankbria/ralph-claude-code) add exit detection, rate limiting and circuit breakers. [open-ralph-wiggum](https://github.com/Th0rgal/open-ralph-wiggum) runs Claude Code, Codex, Copilot or OpenCode in the same loop.
+3. **The official plugin.** Anthropic's ralph-wiggum / ralph-loop plugin moves the loop *inside* a Claude Code session: a **Stop hook** catches the agent's attempt to finish, returns exit code 2 to block it, and re-injects the prompt. `--max-iterations` caps it and `--completion-promise` defines a string that ends it ([plugin](https://github.com/AI-App/Anthropics.Claude-Code/tree/main/plugins/ralph-wiggum), [DeepWiki](https://deepwiki.com/anthropics/claude-code/5.5-ralph-wiggum-plugin), [listing](https://claudecowork.im/resources/official/ralph-loop)).
+4. **`/goal`.** The loop becomes a harness primitive with an evaluator, a budget and states. Simon Willison described Codex's version as "a built-in Ralph loop" ([blog](https://simonwillison.net/2026/Apr/30/codex-goals/)); Hermes' docs call its `/goal` "our take on the Ralph loop" ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)).
+
+<Callout type="info" title="Ralph vs. /goal: one real difference">
+  Classic Ralph uses **fresh context** on every iteration. Built-in `/goal` modes continue **in the same session**, so the
+  context grows (with compaction) unless the harness resets it. That affects both quality (context rot) and cost (context
+  re-read on every turn). See [Cost](/guide/shortcomings/cost).
+</Callout>
+
+## Further reading
+
+- [Entering the Mind of Ralph Wiggum](https://stevekinney.com/writing/the-ralph-loop) by Steve Kinney
+- [Ship Features in Your Sleep with Ralph Loops](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops) from geocod.io
+- [What Is a "Ralph Loop"? How a Bash One-Liner Became an AI Coding Pattern](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/)
+- [What is Codex /goal? How it replaces "keep going" prompts](https://smartscope.blog/en/blog/codex-goal-ralph-loop/)
+- [No plugins needed: I built a fully automated coding loop in OpenCode](https://levelup.gitconnected.com/no-plugins-needed-i-built-a-fully-automated-coding-loop-in-opencode-9a7955b5d3f8)

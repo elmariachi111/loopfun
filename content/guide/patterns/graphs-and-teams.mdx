@@ -1,0 +1,48 @@
+---
+title: Graphs and teams
+description: When one loop isn't enough, the patterns are planners, sub-agents, agent teams, kanban boards and "graph engineering".
+icon: Network
+---
+
+At [Layer 4](/guide/foundations/four-layers#layer-4--meta-loops-and-graphs), loops orchestrate other loops. The motivation is usually one of three:
+
+1. **Context isolation.** A sub-agent explores a codebase or runs a noisy tool and returns a summary, so the main agent's context stays clean. Google's [subagents in Gemini CLI](https://developers.googleblog.com/en/subagents-have-arrived-in-gemini-cli/) were introduced with exactly this argument: specialized instructions and tools, isolated contexts, no accumulation of intermediate results.
+2. **Parallelism.** Several agents work at once on independent parts.
+3. **Specialisation.** Planner, implementer, reviewer and tester each get a narrower job.
+
+## The shapes in the wild
+
+<Accordions>
+<Accordion title="Sub-agents (fan-out / fan-in)">
+A lead agent spawns workers and collects results. Codex spawns parallel sub-agents with a configurable thread cap; Antigravity runs async background sub-agents and hands control back to you immediately ([Antigravity I/O deep dive](https://antigravity.google/blog/google-io-2026-feature-deep-dive/), [Morph comparison](https://www.morphllm.com/comparisons/codex-vs-claude-code)).
+</Accordion>
+<Accordion title="Agent teams with a shared task list">
+Claude Code's agent teams share a task list and message each other ([Morph](https://www.morphllm.com/comparisons/codex-vs-claude-code), [docs](https://code.claude.com/docs/en/agents)). Anthropic's C compiler project used parallel agents and a synchronization approach across nearly 2,000 sessions ([Anthropic](https://www.anthropic.com/engineering/building-c-compiler)).
+</Accordion>
+<Accordion title="Kanban of goals">
+Hermes points users to **kanban** for many independent tasks with dependencies or handoffs; a single card can carry its own `--goal` and keep iterating ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)). Each card is a goal loop and the board is the orchestrator.
+</Accordion>
+<Accordion title="Teams over hours or days">
+Google's **Antigravity Teamwork** runs autonomous agent teams on long-horizon challenges for hours or days ([Google](https://blog.google/innovation-and-ai/technology/developers-tools/antigravity-teamwork-multi-agent/)). The Antigravity CLI's `/boost` runs deeper multi-agent reasoning loops ([Antigravity CLI reference](https://antigravity.google/docs/cli/reference/)).
+</Accordion>
+<Accordion title="Planner → generator → evaluator">
+A fixed pipeline of specialised loops. See [Maker/checker](/guide/patterns/maker-checker).
+</Accordion>
+</Accordions>
+
+## "Graph engineering"
+
+In July 2026 Peter Steinberger asked on X whether the field had moved "from loops to graphs". The post reportedly drew millions of views and a wave of "graph engineering" articles ([Towards Data Science](https://towardsdatascience.com/graph-engineering-for-ai-agents-from-prompts-and-loops-to-workflows/), [Louis Bouchard](https://www.louisbouchard.ai/graph-engineering-explained/), [Zero Future Tech](https://zerofuturetech.substack.com/p/graph-engineering-why-ai-agents-are)). Hamel Husain's response, "Loop Engineering Is Dead", was widely read as a joke ([WiLine](https://wec.wiline.com/docs/news/loop-engineering-graph-engineering-what-survives/)). <Evidence level="contested" />
+
+The sober take, shared by most commentators:
+
+- **A loop is a graph with one node that points back at itself.** Graphs contain loops; they don't replace them ([Analytics Vidhya](https://www.analyticsvidhya.com/blog/2026/08/agent-harness-loop-graph-engineering/)).
+- **Loop engineering is about making one agent reliable; graph engineering is about coordinating many.** They're different layers, not successive eras.
+- **It's not new.** AutoGen, Google's ADK and LangGraph supported multi-agent graphs well before the term trended ([Data Engineer Things](https://blog.dataengineerthings.org/graph-engineering-explained-like-youre-new-here-018973b9b52e)). Some argue the shape of the agent graph matters less than the infrastructure underneath it ([iii.dev](https://iii.dev/blog/loops-graphs-and-the-layer-that-matters/)).
+
+## What gets harder with more loops
+
+- **Shared state.** Who owns the truth when five agents edit the same repo? Worktrees help for files; nothing standard exists for goals.
+- **Silent failures between agents.** An [arXiv study of multi-agent systems](https://arxiv.org/pdf/2606.04896) documents messages that get "silently delivered" across channel boundaries but never acted on.
+- **Ping-pong.** The most-cited cost horror story is two agents in a four-agent setup sending requests back and forth for 264 hours ([AI agent cost horror stories](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/)). <Evidence level="anecdotal" />
+- **Supervision.** Claude Code's Agent View, a single screen showing every session and which need input, exists because people lost track ([Cobus Greyling](https://cobusgreyling.medium.com/claude-code-agent-view-703491634ea7)).

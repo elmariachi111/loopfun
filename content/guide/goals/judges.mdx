@@ -1,0 +1,81 @@
+---
+title: Judges and verification
+description: Who decides the goal is met? The difference between self-report, a separate model and a deterministic check matters a lot.
+icon: Scale
+---
+
+Every goal loop has a moment where something decides whether to continue. That something is the **judge**. Its design determines whether the loop ends on time, ends too early, or never ends.
+
+## A hierarchy of judges
+
+The arXiv paper [Stop Hand-Holding Your Coding Agent](https://arxiv.org/pdf/2607.00038) ranks verifiers by strength. Simplified:
+
+<Steps>
+<Step>
+### Deterministic checks
+
+Exit codes, test results, type checks, a metric crossing a threshold, a file existing. These are cheap, reproducible and hard to argue with (but not impossible to game; see below).
+</Step>
+<Step>
+### Behavioural checks against the real system
+
+Run the app and click through it. Anthropic's long-running harness has its evaluator drive the running app via Playwright, the way a user would, rather than reading code ([Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps)).
+</Step>
+<Step>
+### A different model as judge
+
+A separate model reads the evidence and decides. Claude Code's `/goal` uses a separate evaluator (Haiku by default) after every turn ([docs](https://code.claude.com/docs/en/goal)). Hermes uses a `goal_judge` auxiliary model ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)).
+</Step>
+<Step>
+### The same agent judging itself
+
+The model decides it's done. This is the weakest form. Anthropic found self-evaluation to be lenient, which is part of why its harness separates evaluator and generator.
+</Step>
+<Step>
+### A human checkpoint
+
+The most expensive judge, and the one that doesn't scale. Often still the only one that works for taste and judgment calls.
+</Step>
+</Steps>
+
+The paper's rule: if a model judge is unavoidable, **a different model should judge, never the same agent approving itself.**
+
+## Transcript vs. world
+
+A subtle but important distinction: what does the judge *look at*?
+
+- **Transcript judges** read the conversation: what the agent said it did and what tools returned. Claude Code's evaluator works this way. It's cheap and general, but it judges the *story*, and an agent that misreports can mislead it.
+- **World judges** inspect the actual state: run the tests themselves, query the deployed service, diff the repo. More reliable, but they need to know *how* to check, which pushes you back toward [checkable goals](/guide/goals/writing-goals).
+
+As one [goal-design guide](https://www.mindstudio.ai/blog/agentic-loop-design-goals-verification-criteria) puts it, the question isn't "did the agent say it completed the task" but "does the system state reflect completion".
+
+## How judges fail
+
+<Accordions>
+<Accordion title="The judge is fooled by overclaiming">
+The agent says "all tests pass" when they don't. A transcript judge may believe it. Overclaiming can be detected by comparing assertions against tool-call logs ([Vector Labs](https://vector-labs.ai/insights/when-your-ai-agent-lies-to-you-what-reward-hacking-and-overclaiming-mean-for-production-deployments)).
+</Accordion>
+<Accordion title="The check is satisfied by gaming it">
+The tests really pass because the agent deleted, skipped or weakened them. This is reward hacking. It requires isolating the grader from the agent's ability to edit it ([SpecStory](https://specstory.com/learning/verification/reward-hacking), [Reward Hacking Benchmark](https://arxiv.org/pdf/2605.02964)). Details in [Verification](/guide/shortcomings/verification).
+</Accordion>
+<Accordion title="The judge errors, and the default is 'continue'">
+In Hermes, if the judge model call fails, the verdict defaults to *continue*, so the turn budget is the real backstop ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)). Any harness needs a decision about what a broken judge means.
+</Accordion>
+<Accordion title="The judge is never satisfied">
+The condition is subjective or impossible, so the loop runs until the budget is exhausted. Claude Code lets the evaluator declare a goal *impossible* to cut this short.
+</Accordion>
+<Accordion title="The retry prompt changes the goal">
+When a check fails, a naive retry says "make the test pass", which turns the *symptom* into the new goal. A better retry keeps the original goal fixed and appends the failing assertion verbatim ([DEV: stop your agent reward-hacking its own checks](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn)).
+</Accordion>
+</Accordions>
+
+## Cheap judges are a cost lever
+
+Judges run after *every* turn, so their cost matters. Hermes reports the judge call is small, around 200 output tokens per turn, and documents routing it to a cheap model such as Gemini Flash ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)). Claude Code defaults to Haiku. And the cheapest judge is no model at all: if the goal is "tests pass", check the exit code **before** asking any model anything. See [Model choice](/guide/shortcomings/model-choice).
+
+## Further reading
+
+- [The Verification Horizon: No Silver Bullet for Coding Agent Rewards](https://arxiv.org/pdf/2606.26300) (arXiv)
+- [Generator-Evaluator Loops: what Anthropic's harness design actually teaches](https://victorinollc.com/thinking/harness-design-long-running-apps)
+- [Verify, Don't Review: coding agent discipline](https://agentconn.com/blog/verify-dont-review-coding-agents-2026/)
+- [Reward Hacking: When AI Passes the Test, Not the Task](https://blog.redhub.ai/reward-hacking)

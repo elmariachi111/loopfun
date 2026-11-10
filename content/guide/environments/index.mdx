@@ -1,0 +1,46 @@
+---
+title: Loops across environments
+description: How today's harnesses implement goal loops, scheduled loops and multi-agent setups. They converged on a common design and diverge in the details that matter.
+icon: BookOpenText
+---
+
+By late 2026, every major agent environment has a built-in goal loop and some form of scheduling. The pages in this section explain how each one works conceptually. For flags and syntax, follow the links to each tool's docs.
+
+## Side by side
+
+| | Goal loop | Who judges "done" | Budget / cap | Other loop primitives |
+|---|---|---|---|---|
+| [**Claude Code**](/guide/environments/claude-code) | `/goal <condition>`; also headless via `claude -p` | A **separate evaluator model** (Haiku by default) reads the transcript after each turn | Ends when met, judged impossible, or on error | `/loop`, routines, Stop hooks, ralph-loop plugin, background sessions and Agent View, agent teams |
+| [**Codex**](/guide/environments/codex) | `/goal` with pause / resume / clear, persisted per thread | The model itself, prompted each turn by a continuation template | Optional token budget; states for achieved, unmet and budget-limited | Hooks, plugins, memories, parallel sub-agents |
+| [**Hermes Agent**](/guide/environments/hermes) | `/goal`, "our take on the Ralph loop" | A **judge model** (defaults to the main model; can be routed to a cheap one) | `goals.max_turns` = 20, then auto-pause; a broken judge defaults to *continue* | Kanban (cards with goals), cron, gateway spending limits |
+| [**Google Antigravity**](/guide/environments/google) | `agy /goal` runs "until the goal is verified complete" | Built-in verification (thinly documented) | Tool permissions still apply | `/schedule`, `/boost`, async sub-agents, Teamwork, Managed Agents API |
+| [**OpenClaw**](/guide/environments/openclaw) | None as such; standing goals in `HEARTBEAT.md` | The agent itself (`HEARTBEAT_OK` = nothing to do) | Heartbeat interval (30 min default) | Gateway routing all channels, memory files |
+| [**SDKs & frameworks**](/guide/environments/frameworks) | Whatever you build | Whatever you build | Whatever you build | Agent SDKs, managed agents, LangGraph checkpointing |
+
+## What everyone converged on
+
+Across all of them, a goal turns into the same five parts: a **natural-language condition**, a **judge** (ideally a different, cheaper model), a **budget** (turns or tokens), a **lifecycle** (active, paused, achieved, unmet, budget-limited), and **durable state** (files, git, thread store). See [What is a goal?](/guide/goals).
+
+There is a shift in investment too: vendors are building **infrastructure around the model**, not just improving models. OpenAI's direction is hosted shells, skills, compaction and persistent state ([Shell, skills and compaction](https://developers.openai.com/blog/skills-shell-tips), [The next evolution of the Agents SDK](https://openai.com/index/the-next-evolution-of-the-agents-sdk/)). Anthropic separates session log, harness and sandbox ([Managed Agents](https://anthropic.com/engineering/managed-agents)). Google provisions a whole remote Linux environment per agent ([Managed Agents in the Gemini API](https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/)).
+
+## Where they diverge
+
+<Accordions>
+<Accordion title="Who judges">
+Claude Code and Hermes use a separate judge call; Codex lets the working model decide, nudged by a continuation prompt. A separate judge costs a little per turn but reduces premature "done". See [Judges](/guide/goals/judges).
+</Accordion>
+<Accordion title="What the budget counts">
+Turns (Hermes), tokens (Codex, optional), money (Hermes gateway limits), or an impossibility judgment (Claude Code). See [Budgets](/guide/goals/budgets-and-lifecycle).
+</Accordion>
+<Accordion title="Pacing between continuations">
+One analysis claims Codex re-fires about 0.03 s after each turn while Claude Code pauses between continuations. That difference matters a lot when the agent is *waiting* for something ([relux.works](https://relux.works/en/blog/codex-goal-token-burn/)). <Evidence level="anecdotal" />
+</Accordion>
+<Accordion title="Where the goal lives">
+Codex keeps it on the thread, Claude Code in the session, Hermes in its session store, OpenClaw in markdown files. Nothing is portable between tools.
+</Accordion>
+</Accordions>
+
+<Callout type="info" title="Snapshot, not spec">
+  These tools ship weekly. Treat this section as a conceptual snapshot from November 2026, and check the linked docs for
+  current behaviour. Spot something outdated? "Improve this page" is at the bottom.
+</Callout>

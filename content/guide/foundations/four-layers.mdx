@@ -1,0 +1,65 @@
+---
+title: The four layers
+description: '"Agentic loop" names at least four nested things. Most disagreements are people talking about different layers.'
+icon: Layers
+---
+
+When someone says "I run my agents in loops", they could mean any of four different things, and the layers nest inside one another:
+
+<LoopLayers />
+
+## Layer 1 · The inner tool loop
+
+This is the loop inside every agent: the model emits a tool call, the harness executes it, the result goes back into the context, and the model continues until it produces a final answer instead of another tool call.
+
+It is a solved, standard part of every agent. OpenAI's [Unrolling the Codex agent loop](https://openai.com/index/unrolling-the-codex-agent-loop/) is the most detailed public description of one: how the harness assembles the prompt on each pass, uses prompt caching, and manages the context window. Anthropic's [Claude Agent SDK post](https://anthropic.com/engineering/building-agents-with-the-claude-agent-sdk) describes the same thing for Claude Code.
+
+**What ends it:** the model decides it has answered. That's one model turn, from the user's point of view.
+
+## Layer 2 · The goal loop
+
+This is what most of the 2026 conversation is about. The goal loop wraps the inner loop and **refuses to let the turn end** until some condition holds. When the agent tries to stop, something checks whether the goal is met; if not, the agent is sent back to work.
+
+- The DIY version is the [Ralph loop](/guide/patterns/ralph), a shell `while` loop or a Claude Code **Stop hook** that blocks exit and re-injects the prompt ([official plugin](https://github.com/AI-App/Anthropics.Claude-Code/tree/main/plugins/ralph-wiggum)).
+- The productized version is `/goal`, now built into [Codex](/guide/environments/codex), [Claude Code](/guide/environments/claude-code), [Hermes Agent](/guide/environments/hermes) and [Google's Antigravity CLI](/guide/environments/google).
+
+**What ends it:** a completion check (often a separate judge model), a budget, or a human. This layer is where *goals* come in, and they get [their own section](/guide/goals).
+
+## Layer 3 · The scheduled or ambient loop
+
+Here the loop isn't driven by "not done yet" but by **time or events**. Something wakes the agent up: a timer, a cron line, a webhook, a new email. The agent does a round of work and goes back to sleep.
+
+- Claude Code's `/loop` repeats a prompt on an interval (an often-cited example is `/loop 5m /babysit` for PR babysitting, per [this unofficial catalogue](https://howborisusesclaudecode.com/)). Routines and scheduled tasks run on a calendar ([MindStudio comparison](https://www.mindstudio.ai/blog/claude-code-goal-routines-loop-autonomous-scheduling)).
+- OpenClaw's **heartbeat** wakes the agent every 30 minutes by default to read a checklist file called `HEARTBEAT.md` ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/)).
+- Antigravity has `/schedule`. Hermes has cron.
+
+This layer is what makes agents feel **always on**. Claire Vo's line about OpenClaw: it "has a heartbeat but not a brain" ([X](https://x.com/clairevo/status/2017741569521271175)).
+
+**What ends it:** usually nothing. It's a standing process. See [Ambient loops](/guide/patterns/ambient-loops) and [Standing goals](/guide/goals/standing-goals).
+
+## Layer 4 · Meta-loops and graphs
+
+At the top are loops that orchestrate other loops: a planner that writes a spec, a generator that implements it, an evaluator that tests it and sends it back. Or a team of agents sharing a task list. Or a kanban board where each card is its own goal loop.
+
+- Anthropic's [planner → generator → evaluator harness](https://www.anthropic.com/research/harness-design-long-running-apps) built full-stack apps over multi-hour runs.
+- Google's [Antigravity Teamwork](https://blog.google/innovation-and-ai/technology/developers-tools/antigravity-teamwork-multi-agent/) runs agent teams "over hours or days".
+- Peter Steinberger's July 2026 question, whether the field had moved "from loops to graphs", spawned the term [graph engineering](https://www.analyticsvidhya.com/blog/2026/08/agent-harness-loop-graph-engineering/). Most commentators noted that a loop is just a graph with one node pointing back at itself ([WiLine](https://wec.wiline.com/docs/news/loop-engineering-graph-engineering-what-survives/)).
+
+**What ends it:** an orchestrator's own stop logic, which itself is a goal loop one level up.
+
+## Why the distinction matters
+
+| If someone says… | They're probably talking about | The hard problem at that layer |
+|---|---|---|
+| "Agents are just a while loop with an LLM" | Layer 1 | Context assembly, caching, tool design |
+| "I let it run overnight until the tests pass" | Layer 2 | Writing a goal that can be checked and can't be gamed |
+| "My agent checks my inbox every morning" | Layer 3 | Silence criteria, cost of idle wake-ups, standing goals going stale |
+| "Loops are dead, graphs are the future" | Layer 4 | Coordination, handoffs, shared state |
+
+A cost complaint about Layer 2 (a goal loop re-reading 400k tokens on every continuation) is a different problem from a cost complaint about Layer 3 (a heartbeat waking up 48 times a day to say "nothing to report"). Both get called "loops burn tokens". See [Cost](/guide/shortcomings/cost).
+
+<Callout type="info" title="Andrew Ng's version adds two layers outside the machine">
+  Ng's [three-loop model](/guide/foundations/three-loops) puts the agentic coding loop (minutes) inside a developer
+  feedback loop (hours) inside an external market/user feedback loop (days). Those outer two are human loops, and they
+  set the pace for everything inside them.
+</Callout>

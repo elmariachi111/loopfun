@@ -1,0 +1,85 @@
+---
+title: How to contribute
+description: Add a field note, fix a page, or start a discussion. Everything goes through GitHub.
+icon: GitPullRequest
+---
+
+This guide lives in a public repository: [elmariachi111/loopfun](https://github.com/elmariachi111/loopfun). Every page is an MDX file under `content/guide/`, and every page has three links at the bottom: **Share a field note**, **Improve this page** and **Disagree? Discuss**.
+
+## Add a field note
+
+<Steps>
+<Step>
+### Open the template
+
+Use the **Start a field note** button on the [Field notes](/guide/field-notes) page or at the bottom of any page. It opens GitHub's file editor in `content/guide/field-notes/` with the template filled in. GitHub will offer to fork the repo for you.
+</Step>
+<Step>
+### Rename the file
+
+Give it a short, descriptive slug, for example `nightly-dependency-bumps.mdx`. It becomes the URL.
+</Step>
+<Step>
+### Fill in the sections
+
+Keep the headings so notes stay comparable. Rough numbers are fine; say they're rough.
+</Step>
+<Step>
+### Open a pull request
+
+New notes appear in the Field notes sidebar automatically once merged.
+</Step>
+</Steps>
+
+### The template
+
+```mdx
+---
+title: "Your loop, in one line"
+description: "What the loop does and where it runs"
+author: "your name or handle"
+harness: "Claude Code / Codex / Hermes / Antigravity / OpenClaw / custom"
+---
+
+## The loop
+What triggers it, what it does each iteration, and when it stops.
+
+## The goal
+The exact goal or completion condition you used.
+
+## What worked
+
+## What hurt
+Cost, verification, state, review, security, anything else.
+
+## Numbers (optional)
+Iterations, runtime, tokens or dollars, success rate.
+```
+
+You can use the same components as the rest of the guide, such as `<Callout>`, `<Steps>`, `<Cycle steps={[...]} />` and `<Evidence level="anecdotal" />`, but plain markdown is perfectly fine.
+
+## Ground rules
+
+- **Failures welcome.** A loop that didn't work, and why, is at least as useful as a success story.
+- **No secrets.** Strip API keys, internal hostnames, customer data and proprietary code.
+- **Disclose interests.** If you work for or sell a tool you're writing about, say so.
+- **Link your sources.** If you're summarizing someone else's public report, link it. It may belong on [From the public record](/guide/field-notes/public-record).
+- **Be specific.** "The judge accepted a summary that said tests passed when they hadn't run" beats "verification was flaky".
+
+## Improve or correct a page
+
+Click **Improve this page** at the bottom of any page to edit its MDX source on GitHub. Especially welcome:
+
+- Corrections where a tool's behaviour has changed (these pages describe November 2026)
+- Better primary sources for claims marked <Evidence level="secondary" /> or <Evidence level="anecdotal" />
+- Missing tools, patterns, papers or timeline entries
+
+## Start a discussion
+
+**Disagree? Discuss** opens a GitHub issue titled after the page. Use it for arguments, open questions and ideas that aren't ready to be a page. Good ideas graduate to the [idea board](/guide/field-notes/idea-board).
+
+<Callout type="idea" title="Coming later, maybe">
+  Ideas for a more structured contribution flow, such as comparable fields, filtering notes by harness or failure mode, and
+  aggregated numbers, are on the [idea board](/guide/field-notes/idea-board#a-better-home-for-field-notes). None of it is
+  built yet, on purpose.
+</Callout>

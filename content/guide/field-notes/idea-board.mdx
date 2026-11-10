@@ -1,0 +1,94 @@
+---
+title: Idea board
+description: Open problems and opportunities around loops and goals. Pick one up, argue with it, or add your own.
+icon: Lightbulb
+---
+
+The mechanism of a loop is commoditized: every harness has `/goal` and scheduling. The value is moving to **what surrounds the loop**. These are ideas collected from the research behind this guide, waiting for someone to try them. None of them are built here.
+
+Each idea has a **Discuss** link that opens a GitHub issue. If you've built or tried one, write a [field note](/guide/field-notes/how-to-contribute).
+
+## Six research tracks
+
+| Track | What it covers |
+|---|---|
+| **Loop control** | Termination, convergence, iteration budgets, livelock detection, diminishing returns |
+| **Goal management** | Persistent objectives, acceptance criteria, subgoals, dependencies, goal drift |
+| **State and memory** | Checkpoints, compaction, cross-session persistence, provenance, retrieval, forgetting |
+| **Economics and routing** | Model selection, budgets, caching, cheap evaluators, adaptive reasoning |
+| **Verification and trust** | Independent reviewers, deterministic checks, safety, sandboxing, escalation |
+| **Orchestration** | Scheduling, event triggers, sub-agents, durable execution, human intervention |
+
+## Ideas
+
+<Accordions>
+<Accordion title="A goal compiler">
+Turn a vague intent ("make checkout robust") into a **checkable contract**: commands to run, files that must not change, an escalation clause and a budget. Hermes' "expand a one-line goal" and Anthropic's sprint contracts point this way. Could it be a standalone step that works for any harness?
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20goal%20compiler)
+</Accordion>
+
+<Accordion title="World-state judges">
+Judges that **inspect the system**, not the transcript: re-run the tests, diff the repo, query the service, screenshot the UI. And they can't be edited by the agent they judge.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20world-state%20judges)
+</Accordion>
+
+<Accordion title="Progress detectors">
+Predict when a loop has **stopped making meaningful progress** from cheap signals, such as repeated errors, unchanged diffs or flat metrics, and stop it before the budget runs out. See the [AgentLoop paper](https://arxiv.org/abs/2609.33315).
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20progress%20detectors)
+</Accordion>
+
+<Accordion title="Per-goal cost accounting">
+Report **tokens and dollars per goal and per successful outcome**, not per session. Which goals are worth looping, and which burn money?
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20per-goal%20cost%20accounting)
+</Accordion>
+
+<Accordion title="Pacing for waiting goals">
+A standard way for a goal to say "not done, nothing to do until CI finishes", with sleep, backoff or wake-on-event, instead of re-reading 400k tokens every few seconds.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20pacing%20for%20waiting%20goals)
+</Accordion>
+
+<Accordion title="A portable goal format">
+Every tool has its own `/goal` semantics. Could a goal (condition, judge, budget, state, history) be a file that moves between Claude Code, Codex, Hermes and Antigravity, or between a laptop and a cloud runner?
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20portable%20goal%20format)
+</Accordion>
+
+<Accordion title="Minimum resumable state">
+What is the **smallest state** needed to resume any loop after an arbitrary interruption? A spec for it, plus a test harness that kills loops at random and checks that they resume correctly.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20minimum%20resumable%20state)
+</Accordion>
+
+<Accordion title="Standing-goal hygiene">
+Tools that notice when a standing goal (a heartbeat item, a routine) hasn't triggered anything useful in weeks, and propose retiring it. Plus provenance for every line in `HEARTBEAT.md`.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20standing-goal%20hygiene)
+</Accordion>
+
+<Accordion title="Review built for loop output">
+Code review designed for the volume loops produce: triage by risk, summaries tied to evidence (test runs, screenshots), and "what did the loop try and abandon?". Not just human-sized PRs, faster.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20review%20for%20loop%20output)
+</Accordion>
+
+<Accordion title="Goal editing mid-flight">
+Change a goal's scope or criteria **without** clearing it and losing the judge's sense of progress.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20goal%20editing%20mid-flight)
+</Accordion>
+
+<Accordion title="A better home for field notes">
+Make field notes **comparable**: structured fields (harness, model, goal type, iterations, cost, outcome), filtering by failure mode, and aggregate views across notes. Possibly a small dataset others can analyse. Deliberately not built yet; first we need enough notes to know what the fields should be.
+
+[Discuss →](https://github.com/elmariachi111/loopfun/issues/new?title=Idea%3A%20structured%20field%20notes)
+</Accordion>
+</Accordions>
+
+<Callout type="idea" title="Add an idea">
+  Use "Improve this page" below to add an entry, or "Disagree? Discuss" to argue with one.
+</Callout>

@@ -1,0 +1,5 @@
+{
+  "title": "Environments",
+  "icon": "BookOpenText",
+  "pages": ["index", "claude-code", "codex", "hermes", "google", "openclaw", "frameworks"]
+}

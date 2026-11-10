@@ -1,0 +1,98 @@
+---
+title: From the public record
+description: Loops that people have documented publicly, summarized in the field-note format and linked to the original.
+icon: Scroll
+---
+
+These are **summaries of public reports**, not first-hand accounts. Each links to its source; numbers are as reported, and badges show how solid they are. If you're the author of one of these and something's wrong, please [fix it](/guide/field-notes/how-to-contribute).
+
+<Accordions>
+<Accordion title="The original Ralph loop (Geoffrey Huntley, 2025)">
+- **Loop:** goal loop (Layer 2), shell `while` around a headless agent.
+- **Goal:** whatever `PROMPT.md` says, usually "work through the spec, update progress, commit".
+- **Worked:** fresh context each pass; the workspace as memory; absurd persistence.
+- **Hurt:** no exit condition, credit burn, inconsistent results, and only works with self-verification.
+- **Sources:** [Steve Kinney](https://stevekinney.com/writing/the-ralph-loop), [Kingy AI](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/), [Sid Bharath](https://sidbharath.com/blog/ralph-wiggum-claude-code/)
+</Accordion>
+
+<Accordion title="Shipping features overnight with Ralph (geocod.io, Jan 2026)">
+- **Loop:** Ralph loop in a production engineering team.
+- **Worked:** features landing while the team slept.
+- **Source:** [Ship Features in Your Sleep with Ralph Loops](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops)
+</Accordion>
+
+<Accordion title="Long-running harness: initializer + coding agent (Anthropic, Nov 2025)">
+- **Loop:** multi-session goal loop with structured handoffs.
+- **Goal:** build an app from a feature list; mark features done only after testing.
+- **Worked:** progress file, feature list and git as cross-session state; one increment per session.
+- **Hurt:** agents declaring the project finished too early; context compaction alone was not enough.
+- **Source:** [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) <Evidence level="primary" />
+</Accordion>
+
+<Accordion title="Planner → generator → evaluator (Anthropic, Mar 2026)">
+- **Loop:** meta-loop (Layer 4) of three specialised agents over multi-hour runs.
+- **Goal:** sprint contracts negotiated between generator and evaluator before each feature.
+- **Worked:** rich full-stack apps; an evaluator that tests the running app via Playwright.
+- **Hurt:** cost (about 6 h and $200, roughly 22× solo, per a secondary source <Evidence level="secondary" />); the evaluator was later cut back as the model improved.
+- **Sources:** [Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps) <Evidence level="primary" />, [Ruh AI](https://www.ruh.ai/blogs/anthropic-3-agent-harness-design)
+</Accordion>
+
+<Accordion title="A C compiler from ~2,000 sessions (Anthropic, 2026)">
+- **Loop:** many parallel agents with a synchronization approach.
+- **Numbers:** nearly 2,000 Claude Code sessions; about 100,000 lines.
+- **Source:** [Building a C compiler](https://www.anthropic.com/engineering/building-c-compiler) <Evidence level="primary" />
+</Accordion>
+
+<Accordion title="autoresearch (Andrej Karpathy, Mar 2026)">
+- **Loop:** metric loop: edit `train.py`, run exactly 5 minutes, read the metric, keep or revert.
+- **Numbers:** about 700 experiments in two days; 11% training speedup when applied to a larger model.
+- **Worked:** a deterministic judge (the metric) and a fixed budget per experiment.
+- **Hurt:** only applies where results can be scored objectively.
+- **Sources:** [Fortune](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/), [Noqta](https://noqta.tn/en/news/karpathy-autoresearch-autonomous-ai-research-open-source-2026) <Evidence level="secondary" />
+</Accordion>
+
+<Accordion title="autoresearch overnight (Tobi Lütke, Mar 2026)">
+- **Loop:** Karpathy's setup applied to his own task overnight.
+- **Numbers:** 37 experiments; 19% performance gain.
+- **Source:** [Fortune](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/) <Evidence level="secondary" />
+</Accordion>
+
+<Accordion title="A typing app in one unattended hour (Andrew Ng, Jun 2026)">
+- **Loop:** agentic coding loop from a spec, self-verifying the UI through a browser.
+- **Numbers:** about one hour without human intervention.
+- **Source:** [The Batch, issue 359](https://www.deeplearning.ai/the-batch/issue-359), [summary](https://explainx.ai/blog/andrew-ng-three-loops-0-to-1-products-2026) <Evidence level="secondary" />
+</Accordion>
+
+<Accordion title="Loops that prompt Claude (Boris Cherny, Jun 2026)">
+- **Loop:** routines and interval loops for code review, PR babysitting, CI fixes, rebases.
+- **Quote:** "I don't prompt Claude anymore. I have loops prompting Claude and figuring what to do."
+- **Sources:** [The New Stack](https://thenewstack.io/loop-engineering/), [The Neuron](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/) <Evidence level="secondary" />
+</Accordion>
+
+<Accordion title="One /goal, 100 landing pages (Hermes user, 2026)">
+- **Loop:** Hermes `/goal` with a judge model.
+- **Claimed:** 100 landing pages, a map of clinics and 100 drafted emails from one command, "zero babysitting".
+- **Source:** [X post](https://x.com/IBuzovskyi/status/2067479409645257075) <Evidence level="anecdotal" />
+</Accordion>
+
+<Accordion title="The six-hour Codex run that survived a pause (2026)">
+- **Loop:** Codex `/goal` across a five-hour pause, using persisted thread state.
+- **Source:** [Tecton Tide](https://tectontide.com/en/blog/codex-goal-six-hour-run/) <Evidence level="anecdotal" />
+</Accordion>
+
+<Accordion title="173 continuations in 48 minutes (Codex goal mode, 2026)">
+- **Loop:** Codex `/goal` waiting on an external process.
+- **Hurt:** re-fired about 0.03 s after each turn; each continuation re-read 120k–470k tokens until a 429. Across 3,808 sessions, the 52 goal sessions used about half of all input tokens.
+- **Lesson:** goal loops need a way to *wait*.
+- **Source:** [relux.works](https://relux.works/en/blog/codex-goal-token-burn/) <Evidence level="anecdotal" />
+</Accordion>
+
+<Accordion title="The $47,000 ping-pong (multi-agent, 2026)">
+- **Loop:** four LangChain agents, two of which kept sending requests to each other.
+- **Numbers:** 264 hours; about $47,000; stopped only when someone saw the billing dashboard.
+- **Lesson:** loops between agents need budgets and livelock detection just as much as single-agent loops.
+- **Source:** [AI agent API cost horror stories](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/) <Evidence level="anecdotal" />
+</Accordion>
+</Accordions>
+
+<FieldNoteCTA />

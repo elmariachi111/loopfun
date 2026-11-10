@@ -1,0 +1,78 @@
+---
+title: What is an agentic loop?
+description: The smallest possible definition, why it's deceptively simple, and the four concepts it has to be kept apart from.
+icon: Repeat
+---
+
+## The smallest possible loop
+
+Strip away the products and the vocabulary and an agentic loop is this:
+
+```bash
+while :; do cat PROMPT.md | claude -p; done
+```
+
+That's the **Ralph loop**, credited to [Geoffrey Huntley](https://stevekinney.com/writing/the-ralph-loop) in July 2025. It runs an agent, waits for it to finish, and runs it again with the same prompt, forever. Each pass starts with a fresh context window, but the *workspace* (files, git history, test output) still holds the evidence of every earlier attempt. The agent "remembers" by reading what it left behind ([geocod.io](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops), [Sid Bharath](https://sidbharath.com/blog/ralph-wiggum-claude-code/)).
+
+It sounds too dumb to work, and for many tasks it isn't dumb at all. That gap between how simple the mechanism looks and how much it gets done is why loops became a topic in 2026.
+
+## The general shape
+
+Every agentic loop, from the bash one-liner to a multi-agent research system, has the same skeleton:
+
+<Cycle steps={['Observe', 'Decide', 'Act', 'Check']} center="repeat?" caption="The core cycle. The interesting design choices are all in 'Check' and in the 'repeat?' decision." />
+
+1. **Observe.** Gather context: files, tool output, the task, the state left by previous iterations.
+2. **Decide.** The model chooses what to do next.
+3. **Act.** Execute it: run a command, edit a file, call an API, spawn a sub-agent.
+4. **Check.** Look at what happened. Did it work? Are we done?
+5. **Repeat or stop.** Something decides whether another iteration is needed.
+
+Anthropic describes Claude Code's core loop as [gather context → take action → verify work → repeat](https://anthropic.com/engineering/building-agents-with-the-claude-agent-sdk). OpenAI's [Unrolling the Codex agent loop](https://openai.com/index/unrolling-the-codex-agent-loop/) walks through the same cycle inside Codex, focusing on how context is built and cached on each pass. Oracle's [explainer](https://blogs.oracle.com/developers/what-is-the-ai-agent-loop-the-core-architecture-behind-autonomous-ai-systems) puts it plainly: the core architecture is stable, and the work now is in context management, coordinating many loops and auditing decisions.
+
+## Why "just a while loop" is both true and misleading
+
+Critics on [Hacker News](https://news.ycombinator.com/item?id=48643180) and in the tech press ([summarized here](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/)) are right that the *mechanism* is trivial. They are wrong if they conclude that the *design* is trivial. The `while` is easy. The hard parts are:
+
+- **The exit condition.** How does the loop know it's done? If the answer is "the model says so", the model will sometimes say so too early, or never.
+- **The budget.** What stops a loop that will never succeed from running all weekend?
+- **The state.** What survives between iterations, so iteration 40 doesn't repeat iteration 12's mistake?
+- **The trigger.** What starts the loop: a person, a timer, a webhook, another loop?
+- **The blast radius.** What is the agent allowed to touch while nobody is watching?
+
+As one widely shared [X post](https://x.com/PawelHuryn/status/2069315068664197315) put it: "the loop is the easy part. The work is the context and the stop condition: the check that ends it, the budget that caps it."
+
+## Four concepts to keep apart
+
+Much confusion in discussions about loops comes from four distinct ideas being used interchangeably. This guide keeps them apart:
+
+<Defs
+  items={[
+    ['Agentic loop', 'The execution mechanism: observe, decide, act, check, repeat. It says how work proceeds, not what the work is for.'],
+    ['Goal', 'The persistent objective, ideally with acceptance criteria, that survives individual turns and decides when the loop may stop. See the Goals section.'],
+    ['Harness', 'The runtime around the model that makes the loop useful and safe: tools, permissions, sandbox, budgets, hooks, scheduling, compaction.'],
+    ['State and memory', 'What survives an iteration, a context reset or a crash. State is what is happening now (iteration count, subgoals done). Memory is what should be kept for later (failed approaches, preferences).'],
+  ]}
+/>
+
+The split between state and memory comes from a useful framing in a parallel analysis of the topic, and lines up with how [Anthropic's long-running harness](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) separates a progress file (state) from git history and feature lists (durable artifacts).
+
+## Loop vs. workflow vs. agent
+
+Two neighbouring terms are worth separating:
+
+- A **workflow** is a fixed sequence of steps defined in advance. The path is designed by a human; the model fills in the steps.
+- An **agent** chooses its own path at runtime, usually inside a tool-calling loop.
+- A **loop** in the 2026 sense is what you wrap *around* an agent: a structure that re-invokes it, checks it and decides whether to keep going. [Andrew Ng](https://www.deeplearning.ai/the-batch/issue-359) and [Addy Osmani](https://www.aibuilderclub.com/blog/loop-engineering-addy-osmani) both describe "loop engineering" as designing the system that prompts the agent, rather than prompting it yourself.
+
+<Callout type="idea" title="A useful mental shift">
+  The old question was "how do I make the model do another iteration?" The new question is "how do I make an
+  autonomous process do the *right* iterations, keep its progress, know when it has succeeded, and stop when continuing
+  isn't worth it?"
+</Callout>
+
+## Where to go next
+
+- [The four layers](/guide/foundations/four-layers): the inner loop, goal loop, scheduled loop and meta-loop, and why mixing them up causes arguments.
+- [Anatomy of a loop](/guide/foundations/anatomy): the building blocks every well-designed loop has.
+- [The Ralph loop](/guide/patterns/ralph): a closer look at the one-liner that started it.

@@ -1,0 +1,53 @@
+---
+title: Reliability and observability
+description: Small errors compound across iterations, loops get stuck, and operators can rarely see what happened or why.
+icon: Bug
+---
+
+## Errors compound
+
+In a single agent turn, an early mistake leads to one wrong answer. In a loop, it becomes the **premise** for every iteration after it. The EMNLP 2026 tutorial on [failure modes in agentic AI](https://aclanthology.org/2026.emnlp-tutorials.1/) lists the patterns that matter most for loops:
+
+<Defs
+  items={[
+    ['Error cascades', 'An early wrong assumption propagates and is built upon.'],
+    ['Reward hacking', 'The loop optimizes the check rather than the task. See Verification.'],
+    ['Memory drift', 'Accumulated notes and summaries slowly diverge from reality.'],
+    ['Reasoning collapse', 'Quality of reasoning degrades over long horizons.'],
+    ['Over-reasoning loops', 'The agent keeps deliberating or re-checking without making progress.'],
+  ]}
+/>
+
+## Stuck loops
+
+Loops fail in ways single turns don't:
+
+- **Thrashing.** The same error, the same fix attempt, for hours. Every 2026 loop guide warns that without verification gates a stuck loop can thrash all night and run up the bill ([heyuan110](https://www.heyuan110.com/posts/ai/2026-07-03-agentic-loops/)).
+- **Livelock.** Two agents waiting on or responding to each other forever, like the 264-hour ping-pong ([story](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/)). <Evidence level="anecdotal" />
+- **Harness-level loops.** Antigravity users report agents stuck re-reading files with Gemini models ([forum](https://discuss.ai.google.dev/t/antigravity-agent-stuck-in-endless-file-reading-loop-gemini-models/188526)). The loop can be inside the tool, not in your goal.
+- **Diminishing returns.** The loop is still making changes, but none of them matter. Hard to detect without a progress signal.
+
+The research direction here is **runtime control**: deciding from the loop's state, not the model's opinion, whether another iteration is worth it. The [AgentLoop paper](https://arxiv.org/abs/2609.33315) tracks which information requirements have enough evidence and stops when iterations stop adding any, and reports up to 88% fewer tokens and 77% fewer service calls against its baselines.
+
+## Observability is thin
+
+When an overnight loop produces something odd, can you answer: *what did it do, in what order, why, and what did it cost?* Mostly, not easily.
+
+- **Dashboards show sessions, not reasoning.** Claude Code's Agent View lists sessions and which need input; that's supervision, not tracing.
+- **Cost attribution is coarse.** Few tools tell you which goal or which iteration spent the money.
+- **Replay is rare.** Research on replayable execution memory exists ([EchoPath](https://arxiv.org/pdf/2609.16635)), but little has reached everyday tools.
+- **State is invisible.** The [adoption study](https://arxiv.org/abs/2608.21884) found loop state living outside version control, where nobody can inspect it.
+
+## Human control
+
+Operators need useful **pause, resume, intervene and escalate** mechanisms. Today:
+
+- Codex has pause/resume with preserved context; Hermes auto-pauses at its turn cap; Claude Code lets you clear a goal or interrupt.
+- **Editing a goal mid-flight** generally means clearing and re-setting it.
+- **Escalation** (the loop asking for help instead of thrashing) mostly depends on writing it into the goal: "stop and report if…".
+
+## Further reading
+
+- [Agent harness vs. loop vs. graph engineering: a technical guide](https://www.analyticsvidhya.com/blog/2026/08/agent-harness-loop-graph-engineering/)
+- [LLM agent evaluation metrics in 2026: trace-based evals](https://www.confident-ai.com/blog/llm-agent-evaluation-complete-guide)
+- [Mobile-Agent-RAG: long-horizon coordination](https://arxiv.org/pdf/2511.12254) (arXiv)

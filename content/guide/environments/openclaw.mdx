@@ -1,0 +1,30 @@
+---
+title: OpenClaw
+description: The personal agent that made "always on" feel real. A gateway, a heartbeat and markdown files for soul, memory and goals.
+icon: Shell
+---
+
+**OpenClaw** is the open-source personal agent project created by Peter Steinberger, who later coined much of the loop-engineering vocabulary and is now at OpenAI ([Wikipedia](https://en.wikipedia.org/wiki/Peter_Steinberger_(programmer))). It approaches loops from the opposite direction to coding agents: it has no finish line, just **a heartbeat**.
+
+## The architecture in one paragraph
+
+A **gateway** takes input from every channel (chat apps, email, schedules), routes it to an agent, runs the agent and sends the output where it needs to go. The **heartbeat** is a timer, 30 minutes by default, that sends the agent one more input: "read `HEARTBEAT.md` and act if needed." Personality and long-term context live in files ("Soul", Memory), and goals live in a markdown file too ([Bibek Poudel](https://bibek-poudel.medium.com/how-openclaw-works-understanding-ai-agents-through-a-real-architecture-5d59cc7a4764), [heartbeat guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/), [HEARTBEAT.md explainer](https://openclawconsult.com/lab/openclaw-heartbeat-md)).
+
+<Cycle steps={['Timer fires', 'Read HEARTBEAT.md', 'Check goals', 'Act or HEARTBEAT_OK']} center="every 30 min" />
+
+## Why it matters for loops
+
+- **It's the clearest example of a [standing goal](/guide/goals/standing-goals).** Goals aren't completed, they're watched. A sample checklist even asks the agent to review `memory/goals.md` and suggest outdated goals to remove.
+- **It made silence a protocol.** `HEARTBEAT_OK` at the start or end of a reply means "nothing to report"; the token is stripped and short replies are dropped.
+- **It showed what "alive" feels like.** "Why OpenClaw feels alive even though it's not (this AI has a heartbeat but not a brain)" ([Claire Vo on X](https://x.com/clairevo/status/2017741569521271175)).
+
+## Costs and risks
+
+- **Idle wake-ups cost money.** Guides contrast the heartbeat with cron for routine checks, and describe configurations that skip the model call entirely when there's nothing to check ([guide](https://launchmyopenclaw.com/openclaw-heartbeat-guide/), [SFAI Labs](https://sfailabs.com/guides/openclaw-heartbeat-scheduling)).
+- **Files that get re-executed are an attack surface.** `HEARTBEAT.md` and memory files are ordinary workspace files read on every heartbeat. An [arXiv paper](https://arxiv.org/pdf/2607.05189) shows how injected content in persistent personal agents can persist and act silently. Security write-ups also cite research finding OpenClaw-style agents highly susceptible to sandbox escape, with an average defence rate of only 17% ([SoftwareSeni](https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/); see also [arXiv 2603.10387](https://arxiv.org/html/2603.10387)). <Evidence level="secondary" /> See [Security](/guide/shortcomings/security).
+- **The platform changes under you.** A DEV post says that after OAuth access for OpenClaw was shut down, the author rebuilt a heartbeat inside Claude Code with a shell loop ([DEV](https://dev.to/simplemindedrobot/giving-claude-code-a-heart-beat-55ja)). <Evidence level="anecdotal" />
+
+## Further reading
+
+- [Make it proactive: the AI agent factory](https://agentfactory.panaversity.org/docs/Building-OpenClaw-Apps/meet-your-personal-ai-employee/make-it-proactive)
+- [Form without function: agent social behaviour in the Moltbook network](https://arxiv.org/pdf/2604.13052) (arXiv)

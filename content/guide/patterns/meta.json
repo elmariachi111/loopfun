@@ -1,0 +1,5 @@
+{
+  "title": "Patterns",
+  "icon": "Boxes",
+  "pages": ["index", "ralph", "maker-checker", "metric-loops", "ambient-loops", "graphs-and-teams"]
+}

@@ -1,0 +1,48 @@
+---
+title: How we got here
+description: A timeline from a bash one-liner in mid-2025 to goal loops built into every major harness by late 2026.
+icon: Clock
+---
+
+The short version: loops moved out of user hacks (shell scripts, Stop hooks) and **into the harness itself**. Goals gained evaluators, budgets and lifecycle states. Scheduling and background execution became built-in, dashboards appeared for supervising many loops at once, and pricing started to adapt to agents that run for hours.
+
+## 2025: the hack era
+
+**July 2025: Ralph.** Geoffrey Huntley describes running a coding agent in an endless shell loop, named after the Simpsons character for its cheerful persistence. `while :; do cat PROMPT.md | claude -p; done`. ([Steve Kinney](https://stevekinney.com/writing/the-ralph-loop), [Kingy AI](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/))
+
+**Late August 2025: weekly caps.** Anthropic introduces weekly usage limits for Claude Code, explicitly to curb continuous, 24/7 background use ([TechCrunch](https://techcrunch.com/2025/07/28/anthropic-unveils-new-rate-limits-to-curb-claude-code-power-users/)). Loops are already straining flat-rate plans.
+
+**Late 2025: Ralph goes official.** Anthropic ships a **ralph-wiggum** plugin for Claude Code. A Stop hook returns exit code 2 to block the agent from finishing and re-injects the original prompt, with `--max-iterations` and `--completion-promise` to end it ([plugin mirror](https://github.com/AI-App/Anthropics.Claude-Code/tree/main/plugins/ralph-wiggum), [DeepWiki](https://deepwiki.com/anthropics/claude-code/5.5-ralph-wiggum-plugin)). Community variants add circuit breakers and rate limiting, and support other agents ([open-ralph-wiggum](https://github.com/Th0rgal/open-ralph-wiggum)).
+
+**November 2025: long-running harnesses.** Anthropic's [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) introduces the initializer-plus-coding-agent pattern, with progress files and feature lists, to bridge sessions that start with no memory.
+
+## Early 2026: the harness era
+
+**January 2026.** OpenAI publishes [Unrolling the Codex agent loop](https://openai.com/index/unrolling-the-codex-agent-loop/), a rare inside look at a production harness ([Technology.org coverage](https://www.technology.org/2026/01/27/openai-engineers-reveal-the-inner-workings-of-their-ai-coding-agent-codex-cli/)). geocod.io writes up [shipping features in your sleep with Ralph loops](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops).
+
+**February 2026.** Nous Research releases **Hermes Agent**, an open-source agent with multi-level memory and a gateway that unifies clients ([MarkTechPost](https://www.marktechpost.com/2026/02/26/nous-research-releases-hermes-agent-to-fix-ai-forgetfulness-with-multi-level-memory-and-dedicated-remote-terminal-access-support/)).
+
+**March 2026.** Anthropic's [Harness design for long-running apps](https://www.anthropic.com/research/harness-design-long-running-apps) describes the planner → generator → evaluator architecture ([announcement on X](https://x.com/AnthropicAI/status/2036481033621623056)). Karpathy releases **autoresearch**, an agent loop running about 700 training experiments over two days; he calls this kind of loop "the final boss battle" for frontier labs ([Fortune](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/)). Anthropic also publishes a post on building a C compiler with nearly 2,000 Claude Code sessions ([engineering blog](https://www.anthropic.com/engineering/building-c-compiler)).
+
+**April 30, 2026: `/goal` arrives.** Codex CLI 0.128.0 ships `/goal`, a persisted objective the agent keeps pursuing across turns until it judges the goal complete or a budget runs out ([Simon Willison](https://simonwillison.net/2026/Apr/30/codex-goals/), [Daniel Vaughan](https://codex.danielvaughan.com/2026/04/30/codex-cli-v0128-goal-workflows-keymap-self-update/)).
+
+**May 2026.** Claude Code gets its own `/goal`, with a separate evaluator model checking completion ([docs](https://code.claude.com/docs/en/goal)), and **Agent View**, one screen for every background session ([Cobus Greyling](https://cobusgreyling.substack.com/p/claude-code-agent-view)). Codex hooks reach general availability ([Developer's Digest](https://www.developersdigest.tech/blog/codex-changelog-june-2026)). Google launches **Managed Agents** in the Gemini API, where a single call provisions a remote Linux sandbox for an agent ([Google blog](https://blog.google/innovation-and-ai/technology/developers-tools/managed-agents-gemini-api/)), alongside Antigravity updates at I/O ([highlights](https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/)).
+
+## Mid 2026: the discourse era
+
+**June 7–8, 2026: "loop engineering".** Peter Steinberger argues for designing the loops that prompt agents rather than prompting them, and Addy Osmani writes the reference essay ([O'Reilly](https://www.oreilly.com/radar/loop-engineering/), [Firecrawl](https://www.firecrawl.dev/blog/loop-engineering)). Boris Cherny: "I don't prompt Claude anymore. I have loops prompting Claude" ([The New Stack](https://thenewstack.io/loop-engineering/), [The Neuron](https://www.theneuron.ai/explainer-articles/claude-code-creators-boris-cherny-and-cat-wu-explain-how-to-use-agent-loops/)). Anthropic publishes [Getting started with loops](https://claude.com/resources/articles/getting-started-with-loops), describing turn-based, goal-based, time-based and proactive loops.
+
+**June 30, 2026.** Andrew Ng's [three-loop letter](https://www.deeplearning.ai/the-batch/issue-359).
+
+**July 2026: backlash.** Critics call it a buzzword for a `while` loop. Steinberger asks whether the field moved "from loops to graphs" and the term [graph engineering](https://towardsdatascience.com/graph-engineering-for-ai-agents-from-prompts-and-loops-to-workflows/) briefly trends, along with a tongue-in-cheek "[Loop Engineering Is Dead](https://wec.wiline.com/docs/news/loop-engineering-graph-engineering-what-survives/)". See [The hype debate](/guide/shortcomings/the-hype-debate).
+
+**August 2026.** Google's [Antigravity Teamwork](https://blog.google/innovation-and-ai/technology/developers-tools/antigravity-teamwork-multi-agent/) runs agent teams over hours or days. The first academic study of the practice, [Loop Engineering: Building Blocks, Adoption, and Impact](https://arxiv.org/abs/2608.21884), finds agreement on the building blocks but little systematic evidence for the benefits.
+
+## Late 2026: consolidation
+
+**October 30 – November 2026.** Anthropic renames Max 20x to **Ultra** and removes the five-hour limit for verified Ultra accounts; weekly limits remain ([Developer's Digest](https://www.developersdigest.tech/blog/claude-ultra-plan-max-20x-rename-five-hour-limit-2026), [vanja.io](https://vanja.io/claude-ultra/)). <Evidence level="secondary" /> Google folds **Jules** into **Antigravity**, and asks Gemini CLI users to move to the Antigravity CLI ([DEV daily digest](https://dev.to/hiroki-ii-ai/ai-daily-digest-november-1-2026-google-folds-jules-into-antigravity-claude-ultra-drops-the-3e5e), [Jules shutdown guide](https://www.explainx.ai/blog/google-jules-shutdown-december-31-antigravity-export-guide-2026)). Codex now lists goals, memories, hooks and plugins as core features ([Morph comparison](https://www.morphllm.com/comparisons/codex-vs-claude-code)). Cursor, Antigravity and Codex add voice for talking to running agents ([The New Stack](https://thenewstack.io/cursor-antigravity-voice-agents)).
+
+<Callout type="idea" title="Missing a milestone?">
+  Timelines like this go stale fast. If a release or essay mattered to how you run loops, use "Improve this page" below
+  to add it.
+</Callout>

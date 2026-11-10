@@ -1,0 +1,56 @@
+---
+title: Budgets, lifecycle and persistence
+description: Every goal needs a way to end without success, a set of states it moves through, and somewhere to live between sessions.
+icon: Hourglass
+---
+
+## Budgets: the second exit
+
+A completion condition is the happy exit. A **budget** is the exit for everything else: the goal is impossible, the judge is broken, the agent is thrashing. Every loop guide published in 2026 repeats the same rule: *a machine-checkable exit condition, plus a hard cap* ([heyuan110](https://www.heyuan110.com/posts/ai/2026-07-03-agentic-loops/), [MindStudio](https://www.mindstudio.ai/blog/agentic-loop-design-goals-verification-criteria)).
+
+Budgets come in four units, and the harnesses picked different ones:
+
+| Unit | Example | Good at | Bad at |
+|---|---|---|---|
+| **Turns** | Hermes `goals.max_turns: 20`, Ralph `--max-iterations` | Simple and predictable | One turn can cost 5k or 500k tokens |
+| **Tokens** | Codex goal token budget | Closer to real cost | Codex leaves it unset by default; reports disagree on syntax <Evidence level="contested" /> |
+| **Money** | Hermes gateway spending limits (v0.23) | What finance actually cares about | Needs pricing awareness in the harness |
+| **Time** | Karpathy's autoresearch gives every experiment exactly 5 minutes ([Noqta](https://noqta.tn/en/news/karpathy-autoresearch-autonomous-ai-research-open-source-2026)) | Natural for metric loops; makes runs comparable | Wastes slack or cuts work short |
+
+What happens **when the budget runs out** matters as much as the cap itself. Codex injects a budget-limit prompt telling the model to stop and report ([Daniel Vaughan](https://codex.danielvaughan.com/2026/05/07/codex-cli-goal-command-persisted-long-horizon-workflows-pause-resume-budget/)); Hermes auto-pauses with "⏸ Goal paused, 20/20 turns used" and waits for you to resume. Both preserve the work done so far, which is the important part.
+
+## Lifecycle: goals have states
+
+Once goals persist, they need states. Codex's are the most explicit ([SmartScope](https://smartscope.blog/en/blog/codex-goal-ralph-loop/), [Daniel Vaughan](https://codex.danielvaughan.com/2026/05/03/codex-cli-goal-mode-persistent-objectives-token-budgets-agentic-loops/)):
+
+<Flow steps={['pursuing', 'paused', 'achieved / unmet / budget-limited']} caption="Codex goal states. Pause keeps the full audit context; resume picks up where it left off." />
+
+- `/goal` sets or replaces, `/goal` alone shows status, `/goal pause` and `/goal resume` suspend it, and `/goal clear` drops it (Codex). Claude Code has `/goal <condition>`, `/goal` for status and `/goal clear` ([docs](https://code.claude.com/docs/en/goal)).
+- **Changing a goal mid-flight** is an underexplored area. Today you mostly clear and re-set, which loses the judge's accumulated sense of progress.
+
+## Pacing: what a goal costs while it waits
+
+A special case that has caused real pain: goals that are **waiting** for something, like CI, a deploy or a long build.
+
+An analysis of Codex sessions by [relux.works](https://relux.works/en/blog/codex-goal-token-burn/) claims goal mode restarts the model about 0.03 s after each turn. When the agent is waiting, that turns into a hot poll loop: one example fired **173 continuations in 48 minutes**, each re-reading 120k–470k tokens of context, until the provider returned 429. <Evidence level="anecdotal" /> The same post claims Claude Code pauses between continuations instead, and points to a Codex `sleep_tool` setting as the workaround.
+
+The lesson applies generally: a goal loop needs a notion of **"not done, but nothing to do right now"**, meaning a sleep, a backoff or a wake-on-event, or it turns waiting into spending.
+
+## Persistence: where does the goal live?
+
+| Harness | Where the goal lives | Survives |
+|---|---|---|
+| Ralph (DIY) | `PROMPT.md` plus progress files and git | Everything, because it's just files |
+| Codex | The thread | Crash and reboot, but it only runs while a session is open ([Daniel Vaughan](https://codex.danielvaughan.com/2026/05/07/codex-cli-goal-command-persisted-long-horizon-workflows-pause-resume-budget/)) |
+| Claude Code | The session | The session; for longer horizons use background sessions or routines |
+| Hermes | Session store plus config; kanban cards can carry `--goal` | Sessions, per secondary sources <Evidence level="secondary" /> |
+| OpenClaw | `HEARTBEAT.md` and `memory/goals.md` | Everything, but as unstructured text |
+
+No two tools share a goal format. A goal set in Codex means nothing to Claude Code, and vice versa. See [Open questions](/guide/goals/open-questions).
+
+## Further reading
+
+- [/goal: The Six-Hour Codex Run That Survived a Five-Hour Pause](https://tectontide.com/en/blog/codex-goal-six-hour-run/)
+- [Codex v0.128.0: /goal keeps working until it's done, even across sessions](https://dev.to/evan-dong/codex-v01280-goal-keeps-working-until-its-done-even-across-sessions-5d85)
+- [Token limits: Codex /goal and Claude Code](https://cool-solution.com/en/blog/token-limits-codex-claude-code-2026)
+- [AI Agent Token Budget Enforcement](https://waxell.ai/blog/ai-agent-token-budget-enforcement)

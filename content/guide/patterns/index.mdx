@@ -1,0 +1,28 @@
+---
+title: Loop patterns
+description: The recurring shapes that agentic loops take. Each is a different answer to "what triggers the next iteration, and what ends it?"
+icon: Boxes
+---
+
+Every loop answers two questions: **what triggers the next iteration** and **what ends it**. The patterns below are the common answers. They mix freely: a Ralph loop can contain a maker/checker step, a heartbeat can start a goal loop, and a graph is mostly loops wired together.
+
+| Pattern | Next iteration triggered by | Ends when | Typical use |
+|---|---|---|---|
+| [Ralph loop](/guide/patterns/ralph) | The previous iteration ending | Completion promise, iteration cap, or never | Grinding through a backlog or spec |
+| [Maker/checker](/guide/patterns/maker-checker) | The checker rejecting the work | The checker approves | Anything where quality matters |
+| [Metric loop](/guide/patterns/metric-loops) | A finished experiment | Budget exhausted; best result kept | Optimisation with a clear number |
+| [Ambient loop](/guide/patterns/ambient-loops) | A timer or an event | Never; it's a standing process | Babysitting, monitoring, inboxes |
+| [Graphs and teams](/guide/patterns/graphs-and-teams) | An orchestrator, or another node | The orchestrator decides | Large or parallel projects |
+
+<Cards>
+  <Card title="The Ralph loop" href="/guide/patterns/ralph" description="The dumbest smart way to run a coding agent." />
+  <Card title="Maker/checker" href="/guide/patterns/maker-checker" description="Separate the worker from the grader." />
+  <Card title="Metric loops" href="/guide/patterns/metric-loops" description="Karpathy's autoresearch and the power of a single number." />
+  <Card title="Ambient loops" href="/guide/patterns/ambient-loops" description="Heartbeats, /loop, routines: agents that wake themselves up." />
+  <Card title="Graphs and teams" href="/guide/patterns/graphs-and-teams" description="When one loop isn't enough: planners, evaluators, teams, kanban." />
+</Cards>
+
+<Callout type="idea" title="Know a pattern that's missing?">
+  Patterns emerge from practice. If you've been running a shape that isn't here, describe it in a
+  [field note](/guide/field-notes/how-to-contribute).
+</Callout>

@@ -1,0 +1,75 @@
+---
+title: What is a goal?
+description: A goal is not a prompt that gets repeated. It is a persistent control object, and most of the open problems with loops live here.
+icon: Crosshair
+---
+
+Every serious loop discussion ends up talking about **goals**. Since spring 2026 the word has a concrete meaning in the tools: `/goal` in [Codex](/guide/environments/codex), [Claude Code](/guide/environments/claude-code), [Hermes Agent](/guide/environments/hermes) and [Antigravity CLI](/guide/environments/google). But the concept is broader than any one command.
+
+## A prompt vs. a goal
+
+A prompt is consumed: the agent reads it, works, answers, and the prompt has done its job. A goal **persists**. It sits outside the conversation, survives individual turns, and is consulted every time the agent tries to stop.
+
+<Tabs items={['Ordinary agent turn', 'Goal-driven loop']}>
+<Tab value="Ordinary agent turn">
+
+1. Receive the task
+2. Reason and call tools
+3. The model decides it's finished
+4. Return a response; the human decides what's next
+
+The only judge of "done" is the model, and the only budget is your patience.
+
+</Tab>
+<Tab value="Goal-driven loop">
+
+1. Establish a persistent goal **and acceptance criteria**
+2. Run one iteration of work
+3. **Evaluate** progress against the goal, ideally by something other than the worker
+4. **Persist** state and remaining work
+5. Continue, escalate, or terminate (met, impossible, or out of budget)
+
+The goal, the judge, the budget and the state are now separate, explicit things.
+
+</Tab>
+</Tabs>
+
+## The anatomy every harness converged on
+
+Look at how the four major `/goal` implementations work and the same five parts appear, under different names:
+
+<Defs
+  items={[
+    ['Condition', 'A natural-language statement of what "done" means. Ideally points at something checkable: a command, an output, a file.'],
+    ['Judge', <>Who decides it's met. Claude Code uses a separate evaluator model (Haiku by default); Hermes uses a judge model that defaults to the main model but can be routed to a cheap one; Codex relies on the model itself, prompted by a continuation template. <Evidence level="primary" /></>],
+    ['Budget', 'Turns (Hermes: 20 by default), tokens (Codex: optional), or the evaluator judging the goal impossible (Claude Code).'],
+    ['Lifecycle', 'States like pursuing, paused, achieved, unmet and budget-limited (Codex), with pause, resume and clear commands.'],
+    ['State', 'Where the goal and its progress live: the thread (Codex), the session (Claude Code), config and session store (Hermes), files and git (Ralph).'],
+  ]}
+/>
+
+<Callout title="Goal = condition + judge + budget + lifecycle + state">
+  If one of the five is missing, the loop is fragile. With no condition it never ends, with no independent judge it ends too
+  early, with no budget it runs up a bill, with no lifecycle you can't pause it, and with no state it can't resume.
+</Callout>
+
+## Why goals are the interesting part
+
+Running a loop is trivial. The engineering work has moved to questions about goals:
+
+- **Specification.** How do you turn "make the auth flow robust" into something a machine can check? See [Writing goals](/guide/goals/writing-goals).
+- **Verification.** Is the agent grading its own homework? Does the judge look at the transcript or at the world? See [Judges](/guide/goals/judges).
+- **Economics.** What happens when the goal can't be met within budget? What does a goal cost while it is *waiting* for something? See [Budgets and lifecycle](/guide/goals/budgets-and-lifecycle).
+- **Persistence.** Where does the goal live when the session restarts, the laptop sleeps or you switch tools?
+- **Standing goals.** Some goals never end: "keep CI green", "watch my inbox". See [Standing goals](/guide/goals/standing-goals).
+- **Integrity.** How do you stop the goal drifting, being gamed, or being rewritten by injected text?
+
+These are collected as research questions in [Open questions](/guide/goals/open-questions).
+
+## Further reading
+
+- Claude Code docs: [Keep Claude working toward a goal](https://code.claude.com/docs/en/goal)
+- Hermes Agent docs: [Persistent Goals](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals) ([source on GitHub](https://github.com/nousresearch/hermes-agent/blob/main/website/docs/user-guide/features/goals.md))
+- Codex: [Goal mode, persistent objectives and token budgets](https://codex.danielvaughan.com/2026/05/03/codex-cli-goal-mode-persistent-objectives-token-budgets-agentic-loops/) and [Using goals in Codex](https://codexinsider.com/guides/codex-goals/)
+- Antigravity: [/goal, run to completion](https://neurals.ca/tech/gemini/antigravity/goal-mode/)
+- Anthropic: [Getting started with loops](https://claude.com/resources/articles/getting-started-with-loops), covering goal-based, time-based and proactive loops

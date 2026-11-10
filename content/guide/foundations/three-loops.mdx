@@ -1,0 +1,30 @@
+---
+title: Andrew Ng's three loops
+description: Machine loops sit inside human loops, and the human loops set the pace.
+icon: CircleDot
+---
+
+In his June 2026 letter in *The Batch* ([issue 359](https://www.deeplearning.ai/the-batch/issue-359)), Andrew Ng described building new products with AI agents as **three nested loops running at different speeds**. It is one of the most useful framings of the year, because it puts the machine loop in its proper place: inside human loops.
+
+<Defs
+  items={[
+    ['Agentic coding loop', <>Runs in <strong>minutes</strong>. The agent works from a product spec and, optionally, evals, then builds, tests and fixes on its own.</>],
+    ['Developer feedback loop', <>Runs in <strong>hours</strong>. A person looks at what the agent built, adjusts the spec, changes direction and re-runs.</>],
+    ['External feedback loop', <>Runs in <strong>days</strong>. Real users, customers or the market react, and the product direction changes.</>],
+  ]}
+/>
+
+Ng's example was a typing-practice app for his daughter. Per [secondary summaries](https://explainx.ai/blog/andrew-ng-three-loops-0-to-1-products-2026), the agent ran for about an hour unattended, using a browser to check the UI itself. <Evidence level="secondary" />
+
+## Why this matters for loop design
+
+- **Faster inner loops make the outer loops the bottleneck.** If the agent can produce a working version in twenty minutes, the limit is how fast a person can look at it and say what's wrong. A [summary of Ng's framing](https://www.besthub.dev/articles/andrew-ng-s-three-layer-loop-faster-agents-demand-slower-human-feedback-c526f15b245f) puts it as "faster agents demand slower human feedback". This connects directly to the [review bottleneck](/guide/shortcomings/humans).
+- **Evals are how you move work from the middle loop to the inner one.** Anything you can encode as an automated check, the agent can iterate on without you. Anything you can't stays in the developer loop. This is the same insight as [writing goals that can be checked](/guide/goals/writing-goals).
+- **Not everything belongs in the inner loop.** The external loop, real-world feedback, can't be simulated away. Loops shine when there's a reliable signal close at hand and struggle when the true signal is days away.
+
+## Related framings
+
+- [The Three Loops of Agentic Coding: A Diagnostic Vocabulary](https://agentpatterns.ai/loop-engineering/three-loops-agentic-coding/) applies the model to diagnose where a team's process is stuck.
+- [The Agentic Loop: Three Loops in a Trench Coat](https://hn.nuxt.dev/item/48907672) (HN discussion) argues "the agent loop" is really three loops pretending to be one.
+- [ADTmag: Loop engineering emerges as developers put AI coding agents on repeat](https://adtmag.com/articles/2026/07/01/loop-engineering-emerges-as-developers-put-ai-coding-agents-on-repeat.aspx) has press coverage tying Ng's letter to the wider movement.
+- [Pure AI: The loop is the engine inside every agentic AI system](https://pureai.com/articles/2026/06/23/the-loop-is-the-engine-inside-every-agentic-ai-system-that-makes-an-ai-agent-an-ai-agent.aspx)

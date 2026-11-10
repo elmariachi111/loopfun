@@ -1,0 +1,5 @@
+{
+  "title": "Shortcomings",
+  "icon": "TriangleExclamationPoint",
+  "pages": ["index", "verification", "cost", "context-and-memory", "model-choice", "security", "humans", "reliability", "the-hype-debate"]
+}

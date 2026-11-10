@@ -1,0 +1,72 @@
+---
+title: Verification and false "done"
+description: The root problem. A loop is only as good as its check, and agents both overclaim and game weak checks.
+icon: BadgeCheck
+---
+
+A goal loop ends when something believes the goal is met. If that belief is wrong, everything downstream is wrong: the human reviews work that isn't finished, the bill covers work that doesn't count, and trust in the loop erodes.
+
+## Two different failures
+
+<Defs
+  items={[
+    ['Overclaiming', 'The agent says it is done when it is not. The tests did not run, or they failed and the summary says they passed. An ordinary error, caught by checking the claim against tool-call logs or the actual artefacts.'],
+    ['Reward hacking', 'The check really passes, because the agent changed the check. It deleted the failing test, loosened an assertion, added a skip or edited the evaluator. This requires keeping the grader out of the agent\'s reach.'],
+  ]}
+/>
+
+The distinction is drawn clearly in [Vector Labs](https://vector-labs.ai/insights/when-your-ai-agent-lies-to-you-what-reward-hacking-and-overclaiming-mean-for-production-deployments) and [SpecStory](https://specstory.com/learning/verification/reward-hacking). They need different defences.
+
+## How common is it?
+
+- The [Reward Hacking Benchmark](https://arxiv.org/pdf/2605.02964) measures exploits in tool-using LLM agents and finds them across models.
+- [The Verification Horizon](https://arxiv.org/pdf/2606.26300) argues there's no silver bullet for coding agent rewards: every checker has a horizon beyond which it can't see.
+- A separate study found that **hiding tests doesn't prevent speculative reward hacking**, where the agent games tests it has never read ([summary](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn)).
+- Anthropic's research on [natural emergent misalignment from reward hacking in production RL](https://arxiv.org/pdf/2511.18397) is a reminder that this behaviour is learned during training, not just a harness quirk.
+
+## Why loops make it worse
+
+A single agent turn that overclaims wastes one turn. A **goal loop** that overclaims stops early with confidence. A goal loop that reward-hacks has a perfect incentive gradient: every iteration the check fails, the easiest path to "pass" may be editing the check. And a naive retry prompt ("make the test pass") turns the symptom into the goal ([DEV](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn)).
+
+## Defences
+
+<Steps>
+<Step>
+### Separate maker and checker
+
+A different model, a fresh context, or a deterministic check. See [Maker/checker](/guide/patterns/maker-checker) and [Judges](/guide/goals/judges).
+</Step>
+<Step>
+### Judge the world, not the transcript
+
+Re-run the tests yourself; don't read the agent's summary of them. Anthropic's evaluator drives the running app via Playwright.
+</Step>
+<Step>
+### Make the checks read-only to the agent
+
+Flag or block edits to tests, evaluators and reward-related files. Put "no files under test/ modified" in the goal itself ([Writing goals](/guide/goals/writing-goals)).
+</Step>
+<Step>
+### Keep the goal fixed on retry
+
+Send back the failing assertion verbatim; don't restate the goal as "make it pass".
+</Step>
+<Step>
+### Verify completion independently of self-report
+
+Compare claims against tool logs and artefacts before accepting "done".
+</Step>
+</Steps>
+
+<Callout type="warn" title="Premature 'done' is also a design smell">
+  Anthropic's long-running harness exists partly because agents tended to declare a project finished after a few features.
+  The fix was structural (a feature list, one increment per session, test before marking done), not a better prompt
+  ([Anthropic](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)).
+</Callout>
+
+## Further reading
+
+- [Reward Hacking: When AI Passes the Test, Not the Task](https://blog.redhub.ai/reward-hacking)
+- [Verify, Don't Review: coding agent discipline](https://agentconn.com/blog/verify-dont-review-coding-agents-2026/)
+- [Stop Hand-Holding Your Coding Agent](https://arxiv.org/pdf/2607.00038) (verifier hierarchy)
+- [Does this project include checks for reward hacking?](https://github.com/ykchen824/FineEnvs/issues/1), a GitHub discussion that shows the question reaching environment builders

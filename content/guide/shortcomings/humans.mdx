@@ -1,0 +1,45 @@
+---
+title: The human bottleneck
+description: Loops automate the typing, not the judgment. Review capacity, comprehension debt, cognitive surrender and fatigue may be the hardest limits of all.
+icon: Users
+---
+
+A line that keeps coming up in 2026 writing on agent loops: **the loop automates the typing, not the judgment.** The bottleneck, reviewing what the agent produced, only grows.
+
+## The review bottleneck
+
+If a loop produces a PR every twenty minutes overnight, somebody has to look at them in the morning. Reported signals from 2026:
+
+- Faros telemetry, as cited by several write-ups: **median time in review up 441.5%**, and **31.3% more PRs merged without review** ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/), [Addy Osmani](https://addyo.substack.com/p/agentic-code-review)). <Evidence level="secondary" />
+- A study of 33,707 agent-authored PRs found **reviewer abandonment** behind 38% of rejected agent PRs ([O'Reilly: Agentic Code Review](https://www.oreilly.com/radar/agentic-code-review/)). <Evidence level="secondary" />
+- One estimate puts agent output at roughly 10× what review capacity can absorb, and argues more reviewers won't help, because the limit is cognitive bandwidth rather than headcount ([CodeRabbit](https://www.coderabbit.ai/guides/agentic-engineering)).
+
+Osmani's framing: the bottleneck is no longer how fast you write code; it's how fast a trusted human can be confident in a review. Andrew Ng's [three loops](/guide/foundations/three-loops) predict the same thing: speed up the inner loop and the developer loop becomes the constraint.
+
+## Comprehension debt
+
+Addy Osmani coined **comprehension debt** in March 2026 for the gap between how much code a system contains and how much of it anyone understands. It doesn't show on a velocity chart; it shows up as an incident at 2 a.m. that nobody on call can debug ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/)). A [DEV essay](https://dev.to/gabrielanhaia/code-review-was-never-mostly-about-bugs-with-agents-its-how-you-learn-your-own-code-40ld) makes the related point that code review was never mostly about catching bugs; it was how a team learned its own code.
+
+## Cognitive surrender
+
+The smoother the loop, the less people think. Osmani's loop-engineering essay warns about **cognitive surrender**: verification, comprehension and engineering judgment have to remain human, even as loops get better ([summary](https://www.aibuilderclub.com/blog/loop-engineering-addy-osmani), [Firecrawl](https://www.firecrawl.dev/blog/loop-engineering)). One HN thread asked whether a developer can stay accountable for a codebase they didn't write turn by turn ([summary](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/)).
+
+## Agentic fatigue
+
+A separate, more personal cost: **agentic fatigue**, the exhaustion of constant judgment calls about whether agent output is right. It reportedly dominated developer feeds in April 2026 ([explainx](https://explainx.ai/blog/agentic-fatigue-vibe-coding-ai-developer-productivity-paradox)). Loops promise to reduce babysitting but often move it to a more draining form: auditing.
+
+## Spec effort
+
+The other half of the human cost is up front. Writing a good goal, with checks, scope and escalation rules, takes real time. Several practitioners argue that defining a loop can take more work than the task itself, which shrinks the promised time savings once planning is counted ([Firecrawl](https://www.firecrawl.dev/blog/loop-engineering), [HN](https://news.ycombinator.com/item?id=48643180)).
+
+## What helps
+
+- **Verify, don't review.** Invest in automated checks so humans review only what the checks can't see ([AgentConn](https://agentconn.com/blog/verify-dont-review-coding-agents-2026/)).
+- **Triage before review.** Predict high-maintenance PRs from cheap signals and fast-track trivial ones ([ReviewDebt talk, eBay](https://ai.engineer/talks/TJPInBjhE4Q-reviewdebt-practical-framework-scoring-every-pull)).
+- **Make loops produce reviewable output.** Small increments, clear summaries and links to evidence such as test runs and screenshots.
+- **Budget human attention like tokens.** A loop that finishes ten tasks nobody can review hasn't finished anything.
+
+## Further reading
+
+- [3100 opinions on code review in an AI world](https://arxiv.org/pdf/2607.07980) (arXiv)
+- [Adopt agentic engineering without losing your review loop](https://www.coderabbit.ai/guides/agentic-engineering)

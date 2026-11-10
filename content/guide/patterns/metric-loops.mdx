@@ -1,0 +1,46 @@
+---
+title: Metric loops
+description: When there's a single number to push, loops are at their best. Karpathy's autoresearch and what it shows.
+icon: ChartLine
+---
+
+The cleanest success stories for agentic loops share one feature: **a number**. When the goal is "make this metric better" and the metric is cheap to measure, the loop has a perfect judge and needs no human to say whether it improved.
+
+## Karpathy's autoresearch
+
+In March 2026, Andrej Karpathy released **autoresearch**, a minimalist setup that lets an agent run LLM training experiments on its own ([Fortune](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/), [Noqta](https://noqta.tn/en/news/karpathy-autoresearch-autonomous-ai-research-open-source-2026)):
+
+- A **human-written instruction file** (`program.md`) plus a single training script (`train.py`, roughly 630 lines).
+- Every experiment runs for **exactly 5 minutes**, whatever the hardware, so results are comparable.
+- The agent edits the code, runs, reads the metric, keeps or discards the change, and repeats.
+
+<Cycle steps={['Hypothesis', 'Edit code', 'Run 5 min', 'Read metric', 'Keep / revert']} center="optimise" />
+
+Reported results: about **700 experiments over two days**, and an **11% training speedup** when the discovered tweaks were applied to a larger model. Shopify's Tobi Lütke reported **37 experiments overnight** and a **19% gain** on his own task ([Fortune](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/)). <Evidence level="secondary" />
+
+Karpathy on X: "All LLM frontier labs will do this. It's the final boss battle." He also sketched the next step as "asynchronously massively collaborative for agents", meaning swarms working in parallel.
+
+## Why metric loops work so well
+
+| Property | Why it matters |
+|---|---|
+| The judge is deterministic | No overclaiming: the number is the number |
+| Every iteration has a fixed cost | The budget is easy to reason about (5 minutes × N) |
+| Failure is cheap | A bad experiment is reverted, not shipped |
+| Progress is monotonic | Keep the best, discard the rest |
+
+## The limits
+
+- **It needs a trustworthy metric.** Commentators pointed out it only works where results can be scored objectively ([AI Daily Brief](https://aidailybrief.beehiiv.com/p/autoresearch-agent-loops-and-the-future-of-work)). Most product work doesn't have one.
+- **The metric can be gamed.** Optimise a proxy hard enough and you get the proxy, not the thing (Goodhart's law). The same [reward-hacking](/guide/shortcomings/verification) concerns apply.
+- **It's not self-improvement.** Fortune notes the agent isn't improving itself; it is tuning the training code of a much smaller model.
+
+## The general lesson
+
+If you can turn a goal into a metric with a threshold (latency under 200 ms, bundle size under 150 kB, eval score above X), you've turned a fuzzy task into a metric loop. That's the strongest form of [writing a checkable goal](/guide/goals/writing-goals).
+
+## Further reading
+
+- [Karpathy autoresearch: autonomous AI experiments loop](https://noqta.tn/blog/karpathy-autoresearch-autonomous-ai-experiments-loop-2026)
+- [The Karpathy Loop](https://memclaw.net/blog/karpathy-loop/) from MemClaw
+- [Autoresearch, agent loops and the future of work](https://aidailybrief.beehiiv.com/p/autoresearch-agent-loops-and-the-future-of-work) from The AI Daily Brief

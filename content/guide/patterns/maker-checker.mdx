@@ -1,0 +1,59 @@
+---
+title: Maker/checker
+description: Separate the agent that does the work from the one that grades it. This is the most-emphasized building block of loop engineering.
+icon: ListChecks
+---
+
+The [academic review of loop engineering](https://arxiv.org/abs/2608.21884) found one building block mentioned more than any other: **maker/checker separation**. The thing that produces the work is not the thing that decides whether it's good.
+
+<Cycle steps={['Maker builds', 'Checker tests', 'Feedback', 'Maker revises']} highlight={1} center="until approved" />
+
+## Why self-checking isn't enough
+
+An agent grading its own work has every incentive, in the loose sense in which a model has incentives, to call it done. Anthropic observed this directly: self-evaluation was lenient, so its long-running harness gave evaluation to a separate agent ([Harness design for long-running apps](https://www.anthropic.com/research/harness-design-long-running-apps)). The same reasoning drives Claude Code's `/goal`, where a separate evaluator model decides whether the condition is met ([docs](https://code.claude.com/docs/en/goal)).
+
+## Planner → generator → evaluator
+
+Anthropic's March 2026 harness is the canonical example, explicitly inspired by GANs ([Anthropic](https://www.anthropic.com/research/harness-design-long-running-apps), [summary gist](https://gist.github.com/0xK8oX/0292e8da944ceb9226a7c2500b47124e)):
+
+<Steps>
+<Step>
+### Planner
+
+Turns a short instruction into a detailed spec. Without it, the generator under-scoped.
+</Step>
+<Step>
+### Generator
+
+Builds the next feature. Before starting, it negotiates a **sprint contract** with the evaluator, listing the behaviours that will be tested.
+</Step>
+<Step>
+### Evaluator
+
+Tests the *running application* using the Playwright MCP, clicking through it like a user rather than reading the code.
+</Step>
+</Steps>
+
+The results were rich full-stack apps over multi-hour sessions. One secondary source puts a full run at about **6 hours and $200, roughly 22× the cost of a solo agent** ([Ruh AI](https://www.ruh.ai/blogs/anthropic-3-agent-harness-design)). <Evidence level="secondary" />
+
+The GAN analogy is [contested](https://victorinollc.com/thinking/harness-design-long-running-apps), since nothing is trained adversarially, but the structural point holds.
+
+## Harnesses should shrink as models improve
+
+The most important lesson from Anthropic's write-up may be this: when the team moved to a stronger model (Opus 4.6), they **simplified** the harness to planner + generator + a single end-of-run evaluator. The per-sprint evaluator stopped being worth its overhead for tasks the generator could now handle alone, though it still helped on the hardest parts ([summary](https://www.ai-heroes.co/en-us/blog/long-running-agent-harness-claude-agent-sdk-2026)).
+
+Checker design is not a one-time decision. Every model upgrade is a reason to check whether the checker is still earning its cost.
+
+## Designing a good checker
+
+- **Make it independent.** A different model, a fresh context, or no model at all (tests, linters).
+- **Check the world, not the story.** Run the app, query the system. Don't just read the maker's summary.
+- **Protect it from the maker.** If the maker can edit the tests, the checker can be defeated. See [Verification](/guide/shortcomings/verification).
+- **Keep the goal fixed on retry.** Send back the failing assertion, not a rewritten objective ([DEV](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn)).
+
+## Further reading
+
+- [Harness Design: Planner, Generator, Evaluator for production LLM agents](https://www.oneneural.ai/blog/harness-design-planner-generator-evaluator)
+- [Building long-running AI agent harnesses](https://atalupadhyay.wordpress.com/2026/03/26/building-long-running-ai-agent-harnesses/)
+- [Summary and thoughts on Anthropic's harness design](https://note.com/moriya_gekko/n/n9467e267aa7e?hl=en)
+- [Agentic Code Review](https://addyo.substack.com/p/agentic-code-review) by Addy Osmani

@@ -1,0 +1,67 @@
+---
+title: Security of unattended loops
+description: Loops remove the human who might have noticed something wrong. Unattended runs, plus tools, plus untrusted input, plus persistent memory, is the classic setup for prompt injection.
+icon: ShieldX
+---
+
+<Quote by="Simon Willison" where="as quoted in SoftwareSeni" href="https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/">
+  I think we're due a Challenger disaster with respect to coding agent security.
+</Quote>
+
+## Why loops raise the stakes
+
+An interactive agent has a human watching each step, at least in principle. A loop's whole point is that **nobody is watching**. Meanwhile it reads untrusted input (issues, PR comments, web pages, dependency READMEs, emails), has real tools (shell, git, network), and often writes to persistent memory. That is the textbook setup for prompt injection, with no one to notice.
+
+## What the research says
+
+- In one benchmark of ten backbone LLMs under advanced injection strategies, **sandbox escape and information leakage** were the most exploitable categories, with an average risk trigger rate of **52.6%** ([arXiv 2605.22321](https://arxiv.org/pdf/2605.22321)). <Evidence level="primary" />
+- OpenClaw-style personal agents were reported to be highly susceptible to sandbox escape, with an average defence rate of about **17%** ([SoftwareSeni](https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/), [arXiv 2603.10387](https://arxiv.org/html/2603.10387)). <Evidence level="secondary" />
+- Content injected into long-term memory **persists across sessions** and affects every future interaction ([arXiv 2607.05189](https://arxiv.org/pdf/2607.05189)). For ambient loops reading `HEARTBEAT.md`, injected instructions run on every heartbeat.
+- A poisoned project file can lead an agent to edit its own settings to auto-approve everything ([SoftwareSeni](https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/)).
+- On a Hacker News thread about agentic loops, one commenter put it bluntly: prompt-injected agents "WILL be able to escape containers" ([summary of the debate](https://futureagi.com/blog/loop-engineering/is-loop-engineering-real/)).
+
+## The autonomy dilemma
+
+Approval gates are the obvious defence, and they **defeat the point of autonomy**. If a loop stops for permission on every risky action, it isn't running unattended. So the industry has largely accepted that injection can't be fully prevented and focused on **limiting the blast radius** ([DEV](https://dev.to/serenitiesai/ai-agents-run-unsandboxed-code-how-to-fix-it-2026-1np4)).
+
+## Defences, layered
+
+<Steps>
+<Step>
+### Isolate
+
+Containers or VMs with restricted network and file access, worktrees per loop. Containers share a kernel, so stronger isolation matters for untrusted work ([SoftwareSeni](https://www.softwareseni.com/understanding-ai-agent-sandboxing-why-production-deployment-remains-unsolved-in-2026/)).
+</Step>
+<Step>
+### Constrain capabilities
+
+Give the loop only the tools and credentials its goal needs. A PR-babysitting loop doesn't need production secrets.
+</Step>
+<Step>
+### Enforce permissions outside the model
+
+The harness, not the model, decides what's allowed, and the model can't edit those rules ([Loams](https://www.loams.dev/blog/what-agents-need-from-infrastructure)). Antigravity keeps tool permission rules active even in goal mode.
+</Step>
+<Step>
+### Gate the irreversible
+
+Keep human approval for the few actions that can't be undone: deploys, payments, deletions, public posts.
+</Step>
+<Step>
+### Treat memory and goal files as code
+
+Review changes to `HEARTBEAT.md`, memory stores and goal files. Keep provenance. Be able to delete selectively.
+</Step>
+<Step>
+### Cap spend
+
+Runaway cost is an attack vector too ([Sondera](https://blog.sondera.ai/p/ai-agent-token-costs-security-risk)). Budgets are a security control.
+</Step>
+</Steps>
+
+## Further reading
+
+- [Agentic AI security: why autonomous AI systems are the next big attack surface](https://www.redfoxsec.com/blog/agentic-ai-security-why-autonomous-ai-systems-are-the-next-big-attack-surface)
+- [AI agent security risks: what autonomous systems can do when they go wrong](https://www.redfoxsec.com/blog/ai-agent-security-risks-what-autonomous-systems-can-do-when-they-go-wrong)
+- [12 questions and answers about self-hosted AI agent sandboxes](https://www.securityscientist.net/blog/12-questions-and-answers-about-self-hosted-ai-agent-sandbox/)
+- [Channel Fracture: silent delivery failures in multi-agent systems](https://arxiv.org/pdf/2606.04896) (arXiv)
