@@ -40,7 +40,7 @@ components/diagrams.tsx   # Cycle, Flow, LoopLayers, Quote, Evidence, Defs
 components/contribute.tsx # per-page contribution links (GitHub only)
 app/global.css            # silver / graphite theme, lobster red + hermes blue
 lib/shared.ts             # site config, GitHub links, field-note template
-brand/                    # style guide + logo SVGs for content and asset authors
+brand/STYLEGUIDE.md       # self-contained style guide (incl. logo SVGs) for content authors
 ```
 
 ## Deploy

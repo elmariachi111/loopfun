@@ -1,6 +1,6 @@
 # loop.fun style guide
 
-A minimal reference for anyone (human or agent) producing content or assets for loop.fun. The source of truth for colors is `app/global.css`; if this file and the CSS disagree, the CSS wins.
+A minimal, self-contained reference for anyone (human or agent) producing content or assets for loop.fun (repo: `elmariachi111/loopfun`, a Fumadocs/Next.js site; guide pages are MDX under `content/guide/`). Everything you need is in this one file, including the logo SVGs. If a color here ever disagrees with `app/global.css` in the repo, the CSS wins.
 
 **One-line summary:** silver and graphite surfaces, **lobster red as the only brand accent**, hermes blue as the quiet second color, circles and dots as the visual language, and no decoration that doesn't explain something.
 
@@ -8,14 +8,13 @@ A minimal reference for anyone (human or agent) producing content or assets for 
 
 ## 1. Logo
 
-| File | Use it for |
-|---|---|
-| [`loop-mark.svg`](./loop-mark.svg) | The mark in `currentColor`. Inline it in HTML/MDX so it inherits text color. |
-| [`loop-mark-red.svg`](./loop-mark-red.svg) | The mark on light backgrounds (`#ca301c`). |
-| [`loop-mark-red-on-dark.svg`](./loop-mark-red-on-dark.svg) | The mark on dark backgrounds (`#f35b44`). |
-| [`loop-icon.svg`](./loop-icon.svg) | App-icon tile: graphite rounded square, red gradient loop, glowing dot. Same file as the favicon (`app/icon.svg`). Use for avatars, social profiles, anywhere a square icon is needed. |
-
 **What it is:** an open loop (a circle with a gap and an arrowhead, going around again) with a single dot in the middle: the agent at the center of its loop.
+
+There are two forms. Copy the SVG source exactly; don't redraw it.
+
+### The mark (monochrome)
+
+Uses `currentColor`, so when inlined in HTML/MDX it takes the surrounding text color. For a standalone file, replace `currentColor` with `#ca301c` (on light backgrounds) or `#f35b44` (on dark backgrounds).
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
@@ -25,13 +24,45 @@ A minimal reference for anyone (human or agent) producing content or assets for 
 </svg>
 ```
 
+### The icon tile
+
+Graphite rounded square, red gradient loop, glowing dot. This is the site favicon (`app/icon.svg`). Use it for avatars, social profiles and anywhere a square icon is needed. It works on any background.
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="hsl(220, 10%, 19%)" />
+      <stop offset="1" stop-color="hsl(220, 9%, 8%)" />
+    </linearGradient>
+    <linearGradient id="loop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="hsl(10, 92%, 64%)" />
+      <stop offset="1" stop-color="hsl(7, 76%, 45%)" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="hsl(7, 90%, 58%)" stop-opacity="0.55" />
+      <stop offset="1" stop-color="hsl(7, 90%, 58%)" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#tile)" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="hsl(220, 10%, 100%)" stroke-opacity="0.09" stroke-width="1.5" />
+  <circle cx="32" cy="32" r="13" fill="url(#glow)" />
+  <g transform="translate(8 8) scale(1.5)" fill="none" stroke="url(#loop)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4a12 12 0 1 1-11.3 8" />
+    <path d="M2.2 8.4 4.7 12l3.9-1.9" />
+  </g>
+  <circle cx="32" cy="32" r="5" fill="hsl(10, 92%, 66%)" />
+  <circle cx="30.6" cy="30.6" r="1.6" fill="#fff" fill-opacity="0.55" />
+</svg>
+```
+
 **Wordmark:** `loop.fun`, all lowercase, Inter semibold or bold, set to the right of the mark with a gap of about half the mark's width. In running text it's always `loop.fun`, never "Loop.fun" or "LoopFun".
 
 **Rules**
 - Minimum size: 16px for the tile, 14px for the bare mark.
 - Clear space: at least a quarter of the mark's width on every side.
 - One color per mark. Don't recolor it blue, don't add outlines or drop shadows, don't rotate or flip it (the arrow direction is clockwise, on purpose).
-- Don't redraw it. Always copy one of the files above.
+- Don't redraw it. Always copy one of the SVGs above.
 
 ---
 
@@ -142,7 +173,7 @@ Generated automatically for every guide page from its `title` and `description` 
 
 ## 7. Writing conventions (the short version)
 
-The visual style only works with the matching voice. Read a couple of existing pages before writing.
+The visual style only works with the matching voice. If you have the repo, read a couple of existing pages under `content/guide/` before writing.
 
 - **Explain concepts, don't document commands.** Readers already know what an agent is.
 - **Link every claim** to where it came from, and tag shaky ones with `<Evidence />`. Add new sources to `content/guide/sources.mdx`.
