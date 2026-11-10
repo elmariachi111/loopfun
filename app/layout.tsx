@@ -23,6 +23,15 @@ export const metadata: Metadata = {
   },
   description:
     'What agentic loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short.',
+  openGraph: {
+    type: 'website',
+    siteName: appName,
+    images: { url: '/og/home/image.png', width: 1200, height: 630, alt: `${appName}: ${appTagline}` },
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: { url: '/og/home/image.png', width: 1200, height: 630, alt: `${appName}: ${appTagline}` },
+  },
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {

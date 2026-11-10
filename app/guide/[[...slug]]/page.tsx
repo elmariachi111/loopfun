@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
+import { appName, getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
 import { PageContribute } from '@/components/contribute';
 
 export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
@@ -55,11 +55,23 @@ export async function generateMetadata(props: PageProps<'/guide/[[...slug]]'>): 
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
+  const image = { url: getPageImageUrl(page).url, width: 1200, height: 630, alt: page.data.title };
+
   return {
     title: page.data.title,
     description: page.data.description,
     openGraph: {
-      images: getPageImageUrl(page).url,
+      type: 'article',
+      siteName: appName,
+      title: page.data.title,
+      description: page.data.description,
+      images: image,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: page.data.title,
+      description: page.data.description,
+      images: image,
     },
   };
 }
