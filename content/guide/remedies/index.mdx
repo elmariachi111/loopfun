@@ -1,0 +1,61 @@
+---
+title: Remedies we're exploring
+description: Three use-case-neutral services aimed at problems this guide documents. A shared control plane for loop side effects, off-peak token routing, and loop-native reporting. Proposals, not products.
+icon: FlaskConical
+---
+
+<Callout type="warn" title="This section is speculative">
+  These pages are the maintainers of this guide thinking out loud. **Nothing here is built, and nothing is for sale.**
+  The market notes come from web research done in November 2026, most of it secondary reporting and vendor
+  material, and they'll drift quickly. Read them as a discussion draft, and tell us where we're wrong.
+</Callout>
+
+## Why this section exists
+
+The [shortcomings](/guide/shortcomings) section maps what goes wrong with loops. The [idea board](/guide/field-notes/idea-board) lists research directions. This section asks a narrower, more practical question:
+
+> Which of these problems could a **small, general-purpose service** take off a loop builder's plate, without knowing anything about what the loop is for?
+
+"General-purpose" is the constraint that matters. A sales loop, a coding loop and an inbox-triage loop have nothing in common at the level of their goals. They have a lot in common at the level of their **plumbing**: they all call models, call tools with side effects, retry, wait, spend money and finish (or don't). That plumbing is what these proposals target.
+
+## The problems, restated
+
+| What we keep seeing | Where the guide documents it | Remedy |
+|---|---|---|
+| Every loop rebuilds credentials, retries, rate limits, budgets and state storage for each external tool it touches. A re-run iteration can repeat a side effect (a second email, a second call). | [Reliability](/guide/shortcomings/reliability), [Security](/guide/shortcomings/security) | [A control plane for loop side effects](/guide/remedies/control-plane) |
+| Loops pay interactive prices for work that could wait hours, and polling while waiting costs more still. | [Cost](/guide/shortcomings/cost), [Pacing](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits) | [Off-peak tokens and arbitrage](/guide/remedies/off-peak-tokens) |
+| Nobody can say what a goal cost, whether it was really achieved, or which iterations were wasted. Loop state lives where nobody can inspect it. | [Reliability and observability](/guide/shortcomings/reliability#observability-is-thin), [Verification](/guide/shortcomings/verification) | [Loop-native reporting](/guide/remedies/loop-reporting) |
+
+## Three remedies
+
+<Cards>
+  <Card title="A control plane for loop side effects" href="/guide/remedies/control-plane" description="One egress point for model and tool calls, with loop-aware retries, idempotency, budgets and a state sink." />
+  <Card title="Off-peak tokens and arbitrage" href="/guide/remedies/off-peak-tokens" description="Who sells cheaper tokens for deferrable work today, and a deadline-aware router to use them." />
+  <Card title="Loop-native reporting" href="/guide/remedies/loop-reporting" description="Langfuse-style tracing, but organized by goal and iteration, with inefficiency detection and achievement triage." />
+</Cards>
+
+## How they fit together
+
+The three ideas share one premise: **if every model call and every tool call a loop makes passes through one place, and each call is tagged with the goal and iteration it belongs to**, then the other features become cheap:
+
+<Flow
+  steps={['Loop iteration', 'One egress (tagged by goal + iteration)', 'Models and tools', 'Event log', 'Per-goal reports']}
+  caption="Routing to a cheaper tier is a policy at the egress. Per-goal cost and inefficiency detection are queries over its event log."
+/>
+
+So the sensible order is probably:
+
+1. **Tag and log.** A thin proxy that changes nothing about behavior, only attaches goal, run and iteration ids and records what happened. This alone answers "what did that goal cost?"
+2. **Report.** Inefficiency detectors and achievement triage run over that log. This is the part loop builders can't easily get anywhere else.
+3. **Control.** Budgets, circuit breakers and idempotency for side effects, once the log shows where the money and the damage actually go.
+4. **Route.** Deadline-aware routing to flex, batch and off-peak tiers, with savings reported per goal.
+
+## What we're deliberately not proposing
+
+- **Another harness or agent framework.** Every vendor already ships one. These services should sit *beside* Claude Code, Codex, Hermes or a hand-rolled loop, not replace them.
+- **Use-case agents.** No "sales loop" or "support loop". Use-case-neutral or nothing.
+- **Reselling anyone's subscription quota.** See the note on [idle capacity](/guide/remedies/off-peak-tokens#two-meanings-of-idle-capacity).
+
+## Tell us we're wrong
+
+Each page has a "Disagree? Discuss" link that opens a GitHub issue. The most useful feedback is a [field note](/guide/field-notes/how-to-contribute) saying *"we built this ourselves, here's what it took"* or *"we tried, and here's why it didn't matter"*.

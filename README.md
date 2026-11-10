@@ -33,6 +33,7 @@ content/guide/            # all guide pages (MDX) + meta.json sidebar order
   environments/           # Claude Code, Codex, Hermes, Google, OpenClaw, SDKs
   shortcomings/           # verification, cost, memory, models, security, humans…
   field-notes/            # community notes, public record, idea board
+  remedies/               # speculative service proposals (collapsed, end of sidebar)
 app/(home)/page.tsx       # landing page
 app/guide/                # guide layout and page renderer
 components/diagrams.tsx   # Cycle, Flow, LoopLayers, Quote, Evidence, Defs

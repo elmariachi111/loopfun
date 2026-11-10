@@ -1,0 +1,103 @@
+---
+title: Off-peak tokens and arbitrage
+description: Much of what a loop does could wait. Who sells cheaper tokens for deferrable work in late 2026 (flex tiers, batch APIs, off-peak pricing, open marketplaces), and a deadline-aware router to use them.
+icon: Clock
+---
+
+## The problem
+
+Loops pay **interactive prices for non-interactive work**. A lot of what a loop does has no human waiting on the other end:
+
+- overnight goal runs and backlog burn-downs
+- judges and evaluators checked at the end of an iteration
+- compaction and summarization of long histories
+- [ambient](/guide/patterns/ambient-loops) heartbeats and scheduled sweeps
+- evals, backfills and re-processing jobs
+
+All of it typically runs on the same standard tier as a chat reply. Meanwhile providers have spare capacity at night and between traffic peaks, and are increasingly willing to sell it cheaper. The question is how a loop can buy it without anyone hand-tuning each call.
+
+## Who sells cheaper tokens today
+
+The short answer: **nobody major sells a true, market-clearing token spot price.** What exists in November 2026 is a set of flat discounts in exchange for latency or pre-emption, plus some early open marketplaces. The real spot markets sit one layer down, at GPU rental.
+
+| Mechanism | Who | Typical discount | Trade-off |
+|---|---|---|---|
+| **Batch APIs** | OpenAI, Anthropic, Google, Amazon Bedrock, Mistral | about 50% | Asynchronous; results within up to 24 hours ([Anthropic](https://claude.com/resources/articles/message-batches-api), [Gemini](https://ai.google.dev/gemini-api/docs/optimization)) <Evidence level="primary" /> |
+| **Flex tiers** (synchronous, pre-emptible) | OpenAI `service_tier: "flex"` ([docs](https://developers.openai.com/api/docs/guides/flex-processing.md)), Gemini Flex, preview ([docs](https://ai.google.dev/gemini-api/docs/flex-inference)), Bedrock Flex ([docs](https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.md)) | about 50% | Slower; may be rejected (OpenAI returns a 429 at no charge) or evicted when standard traffic spikes. Gemini doesn't fall back to standard on its own, and Flex traffic still counts toward rate limits. <Evidence level="primary" /> |
+| **Priority tiers** (the inverse) | Bedrock Priority | a premium, reportedly about 75% ([Tech Insider](https://tech-insider.org/amazon-bedrock-pricing-tiers-flex-priority-batch-2026/)) | You pay more to jump the queue. Useful for the few loop steps that truly block a human. <Evidence level="secondary" /> |
+| **Time-of-day pricing** | DeepSeek, peak and off-peak billing since mid-August 2026 | off-peak about half of peak | Fixed UTC windows; published figures disagree across sources ([Synthorai](https://synthorai.io/blog/llm-api-price-changes-2026/)). <Evidence level="secondary" /> |
+| **Aggregator routing** | OpenRouter `:floor` variant | cheapest provider for the model | Sorts providers by price **and** makes flex-tier endpoints eligible; `provider.sort: "price"` does price sorting without flex ([docs](https://openrouter.ai/docs/guides/routing/model-variants/floor)). <Evidence level="primary" /> |
+| **Open inference marketplaces** | Surplus Intelligence (order book for spare capacity, launched May 2026, settles in USDC on Base), Chutes (Bittensor subnet 64) | claimed 40 to 60% | Self-reported savings; crypto settlement; harder questions about who serves your data ([Alea Research](https://alearesearch.substack.com/p/surplus-intelligence-an-order-book), [Crypto Briefing](https://cryptobriefing.com/chutes-surplus-onchain-inference-growth/)). <Evidence level="anecdotal" /> |
+| **GPU spot and futures** (below the token layer) | SF Compute (hourly H100/H200 market), AWS and GCP spot VMs (up to 90%+ off), compute futures from CME and Silicon Data | large, but variable | You run the model yourself, and capacity can be reclaimed at any time ([Latent Space](https://latent.space/wiki/sf-compute-0739be6d/)). <Evidence level="secondary" /> |
+
+Two notes on OpenRouter, since it's the closest thing to a ready-made pass-through:
+
+- `:floor` already does the "use the flex tier when it happens to be cheapest" part. What it doesn't know is **whether your request can afford to wait**.
+- Third-party posts report that on **October 28, 2026** OpenRouter changed its default routing to optimize a "Routing Cost" (price plus waiting plus retries) rather than raw price, with requests about 6% more expensive and far fewer 429s ([AIREITER](https://aireiter.com/blog/openrouter-provider-routing-explained)). We couldn't confirm this in OpenRouter's own docs. <Evidence level="anecdotal" /> If true, it's the market moving toward exactly the cost-versus-latency trade-off this page is about.
+
+## Why loops are the ideal flex customer
+
+Flex and off-peak tiers suit loops better than they suit almost anything else:
+
+- **Loops already wait.** A goal waiting on CI for ten minutes doesn't notice a one-to-fifteen-minute flex latency target.
+- **Loops already retry.** A flex 429 is one more retry, which the loop (or [its control plane](/guide/remedies/control-plane)) handles anyway.
+- **Loops already have budgets.** "Finish by 7am for under $20" is a natural way to state a goal, and a natural input for a scheduler.
+
+<Callout type="warn" title="The catch: prompt caching">
+  Loop economics are dominated by **cache hits**: every iteration re-sends a long, mostly stable prefix (see
+  [Cost](/guide/shortcomings/cost)). Moving a running conversation to a different provider, or sometimes a different
+  tier, can throw that cache away. A 50% discount on a request that loses a 90% cache discount is a loss. OpenAI's flex
+  keeps prompt-caching discounts, and Bedrock's Flex reportedly supports explicit caching ([re:Post](https://repost.aws/questions/QUBuhKumN7Qsm6Whi0HaeJuw/flex-service-tier-for-bedrock-models)), but
+  provider hopping almost never does. Any "arbitrage" has to price this in.
+</Callout>
+
+## The proposal: a deadline-aware router
+
+Most of the "arbitrage" here is really **scheduling**: matching each piece of work to the cheapest tier that still meets its deadline.
+
+<Steps>
+<Step>
+**Declare deadlines, not tiers.** A goal or step says *when* it needs an answer ("now", "within 15 minutes", "by 7am"). The loop author shouldn't need to know which provider calls that flex, batch or off-peak.
+</Step>
+<Step>
+**Route to the cheapest tier that fits.** Standard for "now", flex for minutes, batch or off-peak windows for hours.
+</Step>
+<Step>
+**Escalate as slack runs out.** On flex rejection, back off and retry; when the remaining slack drops below a threshold, promote to standard (or priority) so the deadline still holds.
+</Step>
+<Step>
+**Keep cache affinity.** Stick with the provider and tier that holds the conversation's cache unless the saving beats the cache loss.
+</Step>
+<Step>
+**Report realized savings per goal.** "This goal cost $8.40; at standard rates it would have been $15.10." That number is what makes anyone trust the router, and it feeds [loop-native reporting](/guide/remedies/loop-reporting).
+</Step>
+</Steps>
+
+## Two meanings of "idle capacity"
+
+"Use capacity when utilization is low" can mean two quite different things:
+
+1. **The provider's idle capacity.** That's what flex, batch and off-peak pricing *are*: providers selling their troughs. Routing into them is straightforward and within everyone's terms.
+2. **Your own idle capacity.** Subscription plans and daily allowances that reset whether you use them or not. Using what's left of **your own** weekly quota for deferrable loop work before it resets is a legitimate, useful scheduling trick. **Reselling** it is something else: a community Hermes plugin, for example, lists a user's unused Venice daily allowance for sale on Surplus Intelligence ([plugin docs](https://hermes-agent.nousresearch.com/docs/plugins/surplus-intelligence-seller)). Whether that's allowed depends entirely on the provider's terms. Most subscription plans are licensed for the subscriber's own use, so we'd treat resale as out of scope.
+
+## Partner, pass through or build?
+
+| Option | What it means | For | Against |
+|---|---|---|---|
+| **Partner** | Recommend or integrate an aggregator (OpenRouter with `:floor`) and add deadline logic on top | Fast; no capital; broad model coverage | Thin margin; the aggregator can ship deadline routing itself |
+| **Pass through** | Route over each provider's own batch and flex APIs, using the customer's own keys | No resale; transparent pricing; keeps provider caches and data terms intact | Every provider's tier semantics differ and keep changing |
+| **Build a market** | Run an order book for spare capacity, or rent spot GPUs and serve open-weight models | Real spread to capture | Capital, compliance, settlement, model provenance and data-handling questions. Not low-hanging. |
+
+Our current lean: **pass through, with the customer's keys, plus the deadline scheduler.** It's the version that needs no capital, takes no position on pricing, and is useful on day one. The market-building version is interesting, but it's a different company.
+
+## Open questions
+
+- How much loop work is actually deferrable? We'd want [field notes](/guide/field-notes/how-to-contribute) with real splits before believing "most of it".
+- Do flex tiers stay cheap once loops pile into them? A tier priced for occasional sheddable traffic may change when it becomes the default for agents.
+- Is time-of-day pricing a trend or a one-provider experiment?
+
+## Further reading
+
+- [Temporal token routing: batch and flex tiers for non-urgent work](https://agentpatterns.ai/token-engineering/temporal-token-routing/) (Agent Patterns)
+- [Surplus Intelligence: an order book for AI inference](https://alearesearch.substack.com/p/surplus-intelligence-an-order-book) (Alea Research)
+- [The rise of onchain inference markets](https://www.bankless.com/read/the-rise-of-onchain-inference-markets) (Bankless)

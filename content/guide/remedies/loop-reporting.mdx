@@ -1,0 +1,114 @@
+---
+title: Loop-native reporting
+description: Tracing tools organize data by trace and session. Loops need it by goal and iteration, with inefficiency detection built in and a triage queue that says which "done" goals to check first.
+icon: Radar
+---
+
+## The problem
+
+When an overnight loop finishes, an operator wants answers to questions like these:
+
+- What did this goal cost, in total, across every run and retry?
+- Was it **actually** achieved, or did the agent only say so?
+- Which iterations moved it forward, and which were wasted?
+- Which of my standing goals haven't done anything useful in a month?
+- Of the twelve goals that reported "done" last night, which three should I look at first?
+
+Today's observability tools can show the raw material, but none of them answer these directly, because their unit of analysis is the **trace** or the **session**, not the goal. And most loops aren't instrumented at all: the [adoption study](https://arxiv.org/abs/2608.21884) found loop state living outside version control and claims of benefit resting "almost entirely on anecdotes". <Evidence level="primary" />
+
+## What already exists
+
+| Tool | What it's good at | Loop-relevant notes |
+|---|---|---|
+| **Langfuse** | Open-source (MIT) tracing, sessions, cost per trace and per user, LLM-as-judge evals | Acquired by ClickHouse in January 2026; core stays MIT ([ClickHouse](https://clickhouse.com/blog/clickhouse-acquires-langfuse-open-source-llm-observability)). Agent graphs, which draw a trace as nodes and edges, went generally available in late 2025 ([Langfuse](https://langfuse.com/blog/2025-11-30-langfuse-november-update)). <Evidence level="primary" /> |
+| **LangSmith** | Tracing and evals, especially for LangChain and LangGraph | Repeated calls are visible on inspection; we found no automated loop alerts ([LangChain](https://www.langchain.com/resources/agent-observability)). |
+| **Braintrust** | Evals plus production trace analysis | "Patterns" run continuously over traces and can surface recurring failures such as repeated tool calls that make no progress ([Braintrust](https://www.braintrust.dev/blog/active-observability-loop-patterns-debugger)). The closest thing to built-in inefficiency detection. <Evidence level="primary" /> |
+| **AgentOps** | Session timelines, cost per tool call | Loops show up visually as repeated identical spans ([AIMultiple](https://aimultiple.com/agentic-monitoring)). <Evidence level="secondary" /> |
+| **OpenTelemetry GenAI conventions** | A shared vocabulary: `invoke_agent`, `execute_tool`, `plan` spans | Still in "Development" status; moved to its own repository in v1.42.0, June 2026 ([Greptime](https://greptime.com/blogs/2026-05-09-opentelemetry-genai-semantic-conventions), [Dash0](https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained)). <Evidence level="secondary" /> |
+| **OpenRouter Broadcast** | Ships request traces to Langfuse, Datadog and others with no code changes | Asynchronous, so no added latency; a free `trace` field carries your own metadata ([docs](https://openrouter.ai/docs/guides/features/broadcast/langfuse)). Useful for getting goal ids into an existing tool. <Evidence level="primary" /> |
+
+The gap isn't tracing. It's that **none of these tools model the loop's lifecycle**: goals that persist for weeks, runs that start and stop, iterations that should make progress, and outcomes that need verifying.
+
+## A loop-shaped data model
+
+<Flow steps={['Goal', 'Run', 'Iteration', 'Step']} caption="Each step is a model call, a tool call or a judge verdict. Every level rolls up cost, time and progress to the one above." />
+
+<Defs
+  items={[
+    ['Goal', 'Persistent objective with a completion condition, a budget and an owner. May be standing.'],
+    ['Run', 'One attempt, ending as achieved, budget-limited, abandoned or interrupted.'],
+    ['Iteration', 'One pass of the loop, with a progress signal: did the diff, metric, test count or task list change?'],
+    ['Step', 'Model call, tool call or judge verdict, as OTel GenAI spans.'],
+    ['Outcome', 'What happened in the end, and how sure we are. See achievement triage below.'],
+  ]}
+/>
+
+The ids can come from the [control plane](/guide/remedies/control-plane) if one is in place, from OpenRouter Broadcast's trace metadata, or from the harness's own session logs.
+
+## Inefficiency detection
+
+These are the patterns this guide keeps running into. Each one can be computed from a goal-tagged event log, without a model.
+
+| Detector | Signal | Why it matters |
+|---|---|---|
+| **Repetition** | Identical tool + normalized arguments, divided by total tool calls. One guide suggests investigating above 0.3 and treating 0.5 as a near-certain loop ([OptScale](https://optscale.ai/blog/runaway-agents-loops-drift-recursion)). <Evidence level="anecdotal" /> | [Thrashing](/guide/shortcomings/reliability#stuck-loops) |
+| **Poll spin** | Continuations while the external state they wait on hasn't changed | The [173-continuation](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits) CI wait |
+| **Context re-read tax** | Input tokens per iteration rising while output and progress stay flat; falling cache-hit rate | The dominant [cost](/guide/shortcomings/cost) of long loops |
+| **Diminishing returns** | No change in diff, metric, tests or task list for M iterations | The [AgentLoop](https://arxiv.org/abs/2609.33315) stopping signal |
+| **Judge overhead** | Share of spend going to evaluation rather than work | A strong judge can quietly double the bill |
+| **Ping-pong** | Two agents alternately answering each other with no external change | The 264-hour livelock |
+| **Idle standing goals** | Heartbeats or routines that end in "nothing to do" for weeks | [Standing goals go stale](/guide/goals/standing-goals#standing-goals-go-stale) |
+| **Fan-out** | Sub-agent calls per iteration trending up | Hidden multiplier on cost |
+| **Tier mismatch** | Deferrable steps billed at standard rates | Money left on the table; see [off-peak tokens](/guide/remedies/off-peak-tokens) |
+
+Each detector should come with a **dollar figure** ("this goal spent $31 in iterations that changed nothing"), because that's what makes people act on it.
+
+## Achievement triage
+
+The part we think is most underserved. Every finished run gets an **outcome class**, and the operator gets a review queue sorted by what most needs a human.
+
+<Defs
+  items={[
+    ['Verified', 'An independent check passed: tests re-run, service queried, screenshot compared. Not the agent\'s word.'],
+    ['Claimed', 'The agent or its judge said "done", but nothing independent confirms it.'],
+    ['Partial', 'Some acceptance criteria met, others not.'],
+    ['Budget-limited', 'Stopped by a cap with work remaining.'],
+    ['Stuck', 'Stopped by a breaker, or flagged by a detector above.'],
+    ['Regressed', 'Was verified, then later invalidated (reverted, failing again).'],
+  ]}
+/>
+
+The queue ranks runs by roughly **blast radius × uncertainty**: a "claimed" outcome that touched production, money or customers goes to the top; a "verified" docs fix goes to the bottom. Each entry comes with its evidence pack: diffs, test runs, the judge's reasoning, and **what the loop tried and abandoned**. This is the [review built for loop output](/guide/field-notes/idea-board) idea made concrete, aimed at the [human bottleneck](/guide/shortcomings/humans).
+
+Two headline metrics fall out of this:
+
+- **Cost per verified achievement.** Tokens and dollars divided by goals that passed an independent check. The metric [Cost](/guide/shortcomings/cost) argues for.
+- **False-done rate.** The share of "claimed" outcomes that later fail verification. The most direct measure of the [verification](/guide/shortcomings/verification) problem we know of.
+
+## The low-hanging version
+
+<Steps>
+<Step>
+**Read what already exists.** A CLI that reads harness session logs (Claude Code and Codex, for example, keep local session transcripts) and produces a per-goal report with the detectors above. No SDK, no hosting.
+</Step>
+<Step>
+**Ingest standard traces.** Accept OTel GenAI spans and OpenRouter Broadcast, so teams already on Langfuse or Datadog can add the loop view without re-instrumenting.
+</Step>
+<Step>
+**Add the triage queue.** Outcome classes, ranking and evidence packs, delivered where reviewers already are: a pull-request comment or a daily digest.
+</Step>
+</Steps>
+
+**Build on, not against.** Langfuse is MIT-licensed and runs on ClickHouse; a loop layer could plausibly be a set of views and detectors on top of it rather than a competitor. The moat, if there is one, is the opinionated loop taxonomy and the detectors, not the trace storage.
+
+## Open questions
+
+- **Who decides "verified"?** The whole scheme depends on independent checks existing. Where they don't, the honest class is "claimed", and that may be most goals.
+- **Privacy.** Loop traces contain customer data, credentials in tool arguments and internal code. Self-hosting has to be a first-class option.
+- **Will the incumbents add goals?** Probably, eventually. Braintrust's patterns are already close on detection. The question is whether a loop-first tool can get there sooner and stay more opinionated.
+
+## Further reading
+
+- [Agent observability: what the trace can't see](https://www.morphllm.com/agent-observability) (Morph)
+- [One connected system for agent observability](https://www.braintrust.dev/blog/active-observability-loop-patterns-debugger) (Braintrust, vendor)
+- [OpenTelemetry GenAI semantic conventions explained](https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained) (Dash0)

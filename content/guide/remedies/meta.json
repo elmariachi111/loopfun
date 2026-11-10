@@ -1,0 +1,6 @@
+{
+  "title": "Remedies",
+  "icon": "FlaskConical",
+  "defaultOpen": false,
+  "pages": ["index", "control-plane", "off-peak-tokens", "loop-reporting"]
+}

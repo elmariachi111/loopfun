@@ -1,0 +1,111 @@
+---
+title: A control plane for loop side effects
+description: One point of egress for every model and tool call a loop makes, with loop-aware retries, idempotency, budgets, approvals and a state sink. What exists, what's missing, and a low-hanging first version.
+icon: Network
+---
+
+## The problem
+
+A loop that only edits files in a sandbox can be thrown away and re-run. A loop that touches the outside world can't. Once a loop places phone calls, writes to a CRM, sends Slack or email messages, opens tickets or charges a card, every external call needs the same things:
+
+- **Credentials**, scoped to the loop and revocable.
+- **Retries** with backoff, and a decision about when to stop retrying.
+- **Rate limits**, both the provider's and your own.
+- **A budget**, in dollars, not only tokens. SMS, voice minutes and data-enrichment lookups cost money too.
+- **Idempotency.** If the iteration crashes after sending the email but before recording that it did, the next iteration must not send it again.
+- **An audit trail** tying each action to the goal that caused it.
+- **Somewhere to write state**, so the loop can resume after an interruption.
+
+Today each loop builder wires this up per tool and per harness. Loops make it worse in two specific ways:
+
+1. **Iterations repeat by design.** A goal loop that continues after a crash, or a [Ralph loop](/guide/patterns/ralph) restarting with fresh context, will happily re-execute side effects it has no memory of.
+2. **Loops fail quietly.** An agent that loops or drifts still returns 200 with normal latency, so standard monitoring doesn't fire ([Morph](https://www.morphllm.com/agent-observability), [OptScale](https://optscale.ai/blog/runaway-agents-loops-drift-recursion)). <Evidence level="secondary" />
+
+## What already exists
+
+The plumbing exists, in slices. Each layer sees part of a loop's traffic and none of it knows it's a loop.
+
+| Layer | Examples | Covers | Doesn't cover |
+|---|---|---|---|
+| **LLM gateways** | [OpenRouter](https://openrouter.ai/docs/guides/routing/model-variants/floor), Portkey, LiteLLM, Cloudflare AI Gateway, Helicone | Model routing, fallbacks, retries, caching, spend caps, request logs | Tool calls and their side effects; any notion of goal or iteration |
+| **Tool integration platforms** | Composio, [Arcade](https://nango.dev/blog/arcade-dev-vs-nango), [Nango](https://nango.dev/blog/best-agentic-api-integrations-platform) | Managed OAuth, pre-built tools for CRMs, messaging and SaaS APIs; some offer syncs and webhooks | Model spend, cross-tool budgets, loop semantics |
+| **MCP gateways** | Cloudflare MCP Portals, Zuplo, Workato and others ([Zuplo](https://zuplo.com/blog/what-the-best-mcp-gateways-do-in-2026), [MintMCP](https://www.mintmcp.com/blog/mcp-gateways-rate-limiting-access-control)) | Central auth, per-agent and per-tool rate limits, audit logs tied to a person | Model calls, state, retries across iterations |
+| **Durable execution** | Temporal, Inngest, Restate, DBOS ([overview](https://www.youngju.dev/blog/culture/2026-05-14-durable-execution-engines-2026-temporal-restate-inngest-trigger-dev-dbos-deep-dive-2026.en)) | Retries, step-level checkpoints, durable sleep and wait-for-event, pausing for human approval | Requires rewriting the loop as workflow code; no integrations or model routing included |
+
+A few market notes, all <Evidence level="secondary" /> from 2026 gateway comparisons ([Future AGI](https://futureagi.com/blog/best-llm-gateways-2026/), [Eden AI](https://www.edenai.co/post/best-portkey-alternatives-7-ai-gateways-compared), [dupple](https://dupple.com/learn/best-llm-gateways)):
+
+- **Gateways are consolidating into security vendors.** One comparison reports that Palo Alto Networks completed its acquisition of Portkey in May 2026, folding it into its agent-governance offering. Another reports Helicone in maintenance mode after an acquisition in March 2026.
+- **Integration vendors are mostly reviewed by each other.** Much of the Composio, Arcade and Nango comparison material is written by one of the three. Treat the verdicts as marketing.
+- **Durable execution is being re-pitched as agent infrastructure.** Its pause, resume and wait-for-event primitives are exactly what [waiting goals](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits) lack, but adopting it means restructuring your loop.
+
+## The gap: loop semantics
+
+None of these layers can answer: *"Is call #4 of iteration 17 of the goal 'follow up with every stale lead' the same action as call #4 of iteration 16?"* That question is the whole difference between a safe retry and a duplicate message to a customer.
+
+What's missing is a layer that understands the loop's own structure:
+
+<Defs
+  items={[
+    ['Goal', 'The long-lived objective. Owns the budget, the credentials scope and the audit trail.'],
+    ['Run', 'One attempt at the goal, from start to stop (achieved, budget-limited, abandoned).'],
+    ['Iteration', 'One pass of the loop. The unit that gets retried, resumed or thrown away.'],
+    ['Intent', 'A side effect the loop means to cause ("email lead 4711 about renewal"). The key for idempotency.'],
+  ]}
+/>
+
+## The proposal: one egress for every loop
+
+A proxy that every model call **and** every tool call goes through, speaking an OpenAI-compatible API for models and MCP for tools, so existing harnesses only need a base URL change. Each request carries goal, run and iteration ids, mapped onto the OpenTelemetry GenAI conventions (`invoke_agent` and `execute_tool` spans) where possible ([Dash0](https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained)).
+
+<Accordions>
+<Accordion title="Idempotent side effects">
+Before executing a side-effecting tool call, the proxy derives an **intent key** (goal + tool + normalized target). If that intent already succeeded in this goal, it returns the recorded result instead of acting again. The loop sees "already done", not an error. This is the single most valuable feature for loops that talk to people.
+</Accordion>
+<Accordion title="Loop-aware retries and circuit breakers">
+Retry transient failures within an iteration. Across iterations, count identical failures: after N, trip a breaker and hand the loop a **structured stop** ("escalate: CRM rejects writes with 403 since iteration 12") instead of letting it thrash. See [stuck loops](/guide/shortcomings/reliability#stuck-loops).
+</Accordion>
+<Accordion title="One budget across models and tools">
+Dollar budgets per goal that count model tokens, SMS segments, call minutes and paid API lookups together. A goal that's cheap in tokens but expensive in phone calls is still expensive.
+</Accordion>
+<Accordion title="Wake on events instead of polling">
+Ingest webhooks (CI finished, customer replied, payment cleared) and **wake** the loop, rather than letting it re-read its context every few seconds to check. This is the [pacing problem](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits) solved outside the harness.
+</Accordion>
+<Accordion title="A state-machine sink">
+An append-only event log per goal: state transitions, intents executed, judge verdicts. The loop can write to it and resume from it; the operator can export it to their own warehouse. It's a concrete answer to the idea board's [minimum resumable state](/guide/field-notes/idea-board) question, and it keeps loop state out of an uncommitted local file.
+</Accordion>
+<Accordion title="Approval gates for high-blast-radius actions">
+Hold selected intents (outbound calls, payments, messages to new recipients) for human approval, with the evidence attached. The loop keeps working on other things while it waits.
+</Accordion>
+</Accordions>
+
+## The low-hanging version
+
+<Steps>
+<Step>
+**Tag and log only.** An OpenAI-compatible and MCP proxy that forwards everything unchanged and records each call with its goal and iteration. Zero behavior change, so zero risk to adopt. It immediately feeds [loop-native reporting](/guide/remedies/loop-reporting).
+</Step>
+<Step>
+**Budgets and breakers.** Per-goal dollar caps and identical-failure breakers. Both are policies over the log you already have.
+</Step>
+<Step>
+**Idempotency for a handful of dangerous tools.** Email, SMS, voice calls and CRM writes first. These are where duplicates hurt.
+</Step>
+<Step>
+**Webhook-to-wake.** Replace polling for the two or three events loops wait on most.
+</Step>
+</Steps>
+
+**Build on, not against.** There's no reason to rebuild hundreds of OAuth connectors: credentials and connectors can come from an integration platform, model routing from an existing gateway, and durable execution can be an optional backend. The value is the loop semantics on top.
+
+## Risks and open questions
+
+- **One egress is one target.** Concentrating every credential a loop uses in one service is a security trade-off, not a free win. It needs the same scrutiny as any [secrets store](/guide/shortcomings/security).
+- **Latency.** Gateways add milliseconds per call; vendor benchmarks claim anywhere from 1 to 40 ms <Evidence level="contested" />. Negligible for loops, but it adds up for chatty inner tool loops.
+- **The harnesses may absorb it.** Hermes has gateway spending limits and Codex has per-goal token budgets. If harness vendors add idempotency and wake-on-event, the standalone case shrinks to cross-harness and multi-tool users.
+- **Crowded market, thin moat.** Routing and auth are commodities. If loop semantics aren't clearly valuable, this is just another gateway.
+
+## Further reading
+
+- [What the best MCP gateways do in 2026](https://zuplo.com/blog/what-the-best-mcp-gateways-do-in-2026) (Zuplo, vendor)
+- [Durable execution for agents](https://agentwiki.org/durable_execution_for_agents) (AgentWiki)
+- [Runaway agents: detecting loops, drift and recursion](https://optscale.ai/blog/runaway-agents-loops-drift-recursion) (OptScale)
