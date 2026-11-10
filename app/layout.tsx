@@ -1,5 +1,6 @@
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { Provider } from '@/components/provider';
 import { appName, appTagline, siteUrl } from '@/lib/shared';
 import './global.css';
@@ -33,6 +34,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
     >
       <body className="flex flex-col min-h-screen font-sans">
         <Provider>{children}</Provider>
+        <Analytics />
       </body>
     </html>
   );
