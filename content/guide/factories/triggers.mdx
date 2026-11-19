@@ -1,0 +1,49 @@
+---
+title: What starts a factory
+description: Factories run on events, not prompts. The triggers in use today, and the intake filter that decides which events deserve an agent run.
+icon: RadioTower
+---
+
+A coding agent waits for a person to type. A factory waits for **something to happen**. That shift is most of what makes it a factory: the person who would have noticed the bug, opened the editor and prompted the agent has been replaced by a webhook.
+
+## The triggers in use
+
+| Trigger | Example | Who uses it |
+|---|---|---|
+| **New issue or webhook** | GitHub webhooks feed an issue queue; workers pick items up and start agent runs in sandboxes | Vercel's AI SDK factory ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)) |
+| **A label on an issue** | A `triage needed` label starts reproduction; later labels move the issue through the pipeline | Cloudflare's Astro triage ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/)) |
+| **An issue tracker state** | Every open Linear issue gets its own agent workspace; the orchestrator watches the board | OpenAI Symphony ([InfoWorld](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html)) |
+| **A chat message** | An engineer tags the bot in a Slack thread, and the thread becomes the task | Stripe Minions ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs)), Ramp Inspect |
+| **A production alert** | A Sentry webhook starts a worker that checks out the repo and runs an agent grounded in the stack trace | [Sentry](https://blog.sentry.io/agents-need-production-context/), [Warp demo](https://docs.warp.dev/factories/api-and-sdk/demo-sentry-monitoring-with-sdk/) |
+| **A CI failure** | A failing workflow on the main branch starts a diagnosis run | [GitHub Agentic Workflows](https://www.infoq.com/news/2026/02/github-agentic-workflows/) |
+| **A pull request** | Opening a PR starts automated review or CVE remediation | [Ona automations](https://githits.com/software-factories/ona/), Cloudflare's AI code reviewer ([Port](https://software-factories.port.io/companies/cloudflare)) |
+| **A schedule** | Nightly dependency bumps, weekly docs sync, fleet-wide migrations | Spotify's Fleet Management and Honk ([InfoQ](https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/)) |
+| **A spec or PRD** | A requirements document is distilled into plans, then tasks for agents | 8090's Software Factory ([Ry Walker](https://rywalker.com/research/8090-software-factory)) |
+
+Platforms now sell the trigger layer itself. Warp's Automation Platform lists schedules, CLI, API and SDK calls, Slack, Linear and Jira integrations, GitHub mentions, GitHub Actions and custom webhooks as trigger types, and can launch either its own agent or Claude Code from any of them ([Warp docs](https://docs.warp.dev/platform/triggers/)). <Evidence level="primary" />
+
+## Three families
+
+The triggers fall into three groups, and each needs a different kind of goal:
+
+1. **Work requests** (issues, labels, Slack mentions, specs). A person asked for something. Each one is a bounded goal with a clear "done".
+2. **Signals** (alerts, CI failures, PRs). Nobody asked; the world changed. These are a [standing goal](/guide/goals/standing-goals) firing: "keep main green", "keep error rates down".
+3. **Schedules** (nightly, weekly, fleet-wide). Maintenance that nobody would ever file a ticket for: migrations, dependency upgrades, docs drift.
+
+The third family is where factories quietly do the most volume. Spotify's Fleet Management system has been opening automated PRs since 2022 (reportedly 652,000 of them in 2024), well before agents arrived; the agent made the changes smarter, not the fleet possible ([Tech Trenches](https://techtrenches.dev/p/honk-is-not-magic-its-15-years-of)). <Evidence level="secondary" />
+
+## The intake filter matters more than the trigger
+
+Wiring a webhook to an agent is easy. Deciding **which events deserve a run** is not, and it's where several teams put their first effort:
+
+- **Classify first.** Vercel's first step was issue classification, before any agent tried to write code. A separate analysis step writes a probe to confirm a requested feature really is missing ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)). <Evidence level="primary" />
+- **Filter noisy signals.** One public factory spec only acts on Sentry alerts for server errors and unhandled exceptions with at least 3 events or 2 affected users within an hour, and only on CI failures on the main branch ([MYOS spec](https://github.com/ahmedtvmer/MYOS/issues/585)). <Evidence level="anecdotal" />
+- **Don't double-fire.** Webhook providers retry. Sentry gives a webhook about one second to respond, so handlers acknowledge immediately and schedule the work in the background; one open-source stack found its assumptions about retries were wrong ([background-agents PR](https://github.com/ColeMurray/background-agents/pull/2632)). Queue events and deduplicate them, or one alert starts two agents. <Evidence level="anecdotal" />
+- **Route judgment calls away.** OpenAI says ambiguous problems and work that needs strong judgment still belong in interactive sessions, not on the Symphony board ([InfoWorld](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html)).
+
+<Callout type="warn" title="Every trigger is an input from the outside world">
+  An issue body, a PR comment and a Slack thread are all text someone else wrote, and the factory feeds them to an
+  agent with repository access. Vercel's rule is blunt: "every issue, pull request, comment, and the links inside them
+  are untrusted" ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)). See
+  [Pitfalls](/guide/factories/pitfalls#prompt-injection-through-the-front-door).
+</Callout>

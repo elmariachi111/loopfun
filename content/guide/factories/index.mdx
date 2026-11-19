@@ -1,0 +1,79 @@
+---
+title: Software factories
+description: When loops stop being sessions and become infrastructure. What people mean by a "software factory" in late 2026, and how it relates to loops.
+icon: Factory
+---
+
+<Callout title="Research snapshot, November 2026">
+  This section collects what practitioners, vendors and critics said about software factories through mid-November
+  2026. The term is months old in its current sense, most numbers are **self-reported by the companies that run the
+  factories**, and several vendors are actively trying to own the word. Read the evidence badges.
+</Callout>
+
+## What people mean by it
+
+In 2026 the phrase **software factory** came to mean a system where AI agents take work from intake to a mergeable (sometimes deployed) change through a **repeatable pipeline**, and people design the pipeline rather than do the work inside it.
+
+Two definitions show the range:
+
+- **Port**, which runs a research index of company factories: "an AI-powered system where agents, guided by guardrails, shared context, and quality gates, take work from intake to production at scale". It stresses that this is "not a single product but an architecture" ([Port](https://software-factories.port.io/what-is-a-software-factory)). <Evidence level="primary" />
+- **PostHog's Jina Yoon**: "Since it's just a metaphor, there's no actual criteria for what counts as a software factory". It's a spectrum of **how much code agents write and how closely humans still read it** ([PostHog](https://newsletter.posthog.com/p/software-factories)). <Evidence level="primary" />
+
+The second definition is the more useful one. Almost every company on the following pages sits somewhere in the middle of that spectrum.
+
+## An old word, a new meaning
+
+The term isn't new. Bob Bemer used it in 1968, Japanese firms such as Hitachi and Toshiba ran "software factories" in the 1970s and 80s, Microsoft published a *Software Factories* methodology in 2004, and the US Department of Defense uses it for its DevSecOps platform teams ([Wikipedia](https://en.wikipedia.org/wiki/Software_factory)). All of these meant **standardised process and reusable parts operated by people**.
+
+The 2026 meaning swaps the workers. Three things pushed it into circulation:
+
+- **January 2026.** Dan Shapiro's "[The Five Levels: from Spicy Autocomplete to the Dark Factory](https://www.danshapiro.com/blog/2026/01/the-five-levels-from-spicy-autocomplete-to-the-software-factory/)" and Simon Willison's write-up of [StrongDM's AI team](https://simonwillison.net/2026/Feb/7/software-factory/), which runs a factory where nobody reads the code. Steve Yegge ships [Gas Town](https://steve-yegge.medium.com/welcome-to-gas-town-4f25ee16dd04), a multi-agent orchestrator.
+- **February to April 2026.** OpenAI's "[Harness engineering](https://openai.com/index/harness-engineering/)" post (an internal product of roughly a million lines, none written by hand) and then [Symphony](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html), a spec for turning an issue tracker into a control plane for agents.
+- **June to November 2026.** Vendors adopt the word: [Factory 2.0](https://factory.ai/news/software-factory), Warp Factories, 8090's Software Factory, Islo's Enterprise Software Factory. Port holds a "[first AI Software Factory Summit](https://finance.yahoo.com/technology/ai/articles/port-announces-portcon-first-ai-153800616.html)" in November.
+
+## Shapiro's five levels
+
+Shapiro's ladder, modelled on driving automation, became the common way to say how far along a team is. As summarised by [Simon Willison](https://simonwillison.net/2026/Jan/28/the-five-levels/):
+
+| Level | Name | What the human does |
+|---|---|---|
+| 0 | Spicy autocomplete | Writes the code; accepts suggestions |
+| 1 | The coding intern | Delegates boilerplate; reviews all of it |
+| 2 | The junior developer | Pair programs; still reviews every line |
+| 3 | The developer | Most code is AI-written; the human is a full-time reviewer |
+| 4 | The engineering team | Acts as manager or PM; writes specs and plans with the agents |
+| 5 | The dark software factory | "A black box that turns specs into software." Nobody reviews the code |
+
+The name "dark factory" borrows from manufacturing plants that run with the lights off because robots don't need to see. **Level 5 is rare.** Most of what's called a software factory in 2026 is level 3 or 4 with automation around it: agents write the code, humans still approve every merge.
+
+## How a factory relates to loops
+
+A factory isn't a new kind of loop. It's what you get when the [four layers](/guide/foundations/four-layers) are wired together and **left running**:
+
+| Factory piece | Loop concept | Where the guide covers it |
+|---|---|---|
+| The factory's mission ("keep open issues near zero") | A [standing goal](/guide/goals/standing-goals) | Goals |
+| Webhooks, labels, Slack mentions, schedules | [Ambient and scheduled loops](/guide/patterns/ambient-loops) (Layer 3) | Patterns |
+| One work item, built until checks pass | A goal loop (Layer 2) | [Foundations](/guide/foundations/four-layers#layer-2--the-goal-loop) |
+| Separate review, test and verification stations | [Maker/checker](/guide/patterns/maker-checker) | Patterns |
+| The board or tracker routing work between stations | [Graphs and teams](/guide/patterns/graphs-and-teams) (Layer 4) | Patterns |
+
+<Cycle
+  steps={['Signal', 'Triage', 'Build', 'Verify', 'Ship', 'Observe']}
+  center="the factory loop"
+  highlight={3}
+  caption="The outermost loop of a factory. Production signals and new issues feed the next round of intake. Most practitioners say the Verify station decides whether the whole thing works."
+/>
+
+The practical difference from a goal loop is **who starts it and who watches it**. A goal loop is something a person kicks off and checks on. A factory is started by events, processes many items at once, and is judged by throughput and quality over weeks, not by whether one run finished.
+
+## In this section
+
+<Cards>
+  <Card title="What starts a factory" href="/guide/factories/triggers" description="Issues, labels, Slack mentions, alerts, CI failures and schedules. Plus the intake filter that decides what's worth a run." />
+  <Card title="Inside the factory" href="/guide/factories/anatomy" description="The stations most factories share, how work moves between them, and how runs end." />
+  <Card title="Where the leverage is" href="/guide/factories/leverage" description="What practitioners found actually moves the needle: verification, environments, deterministic scaffolding and context." />
+  <Card title="Who runs one" href="/guide/factories/who-runs-them" description="Stripe, Ramp, Spotify, Vercel, Cloudflare, OpenAI, StrongDM and PostHog, side by side." />
+  <Card title="Tools and vendors" href="/guide/factories/tools" description="Platforms, open-source orchestrators and the primitives factories are built from." />
+  <Card title="Pitfalls and the debate" href="/guide/factories/pitfalls" description="Which problems the patterns solve, which they don't, and the critics who think the metaphor is wrong." />
+</Cards>

@@ -1,0 +1,89 @@
+---
+title: Pitfalls and the debate
+description: Which known problems the factory patterns solve, which ones they make worse, and the critics who think "factory" is the wrong word entirely.
+icon: Scale
+---
+
+## Problems the patterns solve
+
+Most factory patterns are answers to failures people hit first with single loops. Read this table as "the pitfall, and the pattern the published factories use against it".
+
+| Pitfall | Pattern that addresses it | Who does it |
+|---|---|---|
+| People can only supervise three to five sessions at once | The tracker as control plane; agents pull work, humans move cards | [Symphony](/guide/factories/leverage#5-the-tracker-as-the-control-plane) |
+| Agents grade their own homework, or edit the tests | Holdout scenarios the agent can't see; reproductions turned into tests first | StrongDM, Cloudflare |
+| "Fixes" for bugs that don't exist | A reproduce or analyse station before implementation | Cloudflare, Vercel |
+| Runaway retries and surprise bills | Bounded CI rounds; spend caps in tokens, dollars or iterations | Stripe, Port's spend control |
+| Slow, flaky or unsafe environments | Pre-warmed, isolated, disposable sandboxes | Stripe devboxes, Vercel Sandbox, Ona |
+| Context rot in long sessions | Narrow stations that start fresh and hand off through files, labels or a ledger | Cloudflare `report.md`, Beads |
+| Rate limits and costs of real third-party APIs during testing | Digital twins of dependencies | StrongDM |
+| Agents borrowing a human's credentials | Per-agent scoped identity; only the secrets each station needs | Port's identity layer, Vercel |
+| One giant instruction file nobody maintains | A short `AGENTS.md` that maps to deeper docs; cleanup agents | OpenAI |
+| Ambiguous tickets producing confident nonsense | Classify at intake; route judgment work back to humans | Vercel, Symphony |
+| Repeating the same failure next week | Outcome taxonomy; failed runs become eval cases | [Vercel](/guide/factories/anatomy#how-a-run-ends) |
+
+These patterns are real progress. But the remaining problems are the ones that matter most.
+
+## The review bottleneck moves, it doesn't disappear
+
+Almost every factory still has a human approve the merge, and those people become the constraint. OpenAI says human QA capacity became its bottleneck as output rose ([OpenAI](https://openai.com/index/harness-engineering/)). Spotify reportedly says "PR review is the new bottleneck" ([Ry Walker](https://rywalker.com/research/spotify-honk)). PostHog's humans skim at least 80% of agent PRs ([PostHog](https://newsletter.posthog.com/p/software-factories)).
+
+The industry data points the same way: more merged PRs, more review time, more PRs merged without review, and higher delivery instability when foundations are weak ([The human bottleneck](/guide/shortcomings/humans#the-review-bottleneck), [InfoQ on DORA 2026](https://www.infoq.com/news/2026/05/dora-roi-ai-assisted-dev-report/)). <Evidence level="secondary" />
+
+Dark factories respond by deleting the review. Everyone else responds by making review cheaper: evidence chains, reporter verification, risk-based routing where "humans decide only on high-risk PRs" ([PostHog](https://newsletter.posthog.com/p/software-factories)). Nobody has shown that review can scale to factory output.
+
+## Slop accumulates
+
+This is the strongest argument against lights-off factories, made most forcefully by **Dex Horthy** of HumanLayer in a series titled "Why Software Factories Fail" and an AI Engineer talk, "Harness Engineering Is Not Enough" ([AI Engineer](https://ai.engineer/talks/Ib5GBkD555M-harness-engineering-is-not-enough-why-software)):
+
+- Agents are good at isolated, well-defined changes, but across a long sequence of changes they "still tend to degrade the codebase beneath them". "Each slop pattern in your codebase increases the chance that more code is also going to be sloppy" ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)).
+- The training signal is lopsided: tests give feedback in seconds, while bad architecture costs you over weeks, months or years ([Developers Digest](https://www.developersdigest.tech/blog/software-factories-fail-harness-engineering)).
+- On his SlopCodeBench runs, unreviewed lights-off output reportedly had **over 11 times** more slop triggers per thousand lines than HumanLayer's reviewed codebase, and every model accumulated defects across checkpoints ([daily.dev](https://daily.dev/posts/everyone-building-a-software-factory-wants-the-same-proof-tuygipxpv), [AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). <Evidence level="contested" />
+
+Horthy is candid that HumanLayer sells human-in-the-loop tooling, that the sample is small, and that he can't prove the broader quality claim with today's benchmarks. But the argument explains something the PR-share numbers can't: a factory can look great for a quarter while making its own future runs worse.
+
+## Prompt injection through the front door
+
+A factory's triggers are its attack surface. Issues, PR comments and Slack threads are text written by strangers, fed to an agent with repository access. That's Simon Willison's **lethal trifecta** (private data, untrusted content, a way out) by default, and a 2025 demonstration against GitHub's MCP server needed nothing more than a malicious public issue ([Munder Difflin](https://munderdiffl.in/blog/the-lethal-trifecta-for-coding-agents/)). An agent that writes code doesn't even need to exfiltrate anything: it can simply commit a backdoor.
+
+What the careful factories do:
+
+- Treat every issue, comment and link as untrusted, and give each station only the secrets it needs ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)).
+- Run agents read-only by default and route writes through a constrained output layer ([GitHub Agentic Workflows](https://www.kenmuse.com/blog/github-agentic-workflows-bring-ai-agents-to-actions/)).
+- Give agents their own revocable identities ([Port](https://software-factories.port.io/)).
+- Apply Meta's "Rule of Two": a session should combine at most two of untrusted input, sensitive access and external action ([DEV](https://dev.to/max_quimby/your-agent-has-a-lethal-trifecta-nobody-shipped-a-fix-for-5233)).
+
+Commentators flagged exactly this risk in Cloudflare's triage system, which reads public issues while agents interact with source code and repository credentials ([Mintec](https://mintec.co/blog/astro-ai-triage-agents-cloudflare-2026/)). See [Security](/guide/shortcomings/security) for the general case.
+
+## Cost at factory scale
+
+StrongDM's $1,000-per-engineer-per-day benchmark is the most quoted number in the debate, and Willison's reaction ("more of a business model exercise") is the most common response ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). Gas Town users report burning around $100 an hour ([paddo.dev](https://paddo.dev/blog/gastown-two-kinds-of-multi-agent/)). <Evidence level="anecdotal" />
+
+The deeper problem is that nobody publishes **cost per verified change**. Factories report PR share, never what each merged PR cost in tokens and review time. Until they do, "the factory pays for itself" is a claim, not a finding. See [Cost](/guide/shortcomings/cost).
+
+## The split between deciding and building
+
+PostHog's critique is subtler: most factories separate **deciding what to build** (humans, specs, tickets) from **building it** (agents), and that split is the flaw. An agent that only sees the ticket can't make good design decisions; one that also sees usage data, logs, traces and user feedback can ([PostHog](https://newsletter.posthog.com/p/software-factories)). Thoughtworks makes a related warning about spec-driven development drifting toward heavy up-front specification and big-bang releases ([Thoughtworks](https://www.thoughtworks.com/radar/techniques)).
+
+## Is "factory" the wrong word?
+
+A vocal group thinks the metaphor itself misleads:
+
+- **Rob West**: software engineering is a discipline of design engineering, not manufacturing; the factory framing gets the nature of the work wrong ([Rob West](https://robwest.info/articles/the-agentic-software-factory-is-the-wrong-metaphor/)).
+- **Noah Brier** (Every): if it's a factory, it's Warhol's Factory, a studio aligned around one creative vision, not Ford's assembly line ([Every](https://every.to/thesis-statements/noah-brier)).
+- **Antony Marcano**: the "dark factory" confuses engineering with manufacturing; the actual factory has always been the CI/CD pipeline ([Substack](https://antonymarcano.substack.com/p/what-everyone-gets-wrong-about-ai)).
+- **LaunchDarkly**: AI software factories won't always look like factories ([LaunchDarkly](https://launchdarkly.com/blog/why-ai-software-factories-wont-always-look-like-factories/)).
+
+On the other side, the bulls argue that "most companies in the knowledge economy will turn themselves into factories" within a couple of years ([Exponential Operator](https://exponentialoperator.substack.com/p/you-should-take-software-factories)), and BCG claims 3 to 5x productivity for organisations running one ([qa.tech, citing BCG](https://qa.tech/blog/ai-software-factory-verification)). <Evidence level="contested" />
+
+## Where the evidence stands
+
+<Callout title="The honest summary">
+  **Factories work for scoped, checkable, high-volume work**: triage, reproductions, dependency bumps, migrations,
+  CI fixes, small bugs with clear reports. That's where every documented success sits. **Lights-off factories for
+  open-ended product work are unproven**: one well-documented team (StrongDM) runs one at a cost most can't
+  justify, and one well-documented team (HumanLayer) tried and archived the result. The rest of the industry sits at
+  Shapiro's level 3 or 4, with agents writing and humans approving.
+</Callout>
+
+As with loops in general, the claims are louder than the evidence. Every number in this section is self-reported, most of it by people selling factories or factory parts. The [field notes](/guide/field-notes/how-to-contribute) are open: if you run one, the most useful thing you could publish is what a merged change really costs you, and what fraction of factory PRs you later had to revert.

@@ -1,0 +1,75 @@
+---
+title: Tools and vendors
+description: The 2026 landscape. Commercial factory platforms, open-source orchestrators and specs, and the primitives every factory is assembled from.
+icon: Hammer
+---
+
+<Callout type="warn" title="A market a few months old">
+  Most of these products launched or renamed themselves in 2026, several are in preview, and funding figures
+  disagree between outlets. This is a map of what exists in November 2026, not a recommendation. Check each vendor's
+  own docs before relying on any detail here.
+</Callout>
+
+## Three ways to get a factory
+
+1. **Build it in-house** from a coding agent, sandboxes, CI and your tracker. This is what Stripe, Ramp, Spotify, Vercel and Cloudflare did. Port's index notes most large companies build their background agent rather than buy one ([Port](https://software-factories.port.io/)).
+2. **Assemble it** from an open-source orchestrator or spec (Symphony, Gas Town, GitHub Agentic Workflows) plus the agent of your choice.
+3. **Buy a platform** that bundles triggers, environments, agents and gates.
+
+## Commercial platforms
+
+| Platform | What it is | Notable | Evidence |
+|---|---|---|---|
+| **[Factory](https://factory.ai/news/software-factory)** | "Droids" across the lifecycle; Factory 2.0 (June 2026) reframes them as a full software factory, from signals to plan, code, review, test, deploy and monitor | **Missions**: describe a business outcome, multiple Droids plan, execute and verify over hours or days. Reported $200M at a $5B valuation in September 2026 ([DevOps.com](https://devops.com/factory-raises-200m-as-it-builds-agents-across-the-software-lifecycle/)) | <Evidence level="primary" /> |
+| **[8090 Software Factory](https://rywalker.com/research/8090-software-factory)** | A spec-first "assembly line": Refinery (requirements into a PRD), Foundry (architecture), Planner (agent tasks), Validator (feedback into work items), over a knowledge graph | Brings your own coding agent (Cursor, Claude Code) over MCP. Chamath Palihapitiya is CEO; a reported $135M Series A ([Enterprise DNA](https://enterprisedna.co/resources/news/8090-labs-chamath-135m-enterprise-ai-coding-2026/)) | <Evidence level="secondary" /> |
+| **[Warp Factories](https://docs.warp.dev/platform/triggers/)** | A team product (August 2026) on Warp's Automation Platform, the execution layer behind its Oz cloud agents (February 2026) | Rich trigger catalogue; can run Warp's own agent or [Claude Code](https://docs.warp.dev/factories/harnesses/claude-code) as the harness | <Evidence level="primary" /> |
+| **[Ona](https://githits.com/software-factories/ona/)** (formerly Gitpod) | Background agents in full dev environments defined by `devcontainer.json`, in Ona's cloud or your VPC | Automations trigger agent fleets on PRs, schedules or webhooks for CVE fixes, migrations, review and triage. One directory reports an acquisition by OpenAI; we couldn't confirm it | <Evidence level="secondary" /> |
+| **[Islo](https://www.unite.ai/islo-raises-15m-to-scale-its-enterprise-software-factory/)** | Enterprise Software Factory from the Incredibuild family, launched 17 November 2026 with $15M led by Insight Partners | "Factory Lines" make checks and approvals repeatable; model changes are tested against historical tickets for customer-specific evidence | <Evidence level="secondary" /> |
+| **[Port](https://www.port.io/blog/how-to-choose-your-software-factory-stack)** | An internal developer portal repositioned as the control layer for agentic SDLC | Also runs the [software factory index](https://software-factories.port.io/) and PortCon | <Evidence level="primary" /> |
+
+The general coding agents (Claude Code, Codex, Devin, Jules, Cursor's background agents) appear in every comparison but are better understood as **the worker inside a station** than as factories themselves ([Mastra](https://mastra.ai/articles/best-software-factory), [Agentastic](https://www.agentastic.dev/compare/best-ai-software-factory-tools)). Their goal and scheduling features are covered under [Environments](/guide/environments).
+
+## Open-source orchestrators and specs
+
+<Accordions>
+<Accordion title="OpenAI Symphony">
+An open specification (with an Elixir reference implementation driving Codex via the App Server) that turns an issue tracker, Linear in the first version, into a control plane: each open issue gets an agent workspace; the orchestrator watches the board, restarts stalled agents and shepherds PRs through CI, rebases and conflicts ([InfoWorld](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html), [Better Stack](https://betterstack.com/community/guides/ai/openai-symphony/)). Positioned as an engineering preview, not a maintained product. Reported "500% more landed PRs" for some teams is unverified. <Evidence level="primary" />
+</Accordion>
+<Accordion title="Gas Town and Beads (Steve Yegge)">
+A multi-agent orchestrator for Claude Code launched in January 2026. Roles: the **Mayor** (the agent you talk to, which files and dispatches work), **Polecats** (ephemeral workers for well-specified tasks), the **Witness** and **Deacon** (monitoring), and the **Refinery** (merges). Work is tracked in **Beads**, a git-backed issue ledger released in October 2025 that many people use on its own ([Yegge](https://steve-yegge.medium.com/welcome-to-gas-town-4f25ee16dd04), [Echofold](https://echofold.ai/articles/gas-town-multi-agent-orchestrator-claude-code)). Yegge himself warns against adopting it casually; users report heavy token burn, around $100 an hour in one account ([paddo.dev](https://paddo.dev/blog/gastown-two-kinds-of-multi-agent/)). <Evidence level="anecdotal" />
+</Accordion>
+<Accordion title="GitHub Agentic Workflows">
+Generally available since 28 October 2026. You describe automation in Markdown under `.github/workflows/`; the `gh aw` CLI compiles it to ordinary Actions YAML, so it reuses your runners and policies. Copilot is the default agent; Claude Code and Codex are supported. Runs are read-only by default with a "safe outputs" layer for writes ([GitHub changelog](https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/), [The Register](https://www.theregister.com/2026/02/17/github_previews_agentic_workflows/), [Ken Muse](https://www.kenmuse.com/blog/github-agentic-workflows-bring-ai-agents-to-actions/)). GitHub calls the idea **continuous AI**: CI for tasks that need judgment. <Evidence level="primary" />
+</Accordion>
+<Accordion title="Cloudflare triagebot-action">
+The Astro issue-triage factory packaged as a GitHub Action: label-driven state machine, isolated subagents, `report.md` handoff ([ai-tldr](https://ai-tldr.dev/releases/astro-triagebot-action/)). <Evidence level="secondary" />
+</Accordion>
+<Accordion title="Vercel eve and Board">
+**eve** is Vercel's agent framework (1.0 GA), with an open-source factory template that turns labelled issues into **draft** PRs and never merges them ([Vercel](https://vercel.com/blog/eve-is-now-generally-available), [Zentor](https://zentor.ai/blog/vercel-eve-software-factory)). **Board** is a shared message board agents use to coordinate ([Vercel](https://vercel.com/blog/introducing-vercel-board)). <Evidence level="primary" />
+</Accordion>
+<Accordion title="Spec-driven development kits">
+GitHub **Spec Kit**, **OpenSpec** and **BMAD** structure the step before the factory: turning intent into specs and plans agents can execute. Thoughtworks has spec-driven development at Assess and warns about "AI-driven documentation sprawl" and a bias toward big up-front specs ([Thoughtworks](https://www.thoughtworks.com/radar/techniques)). <Evidence level="secondary" />
+</Accordion>
+</Accordions>
+
+Curated lists track the long tail: [awesome-software-factories](https://github.com/varun1505/awesome-software-factories) and [camplight's list](https://github.com/camplight/awesome-software-factories).
+
+## The primitives underneath
+
+Whatever you buy or build, the same parts recur. Port's nine patterns are the clearest catalogue ([Port](https://software-factories.port.io/)):
+
+<Defs
+  items={[
+    ['Background agent', 'The worker. Runs without a person watching; most large companies build their own.'],
+    ['Ephemeral environments', 'A pool of pre-warmed, disposable sandboxes, one per run.'],
+    ['Quality gate', 'The checkpoint that decides whether an agent-written change is safe to merge.'],
+    ['Shared agent context', 'What agents know about the codebase, kept as a versioned artifact.'],
+    ['Model router', 'Every model request goes through one layer, so models can be swapped and costed.'],
+    ['Internal MCP gateway', 'One place to grant, audit and revoke tool access.'],
+    ['Identity layer', 'Each agent gets its own scoped, revocable identity instead of borrowing a human\'s.'],
+    ['Guardrail layer', 'Rules enforced as code the agent can\'t get past, not as requests in a prompt.'],
+    ['Spend control', 'Caps in dollars, tokens or iterations.'],
+  ]}
+/>
+
+Several of these overlap with what this guide's [Remedies](/guide/remedies/control-plane) section proposes for loops in general: one egress, tagged by goal, with budgets and an audit log.
