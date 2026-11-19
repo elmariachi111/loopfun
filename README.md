@@ -31,6 +31,7 @@ content/guide/            # all guide pages (MDX) + meta.json sidebar order
   goals/                  # goals, judges, budgets, standing goals, open questions
   patterns/               # Ralph, maker/checker, metric, ambient, graphs
   environments/           # Claude Code, Codex, Hermes, Google, OpenClaw, SDKs
+  hosts/                  # microVM hosts: Firecracker, custom stacks, gVisor/k8s, self-hosted, harnesses, costs, ops
   factories/              # software factories: triggers, stations, leverage, cases, tools, pitfalls
   shortcomings/           # verification, cost, memory, models, security, humans…
   field-notes/            # community notes, public record, idea board

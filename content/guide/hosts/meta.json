@@ -1,0 +1,16 @@
+{
+  "title": "MicroVM hosts",
+  "icon": "Server",
+  "pages": [
+    "index",
+    "---By technology---",
+    "firecracker",
+    "custom-stacks",
+    "gvisor-and-kubernetes",
+    "self-hosted",
+    "---Using them---",
+    "harnesses",
+    "costs",
+    "operations"
+  ]
+}

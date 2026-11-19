@@ -1,0 +1,123 @@
+---
+title: Firecracker hosts
+description: Fly.io Sprites, E2B, Blaxel and Vercel Sandbox give each agent a microVM that sleeps when idle. How to get one, put a harness on it and wake it.
+icon: Flame
+---
+
+**Firecracker** is the open-source microVM technology AWS built for Lambda. For you as a user, the only things that matter are that each agent gets **its own kernel** (much stronger isolation than a container), the machine **starts in well under a second**, and the platform can **pause and snapshot it**. That makes it the default choice for agent hosts. The four hosts on this page all state that they run on Firecracker, but they use the pause button very differently.
+
+## At a glance
+
+| | [Fly.io Sprites](#flyio-sprites) | [E2B](#e2b) | [Blaxel](#blaxel) | [Vercel Sandbox](#vercel-sandbox) |
+|---|---|---|---|---|
+| **Feels like** | A personal Linux computer per agent | A programmable sandbox you pause and resume | A sandbox that's always in standby | A disposable box that remembers its disk |
+| **Goes to sleep** | About 30 s after the last activity | When the timeout you set runs out (if set to pause) | Seconds after the last connection | When stopped or timed out (default 5 min) |
+| **Memory on wake** | Kept after a short nap, lost after a long sleep | Kept | Kept | Not kept (disk only) |
+| **Wakes on** | HTTP request to its URL, a command | SDK call, or traffic to a port URL with auto-resume | Reconnecting | Next call or command |
+| **Sleeping machine kept** | Until you destroy it | Indefinitely | 7–60 days is typical; TTL on low tiers | Snapshots expire 30 days after last use |
+| **Runtime cap** | None stated | 1 h (Hobby) / 24 h (Pro) without a pause | Hours | 45 min (Hobby) / 24 h (Pro) per session |
+| **Harness ready-made** | Common toolchains; install the agent yourself | `claude` and `codex` templates, guides for many more | Skills and MCP for coding agents | Claude Agent SDK guide |
+
+Sources for this table are linked in each section below. Treat the numbers as of November 2026.
+
+## Fly.io Sprites
+
+Launched in January 2026, Sprites are Fly.io's take on "a computer for your agent": a persistent Linux machine with 100 GB of disk and a public URL that sleeps whenever nothing is happening ([Fly.io](https://fly.io/sprites), [DevClass](https://www.devclass.com/ai-ml/2026/01/13/flyio-introduces-sprites-lightweight-persistent-vms-to-isolate-agentic-ai/4079557)).
+
+<Steps>
+<Step>
+
+**Get in.** Sign up with a Fly.io account, install the `sprite` CLI and run `sprite login`. For CI or another agent, create an org token (`sprite org auth`). SDKs exist for JavaScript (`@fly/sprites`), Python, Go and Elixir, plus a REST API ([quickstart](https://docs.fly.io/sprites/quickstart), [CLI reference](https://docs.fly.io/sprites/cli/commands)).
+
+</Step>
+<Step>
+
+**Make a machine.** `sprite create my-agent`, then `sprite console` for a shell. It comes with Node.js, Python, Go and Git. You install Claude Code, Codex, Hermes or any other harness the usual way.
+
+</Step>
+<Step>
+
+**Keep the agent alive across wakes.** Register the harness as a **service** (`sprite-env services create …`). Services start at boot and come back after a cold wake, so the agent is always there when a request arrives. While the agent works, it holds a **task** (renewable, up to an hour at a time) so the machine doesn't fall asleep mid-run. When the task expires, the Sprite is free to sleep ([services](https://docs.fly.io/sprites/concepts/services), [keeping Sprites running](https://docs.fly.io/sprites/keeping-sprites-running)).
+
+</Step>
+<Step>
+
+**Let the world reach it.** Every Sprite has an HTTPS URL. It's private by default, and you can make it public for webhooks (`sprite url update --auth public`). Traffic goes to port 8080. Fly's docs warn to "treat every HTTP service as potentially internet-facing".
+
+</Step>
+</Steps>
+
+**How it sleeps.** About 30 seconds after the last command, output or connection, the Sprite goes **warm**: suspended with its memory, not billed for compute, back in 100 to 500 ms "mid-thought". After a longer idle it goes **cold**: memory is dropped, and the next wake takes 1 to 2 s and starts services fresh. Files, installed packages and git repos always survive. Open TCP connections never do ([lifecycle](https://docs.fly.io/sprites/concepts/lifecycle)). <Evidence level="primary" />
+
+**Checkpoints** are a separate feature: a snapshot of the disk in about a second, which you can restore if the agent wrecks its environment. They don't capture memory, and Fly is blunt that they "are not version control", so keep code in git ([checkpoints](https://docs.fly.io/sprites/concepts/checkpoints)).
+
+**Cost.** $0.0385 per CPU-hour and $0.021875 per GB-hour of memory while active. Disk is $0.50 per GB-month hot and $0.02 cold. Fly's own example puts a 4-hour Claude Code session at $0.23. A $100/month plan includes 1,200 CPU-hours. Some Fly pages list double these rates, and the free trial differs between pages, so check before you budget ([pricing](https://fly.io/sprites)). <Evidence level="contested" />
+
+**Good for:** one long-lived agent per person, project or customer that should feel like "its own computer". **Watch out for:** a forgotten task heartbeat keeps the machine (and the bill) awake, and anything you started by hand in a shell is gone after a cold wake.
+
+## E2B
+
+E2B started as a code-execution sandbox for AI apps and has become one of the most widely used agent hosts. It is the most explicit about pausing: you decide when a sandbox pauses, it keeps **memory and running processes**, and a paused sandbox is **kept indefinitely** ([persistence](https://docs.e2b.dev/sandbox/persistence)). <Evidence level="primary" />
+
+<Steps>
+<Step>
+
+**Get in.** Sign up at the E2B console, create an API key (`E2B_API_KEY`) and install the SDK (`npm install e2b` or `pip install e2b`). The Hobby tier needs no credit card ([API key](https://docs.e2b.dev/api-key), [pricing](https://e2b.dev/pricing)).
+
+</Step>
+<Step>
+
+**Start from a template.** E2B ships ready-made **`claude`** and **`codex`** templates with the CLIs installed (`e2b sbx create claude`), and its agent docs cover OpenCode, Gemini CLI, Amp, Droid, Kimi, Kiro, Hermes, Copilot CLI and others. For your own setup, define a template in code with your harness and its config baked in ([Claude Code](https://docs.e2b.dev/agents/claude-code), [Codex](https://docs.e2b.dev/agents/codex), [templates](https://docs.e2b.dev/template/quickstart)).
+
+</Step>
+<Step>
+
+**Run the harness headless.** The docs drive the agent through its headless mode (`claude -p …`, `codex exec …`) as a sandbox command with no timeout, and resume the same conversation later by session or thread ID. An MCP gateway gives the agent access to many external tools.
+
+</Step>
+<Step>
+
+**Turn on auto-pause.** Set the sandbox's timeout behaviour to *pause* instead of *kill*, and enable **auto-resume** so that the next SDK call or request to one of its port URLs wakes it. Keep the sandbox ID somewhere durable so your scheduler can reconnect ([auto-resume](https://docs.e2b.dev/sandbox/auto-resume)).
+
+</Step>
+</Steps>
+
+**How it sleeps.** Pausing takes about 4 seconds per GiB of RAM, and resuming about a second. Paused sandboxes don't bill compute and don't count against concurrency. Clients disconnect and must reconnect after resume. There is also a cheaper *filesystem-only* pause that reboots on resume.
+
+**Caps.** A sandbox may run continuously for at most 1 hour on Hobby and 24 hours on Pro. Pausing and resuming resets the clock, which suits a waiting loop but can cut off a long working loop ([sandbox docs](https://docs.e2b.dev/sandbox)).
+
+**Cost.** $0.000014 per vCPU-second and $0.0000045 per GiB-second while running, so about $0.17 an hour for 2 vCPU and 4 GiB. Pro is $150/month plus usage. Hobby includes one-time credits ([pricing](https://e2b.dev/pricing)).
+
+**Ports and webhooks.** Every port gets a public URL (`<port>-<sandbox-id>.e2b.app`) that is reachable by anyone who knows it unless you restrict it with an access token ([public URLs](https://docs.e2b.dev/network/public-url)).
+
+**Good for:** programmatic fleets, where your own code decides when each agent runs and pauses. **Watch out for:** the public-by-default port URLs, and the runtime cap on long working loops.
+
+## Blaxel
+
+Blaxel bills itself as a "perpetual sandbox": a Firecracker microVM that drops into **standby** within seconds of the last connection and resumes in **under 25 ms**, "even after weeks", with memory, processes and files intact ([docs](https://docs.blaxel.ai/), [perpetual sandbox](https://blaxel.ai/blog/perpetual-sandbox)). <Evidence level="anecdotal" /> The resume time is the vendor's own figure. Its pages disagree on whether standby starts after 5 or 15 seconds.
+
+- **Get in:** sign up at app.blaxel.ai and install the `bl` CLI. `bl setup` also installs Blaxel skills and an MCP server into Claude Code, Codex, Cursor and others, so your coding agent can create and drive sandboxes itself. SDKs exist for TypeScript, Python and Go ([CLI](https://docs.blaxel.ai/cli-reference/introduction)).
+- **Make a machine:** create a sandbox from a Blaxel base image or your own image (`bl deploy`), then `bl connect sandbox <name>` for a terminal. Blaxel links a guide for connecting Claude Code to a sandbox.
+- **Sleep and wake:** reconnecting wakes the sandbox. Long-lived WebSocket or TCP connections time out after 15 minutes of inactivity, and outbound connections (databases, Redis) need reconnect logic after standby ([best practices](https://docs.blaxel.ai/Sandboxes/best-practices)).
+- **Retention:** the lowest quota tiers enforce a maximum TTL. From tier 2 up there is no default expiry, and Blaxel says most customers keep sandboxes in standby for 7 to 60 days. A separate **archive** mode keeps only the disk, for cheaper long-term storage.
+- **Cost:** $0.0000115 per GB of RAM per second while active (about $0.08 an hour for 2 GB), nothing for compute in standby, and $0.20 per GB-month for snapshot storage ([pricing](https://blaxel.ai/pricing)).
+
+**Good for:** many agents that each wake briefly and often, where resume latency matters. **Watch out for:** a young vendor whose numbers are mostly self-reported.
+
+## Vercel Sandbox
+
+Vercel Sandbox (GA January 2026) runs each sandbox in a Firecracker microVM. It is the most "serverless" of the four: a sandbox is **persistent by default**, but what persists is the **disk**. When it stops, Vercel snapshots the filesystem automatically, and the next session starts from that snapshot ([docs](https://vercel.com/docs/sandbox), [persistent sandboxes](https://vercel.com/docs/sandbox/concepts/persistent-sandboxes)). <Evidence level="primary" />
+
+- **Get in:** any Vercel account. Authenticate from a linked project or with an access token. Use the `@vercel/sandbox` SDK, the Python package or the `sandbox` CLI.
+- **Put a harness on it:** Vercel's guide installs Claude Code and the Claude Agent SDK into a sandbox ([guide](https://vercel.com/kb/guide/using-vercel-sandbox-claude-agent-sdk)). Pair it with Vercel's **Workflow** kit when the loop itself should survive restarts, with durable steps, sleeps and retries outside the sandbox.
+- **Sleep and wake:** sessions time out after 5 minutes by default, up to 45 minutes on Hobby and 24 hours on Pro. The limit resets on each resume, so a sandbox can live indefinitely as a series of sessions. Running processes don't survive a stop, so the harness must restart from its files.
+- **Retention:** snapshots expire 30 days after last use by default and are tied to a region ([snapshots](https://vercel.com/docs/sandbox/concepts/snapshots)).
+- **Cost:** CPU is billed only while it's actually busy ($0.128 per Active CPU hour in iad1), plus $0.0212 per GB-hour of provisioned memory. Vercel's example: a 1 vCPU, 2 GB sandbox busy all day costs about $4 ([pricing](https://vercel.com/docs/sandbox/pricing)).
+
+**Good for:** teams already on Vercel, agents whose state lives in files and git, and bursty work that waits on model responses (I/O wait doesn't bill CPU). **Watch out for:** anything that must stay resident in memory between wakes.
+
+## Further reading
+
+- [AI agent sandboxes compared: 15 providers](https://upstash.com/blog/ai-agent-sandbox-providers-compared-2026) (Upstash, a vendor in the space)
+- [Your AI coding agent needs more than a sandbox](https://fly.io/learn/sprites-for-ai-agents/) (Fly.io)
+- [CPU-hour vs wall-clock pricing for sandboxes](https://upstash.com/blog/ai-sandbox-pricing-active-cpu-vs-wall-clock)

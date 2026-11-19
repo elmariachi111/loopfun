@@ -7,6 +7,7 @@ import {
   Crosshair,
   Library,
   NotebookPen,
+  Server,
   TriangleAlert,
 } from 'lucide-react';
 import { FieldNoteCTA } from '@/components/contribute';
@@ -36,6 +37,12 @@ const sections = [
     icon: BookOpenText,
     title: 'Environments',
     body: 'How Claude Code, Codex, Hermes, Antigravity, OpenClaw and the SDKs each implement loops.',
+  },
+  {
+    href: `${docsRoute}/hosts`,
+    icon: Server,
+    title: 'MicroVM hosts',
+    body: 'Cloud machines for agents that look always on but sleep between tasks, and how to put a harness on one.',
   },
   {
     href: `${docsRoute}/shortcomings`,

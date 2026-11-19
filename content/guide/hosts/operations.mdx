@@ -1,0 +1,69 @@
+---
+title: Running them for months
+description: The upkeep of sleeping agents. Harness updates, secrets, expiry, reconnects, runtime caps, observability and cleaning up.
+icon: Wrench
+---
+
+Starting an agent on a hibernating host takes minutes. Keeping a few dozen of them healthy for months is where the work is. Most of the chores below come from one fact: **a sleeping machine is frozen in time**, and the world it wakes up in has moved on.
+
+## Harness updates
+
+Claude Code, Codex, Hermes and most other harnesses update themselves, or ship new versions weekly. A snapshot freezes whatever version was installed when it was taken. If you restore agents from different snapshots, they end up on mixed versions, each with slightly different loop behaviour.
+
+- **Bake versions into images or templates** and rebuild them on a schedule, instead of letting each machine self-update at random. kagent, for example, builds one snapshot per harness and wakes every agent from it, which takes about a minute the first time ([kagent](https://kagent.dev/docs/kagent/concepts/agent-substrate/)).
+- **Roll out like any deployment.** Move a few agents to the new image, watch their loops for a day, then move the rest.
+- **Pin what the goal depends on**: model IDs, MCP server versions, and the harness's goal and judge settings ([Judges](/guide/goals/judges)).
+
+## Secrets
+
+A memory snapshot captures **everything that was in RAM**, including any token the harness had loaded. A disk snapshot captures every key written to a dotfile. Snapshots are then stored, sometimes for weeks, and can be forked.
+
+- **Prefer credentials injected from outside the machine.** Docker Sandboxes' proxy adds credentials to outbound requests so the key never enters the VM. Sprites connectors keep credentials out of the Sprite. Claude Code's cloud environments and Codex cloud route traffic through an egress proxy in the same way.
+- **Never write keys into shell profiles.** Some vendor quickstarts do this (`export …_API_KEY` appended to `~/.bashrc`). The key then lives in every snapshot and every fork.
+- **Use scoped, revocable tokens** per agent, such as Morph's agent tokens or per-sandbox access tokens, so one leaked snapshot doesn't expose your account.
+- **Check snapshot encryption and retention** with your host, the same way you would for a database backup.
+
+## Expiry and retention
+
+Every host eventually throws a sleeping machine away. A standing goal that sleeps longer than that loses its body, and on some hosts its memory, disk and checkpoints with it.
+
+| Host | What expires, and when (default) |
+|---|---|
+| E2B | Paused sandboxes are kept indefinitely ([persistence](https://docs.e2b.dev/sandbox/persistence)) |
+| Fly.io Sprites | Kept until you destroy them. Automatic checkpoints are pruned over time |
+| Blaxel | Maximum TTL on the lowest quota tiers. No default expiry from tier 2 up |
+| Vercel Sandbox | Snapshots expire 30 days after last use, and can't leave their region |
+| Modal | Filesystem snapshots after 30 days (configurable), memory snapshots after 7 |
+| Daytona | Stopped containers archived after 7 days. No auto-delete by default |
+| Docker Sandboxes (cloud) | Cloud sandboxes expire after one hour by default |
+| Cloudflare Sandbox | Workspace backups expire after 3 days |
+
+**Treat the machine as replaceable.** The goal, its memory and its audit trail should survive the loss of the machine: in git, a database or the harness's session store. See [Persistence](/guide/goals/budgets-and-lifecycle#persistence-where-does-the-goal-live).
+
+## Reconnects after a wake
+
+No host keeps open network connections through a pause. Google's Agent Substrate docs say it plainly: connections "to MCP servers" and databases "aren't preserved" ([GKE](https://docs.cloud.google.com/kubernetes-engine/ai-ml/about-agent-substrate)). After every wake the harness must re-open MCP servers, database sessions and chat connections. Test this deliberately: pause an agent mid-task, wake it, and see whether it carries on or hangs.
+
+## Runtime caps and long work
+
+Hosts built for waiting loops often limit how long a machine may run without a break: 1 hour on E2B Hobby, 24 hours on E2B Pro, Modal and Vercel Pro, 45 minutes per session on Vercel Hobby. A working loop that runs into the cap is cut off mid-turn. Give long `/goal` runs a host or plan without a short cap, or break them into resumable chunks with a checkpoint between each one.
+
+## Observability
+
+Loops [fail quietly](/guide/shortcomings/reliability), and sleeping loops fail even more quietly: an agent that never wakes up looks exactly like an agent with nothing to do. Track, per agent:
+
+- **Wakes per day, and why** (webhook, schedule, manual). A sudden drop usually means a broken trigger, not a quiet week.
+- **Busy time per wake.** A creeping increase is an early sign of a goal going stale or a context growing without bound.
+- **Prompt-cache hit rate per wake**, if your provider reports it. See [Costs](/guide/hosts/costs).
+- **Machines awake with nothing running.** This is the forgotten keep-alive, and it's the commonest surprise on the bill.
+
+## Cleaning up
+
+Sleeping machines are cheap enough to forget about. A fleet of abandoned agents with 100 GB disks still bills for storage, and their snapshots still hold whatever secrets they had. Give every machine an owner and a goal label (most hosts support labels or names), review the list monthly, and delete machines whose goal has been retired. [Standing goals go stale](/guide/goals/standing-goals#standing-goals-go-stale), and so do their machines.
+
+## Further reading
+
+- [Security](/guide/shortcomings/security) and [A control plane for loop side effects](/guide/remedies/control-plane) on this site
+- [Fly.io: keeping Sprites running](https://docs.fly.io/sprites/keeping-sprites-running)
+- [Blaxel: sandbox best practices](https://docs.blaxel.ai/Sandboxes/best-practices)
+- [Amazon Bedrock AgentCore pricing: hidden costs that bill while your agent idles](https://builder.aws.com/content/3KC60kJzFVDfHVxJ5CNecLZVPmA/amazon-bedrock-agentcore-pricing-hidden-costs-that-bill-while-your-agent-idles)

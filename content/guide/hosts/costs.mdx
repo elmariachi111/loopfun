@@ -1,0 +1,84 @@
+---
+title: Costs
+description: What a hibernating host saves for a waiting loop, why it saves nothing for a working loop, and why the real win only shows up at fleet scale.
+icon: Calculator
+---
+
+Hibernating hosts are sold on "never pay for idle". That's true, but whether it matters depends on **how much of your loop's life is idle** and **how much of your bill is compute at all**.
+
+## A worked example
+
+<Callout title="Illustrative arithmetic, not a benchmark">
+  The rates below are the published list prices quoted elsewhere in this section (Sprites, E2B and Blaxel all land near
+  $0.08 an hour for 1 vCPU and 2 GB). The token figures are assumptions, stated so you can redo the sums with your own
+  numbers.
+</Callout>
+
+**The waiting loop.** A standing goal ("keep CI green and triage new issues") on a 1 vCPU, 2 GB machine. It wakes 48 times a day (every 30 minutes, OpenClaw's default heartbeat) and is busy for 90 seconds each time. That's about **36 hours of activity a month**, a 5% duty cycle.
+
+| | Compute per month |
+|---|---|
+| Always-on VM at about $0.08 per hour | **about $60** |
+| Hibernating microVM at the same rate | **about $3**, plus cents for sleeping storage |
+| Tokens: 1,440 wakes, each re-reading about 40k tokens of instructions, memory and tool definitions at $3 per million, plus about 2k output tokens at $15 per million | **about $215**, on any host |
+
+**The working loop.** A `/goal` run that migrates a codebase for three hours straight, on 2 vCPU and 4 GB.
+
+| | Compute for the run |
+|---|---|
+| Any VM, or any hibernating host | **about $0.50** (E2B's rates: $0.17 an hour) |
+| Saved by hibernation | **$0.** The machine never goes idle. |
+| Tokens | Far larger, and set by the model and the task, not the host |
+
+## What the numbers say
+
+<Accordions>
+<Accordion title="For one agent, hibernation is a rounding error">
+In the waiting-loop example, hibernation saves about $57 a month on a bill of about $275. Tokens dominate, which matches Anthropic's own hosting guidance that containers cost around 5 cents an hour and tokens usually dwarf that ([Agent SDK hosting](https://code.claude.com/docs/en/agent-sdk/hosting)). A small always-on VM or a machine at home is a perfectly good choice for one personal agent.
+</Accordion>
+<Accordion title="For a working loop, it's irrelevant">
+Goal-driven payloads, inner loops and Ralph loops are busy the whole time they run. Hibernation can't make busy time cheaper. Choose these hosts for isolation, snapshots or convenience, and choose machine size and [budgets](/guide/goals/budgets-and-lifecycle) to control cost. Also check the host's runtime cap: an E2B Hobby sandbox stops after an hour, and Pro sandboxes, Modal and Vercel Pro after 24 hours.
+</Accordion>
+<Accordion title="For a fleet, it's the whole business case">
+Multiply the waiting loop by 1,000 (one agent per customer, repository or inbox) and the same 5% duty cycle saves about **$57,000 a month** in compute. This is the case Agent Substrate (about 250 agents on 8 pods in Solo.io's demo) and Unikraft ("100K+" instances per server) are built for. <Evidence level="anecdotal" />
+</Accordion>
+<Accordion title="The prompt cache cares about how long you sleep">
+Providers cache long prompt prefixes for minutes to an hour. If your agent sleeps longer than the cache lasts, every wake pays full price to re-read its instructions and memory. In the example above, that is most of the token bill. Choosing a wake interval shorter than the cache lifetime, or a longer-lived cache, can matter more than which host you pick. Better still, wake on events and skip the model call when a cheap check finds nothing to do ([Cost levers](/guide/shortcomings/cost#levers-that-help)).
+</Accordion>
+</Accordions>
+
+## Where hibernation wins
+
+- **Fleets of low-duty standing goals**: one agent per user, customer, repo or ticket queue.
+- **Wait-heavy goals**: waiting on CI, a deploy, a human approval or a vendor callback for hours or days.
+- **Event-driven loops**: webhooks wake the machine only when something actually happened.
+- **Branch-and-compare patterns**: fork one warm machine into several attempts (Morph branching, E2B forks, Sprites checkpoints) instead of building N environments from scratch.
+- **Reversible autonomy**: a snapshot before a permission-free run is a cheap undo.
+
+## Where it doesn't
+
+- **Working loops** of any kind (see above).
+- **A single personal agent**, where compute is noise next to tokens.
+- **Harnesses that never sleep**: an in-process heartbeat, a held chat connection or a forgotten keep-alive keeps the meter running.
+- **Polling every minute**: resume overhead and cold prompt caches cancel out the savings. Push events instead.
+- **GPU or local-model agents**: no host here can snapshot a GPU, so every wake is a cold start.
+- **Goals that sleep longer than the host keeps them**: a 30-day snapshot expiry is fine for a daily heartbeat and fatal for a quarterly one.
+
+## How the meters differ
+
+<Defs
+  items={[
+    ['Wall-clock while awake', 'Sprites, E2B, Blaxel and Morph bill CPU and memory for as long as the machine is active, busy or not.'],
+    ['Active CPU only', 'Vercel bills CPU only while code is actually executing, not while it waits on a model response, but bills provisioned memory the whole time. This suits agents that mostly wait for the model.'],
+    ['Per active session', <>Claude Managed Agents charges about $0.08 per active session-hour on top of tokens and nothing while idle, according to third-party pricing write-ups (<a href="https://www.truefoundry.com/blog/claude-managed-agents-pricing">TrueFoundry</a>).</>],
+    ['Storage while asleep', 'Almost every host bills for the snapshot or disk of a sleeping machine, typically $0.02 to $0.50 per GB-month. Small per agent, noticeable for a large fleet of large disks.'],
+    ['Plan minimums', 'E2B Pro is $150 a month before usage, Sprites plans start at $100 with included hours, and Morph sells prepaid compute units. For small setups the minimum can be the biggest line item.'],
+  ]}
+/>
+
+## Further reading
+
+- [Why AI agent sandbox bills balloon, and how scale-to-zero fixes it](https://blaxel.ai/blog/ai-agent-sandbox-costs-scale-to-zero) (Blaxel, a vendor)
+- [E2B vs Modal vs Daytona: idle time, not cold start, sets the bill](https://www.beri.net/article/e2b-vs-modal-vs-daytona-agent-sandbox-pricing-isolation-2026)
+- [What an AI agent sandbox really costs](https://www.dedaluslabs.ai/blog/ai-agent-sandbox-cost) (Dedalus Labs)
+- [Cost](/guide/shortcomings/cost), on this site, for the token side

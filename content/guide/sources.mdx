@@ -129,6 +129,26 @@ Missing something good? Use "Improve this page" at the bottom.
 
 **Ralph:** [geocod.io](https://www.geocod.io/code-and-coordinates/2026-01-27-ralph-loops) · [Sid Bharath](https://sidbharath.com/blog/ralph-wiggum-claude-code/) · [Kingy AI](https://kingy.ai/news/what-is-a-ralph-loop-how-a-bash-one-liner-became-an-ai-coding-pattern/) · [open-ralph-wiggum](https://github.com/Th0rgal/open-ralph-wiggum) · [ralph-claude-code](https://github.com/frankbria/ralph-claude-code)
 
+## Hosting: microVM hosts and agent runtimes
+
+| Source | Why it matters |
+|---|---|
+| [Fly.io Sprites docs: lifecycle](https://docs.fly.io/sprites/concepts/lifecycle) | Warm and cold sleep, what survives, services and tasks |
+| [E2B docs: sandbox persistence](https://docs.e2b.dev/sandbox/persistence) | Pause and resume with memory, indefinite retention |
+| [E2B docs: Claude Code in a sandbox](https://docs.e2b.dev/agents/claude-code) | Ready-made harness templates |
+| [Blaxel docs](https://docs.blaxel.ai/) and [the perpetual sandbox](https://blaxel.ai/blog/perpetual-sandbox) | Standby with millisecond resume (vendor claims) |
+| [Vercel Sandbox: persistent sandboxes](https://vercel.com/docs/sandbox/concepts/persistent-sandboxes) | Disk-only persistence, Active CPU pricing |
+| [Morph Cloud: wake-on](https://cloud.morph.so/docs/documentation/instances/wake-on) and [branching](https://cloud.morph.so/docs/documentation/instances/branch) | Waking paused VMs, cloning running ones |
+| [Unikraft Cloud: scale to zero](https://unikraft.com/docs/features/scale-to-zero) | Stateful standby on connection-driven wake |
+| [Modal: sandbox snapshots](https://modal.com/docs/guide/sandbox-snapshots) | Filesystem and experimental memory snapshots |
+| [Daytona: persistence](https://www.daytona.io/docs/en/persistence) | Container and VM lifecycle defaults |
+| [GKE: About Agent Substrate](https://docs.cloud.google.com/kubernetes-engine/ai-ml/about-agent-substrate) | Many agents on few pods, snapshot when idle |
+| [Kubernetes blog: Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox) | The Sandbox resource for one isolated pod per agent |
+| [kagent: the future of kagent](https://kagent.dev/blog/the-future-of-kagent) | kagent moving onto Agent Substrate; harnesses as resources |
+| [Docker Sandboxes docs](https://docs.docker.com/ai/sandboxes/) | Local microVMs for coding agents, credential-injecting proxy |
+| [Claude Agent SDK: hosting](https://code.claude.com/docs/en/agent-sdk/hosting) | Hosting patterns; tokens dominate container cost |
+| [Upstash: 15 sandbox providers compared](https://upstash.com/blog/ai-agent-sandbox-providers-compared-2026) | Broad comparison (written by a vendor in the space) |
+
 ## Costs, limits and models
 
 - [Spheron: agents burn 5–30× tokens](https://www.spheron.network/blog/agentic-ai-inference-cost-2026/) · [Unblocked: auto-loop tax](https://getunblocked.com/blog/agent-auto-loop-token-cost/) · [TrustGate: token bill came due](https://www.trustgateai.io/blog/token-bill-runaway-agents) · [Cost horror stories](https://baeseokjae.github.io/posts/ai-agent-api-cost-horror-story-2026/) · [Waxell: budget enforcement](https://waxell.ai/blog/ai-agent-token-budget-enforcement) · [Sondera: costs as security risk](https://blog.sondera.ai/p/ai-agent-token-costs-security-risk) · [Splunk](https://www.splunk.com/en_us/blog/observability/why-most-projects-still-die-before-production.html)
