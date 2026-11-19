@@ -1,0 +1,90 @@
+---
+title: gVisor and Kubernetes
+description: Modal's sandboxes, plus Google's open-source Kubernetes projects (Agent Sandbox, Agent Substrate and kagent) for running a hibernating agent fleet on your own cluster.
+icon: Container
+---
+
+**gVisor** is Google's sandboxed kernel. It sits between a container and the host and can **checkpoint an entire container**, memory included. You'll meet it in two very different places: as the default isolation in **Modal**'s hosted sandboxes, and inside the new **Kubernetes projects for agents** that let you run your own hibernating fleet instead of renting one.
+
+## Modal
+
+Modal is a serverless platform for Python-heavy and GPU workloads. Its **Sandboxes** are containers your code creates on demand, isolated with gVisor by default, or in a VM with its own kernel if you ask for one ([guide](https://modal.com/docs/guide/sandbox)).
+
+- **Get in:** sign up at modal.com and use the Python, JavaScript or Go SDK. A sandbox belongs to an `App`, which you can look up or create from outside Modal.
+- **Lifetime:** 5 minutes by default, up to 24 hours. An idle timeout ends a sandbox after inactivity.
+- **No pause button.** Ordinary sandboxes don't hibernate. You **persist** by snapshotting the filesystem (kept 30 days by default, or forever if you choose) and starting a new sandbox from that snapshot later. **Memory snapshots** exist but are experimental. They end the sandbox, expire after 7 days, need the same instance type to restore, and don't work with GPUs ([snapshots](https://modal.com/docs/guide/sandbox-snapshots)). <Evidence level="primary" />
+- **Inbound traffic:** `modal.forward()` opens a tunnel to a random public URL. The docs point out that anyone with the URL can reach it ([tunnels](https://modal.com/docs/guide/tunnels)).
+- **Cost:** sandboxes are billed at three times Modal's base rates, about $0.14 per core-hour and $0.024 per GiB-hour. The free Starter plan includes $30 of monthly credit ([pricing](https://modal.com/pricing)).
+- **Harnesses:** Hermes Agent supports Modal natively as a terminal backend. A third-party guide notes that local state is lost when the container shuts down after a few minutes idle, unless you set up persistence ([Fast.io](https://fast.io/resources/hermes-agent-modal-serverless-gpu-deployment/)). <Evidence level="secondary" /> Anthropic's Agent SDK hosting guide also links a Modal demo ([hosting](https://code.claude.com/docs/en/agent-sdk/hosting)).
+
+**Good for:** loops that sit next to GPU jobs or Python data pipelines, and short bursts where "restore from a disk snapshot" is good enough. **Not a good fit for** a resident agent that should wake with its memory intact.
+
+## Running your own fleet on Kubernetes
+
+If you already run Kubernetes, or you need hundreds of agents on infrastructure you control, three open-source projects now fit together. They are young (all from 2025 and 2026), and their APIs are still moving.
+
+| Layer | Project | What it gives you |
+|---|---|---|
+| **Front end** | [kagent](https://kagent.dev/) (Solo.io, CNCF Sandbox) | Declare agents, models, tools and chat channels as Kubernetes resources. Runs whole harnesses such as **Hermes and OpenClaw**. |
+| **Packing and hibernation** | [Agent Substrate](https://docs.cloud.google.com/kubernetes-engine/ai-ml/about-agent-substrate) (Google, open source) | Many agents on a small pool of pre-warmed workers. Idle agents are snapshotted (memory and files) to object storage and restored onto any free worker when a request arrives. |
+| **Isolation primitive** | [Agent Sandbox](https://github.com/kubernetes-sigs/agent-sandbox) (kubernetes-sigs) | One isolated, stateful pod per agent (gVisor, Kata or another runtime), with warm pools, and suspend and resume on GKE. |
+
+### Agent Sandbox: one isolated pod per agent
+
+A Kubernetes SIG Apps project that adds a `Sandbox` resource: a single, stable, isolated pod with a persistent identity, which is what an agent needs and a normal Deployment isn't. Install its controller on any cluster, choose a runtime class (gVisor or Kata), and optionally keep a **warm pool** so new agents start in about half a second instead of ten ([Kubernetes blog](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox), [docs](https://agent-sandbox.sigs.k8s.io/docs/)).
+
+On **GKE**, Agent Sandbox has been generally available since May 2026 and can **suspend idle sandboxes and resume them in seconds** using GKE Pod Snapshots, which require gVisor ([Google Cloud blog](https://cloud.google.com/blog/products/containers-kubernetes/bringing-you-agent-sandbox-on-gke-and-agent-substrate)). Whether Pod Snapshots themselves are out of preview is unclear from the docs. <Evidence level="contested" />
+
+### Agent Substrate: many agents, few pods
+
+Announced at Google I/O in May 2026, Substrate is for the case where you have far more agents than you want to pay pods for. Each agent is an **actor**. When a request names a suspended actor, Substrate takes a warm **worker** from the pool, restores the actor's snapshot "in under a second", lets it run, and snapshots it again when it goes idle. Solo.io's demo packed about 250 stateful agent sessions onto 8 pods ([GKE docs](https://docs.cloud.google.com/kubernetes-engine/ai-ml/about-agent-substrate), [Solo.io](https://www.solo.io/topics/ai-infrastructure/how-google-agent-substrate-works)). <Evidence level="anecdotal" />
+
+- **Where it runs:** Google supports GKE Standard clusters (version 1.37 or later). The open-source project also runs on a local kind cluster for development ([kagent example](https://kagent.dev/docs/kagent/concepts/agent-substrate/)).
+- **What to plan for:** your application, or kagent, decides when an agent is suspended. Open connections to databases or MCP servers **don't survive**, so agents must reconnect. GPU workloads can't be snapshotted.
+
+### kagent: declare the agent, its model and its channels
+
+kagent turns agents into Kubernetes resources and is moving its default runtime onto Substrate. The kagent team says it is "fully embrac[ing] Agent Substrate". The new API is still a proposal, with breaking changes expected ([blog](https://kagent.dev/blog/the-future-of-kagent)). <Evidence level="primary" />
+
+What a setup looks like, conceptually:
+
+<Steps>
+<Step>
+
+**A cluster with Substrate installed**, plus a worker pool and an object-storage bucket for snapshots.
+
+</Step>
+<Step>
+
+**kagent installed**, with a `ModelConfig` that points at your model provider and a Kubernetes secret holding the API key.
+
+</Step>
+<Step>
+
+**An `AgentHarness`** that names the harness (`backend: hermes` or `openclaw` today), the worker pool and model to use, and the **channels** it should listen on (Slack, Discord and Telegram are documented). kagent builds a snapshot of the harness once (about a minute the first time), and every chat then wakes the agent from that snapshot ([agent harness](https://kagent.dev/docs/kagent/0.x/concepts/agent-harness/)).
+
+</Step>
+<Step>
+
+**Talk to it.** Harnesses are reached over ACP through a small shim inside the sandbox. kagent's own declarative agents are also exposed over **A2A** and as **MCP** servers, so other agents can call them as tools.
+
+</Step>
+</Steps>
+
+For agents you write yourself rather than an existing harness, kagent has declarative agents (Google's ADK in Go or Python, with LangGraph and CrewAI integrations) and bring-your-own containers. A `SandboxAgent` runs one of these on Substrate.
+
+<Callout type="warn" title="Handing an LLM your cluster">
+  kagent started life as an agent framework for operating Kubernetes itself. Thoughtworks' Technology Radar advises
+  introducing it "with care" because of the risk of giving LLMs operational capabilities
+  ([Radar](https://www.thoughtworks.com/radar/languages-and-frameworks/kagent)). Keep the agents that run your loops in
+  their own namespace, with no rights over the cluster they live in.
+</Callout>
+
+**Good for:** platform teams that want per-user or per-repo agents on their own infrastructure, with Kubernetes-native policy, identity and observability. **Not a good fit for** one person with one agent: the setup is a project in itself.
+
+## Further reading
+
+- [Unleashing autonomous AI agents: why Kubernetes needs a new standard for agent execution](https://opensource.googleblog.com/2025/11/unleashing-autonomous-ai-agents-why-kubernetes-needs-a-new-standard-for-agent-execution.html) (Google Open Source blog)
+- [Agent Substrate: from pods to sandboxes](https://www.solo.io/resources/report/agent-substrate-from-pods-to-sandboxes) (Solo.io)
+- [Your agents are idle, your Kubernetes bill isn't](https://www.doit.com/blog/your-agents-are-idle-your-kubernetes-bill-isnt) (DoiT)
+- [KubeCon Europe 2026: AI agents go to production](https://www.codecentric.de/en/knowledge-hub/blog/kubecon-europe-2026-ai-agents-go-to-production) (codecentric)

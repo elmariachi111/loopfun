@@ -126,7 +126,7 @@ Temporal, Restate, Inngest, DBOS, Lambda durable functions, Cloudflare Workflows
 | **OpenCode, Gemini CLI, Copilot CLI, Kiro, Docker Agent (ex-cagent)** | Headless modes | Docker Sandboxes lists most of them [S] | Yes | Not researched further |
 | **Prime Agent** (Prime Intellect, MIT, Aug 2026) | "Self-improving" long-running harness [S] | n/a | Probably | Candidate |
 | **Claude Duet** | n/a | Vendor-hosted only | n/a | Reference point for the end-user experience |
-| **"dot"** | ? | ? | ? | **Couldn't identify.** Need the exact project or URL. |
+| **dots** (OpenAI) | n/a | Vendor-hosted only (DevDay, Sep 29 2026) | n/a | OpenAI's always-on assistant with its own cloud computer; not self-hostable |
 
 ---
 

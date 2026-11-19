@@ -1,0 +1,63 @@
+---
+title: Custom VM stacks
+description: Morph Cloud, Unikraft Cloud and Daytona built their own snapshot layers. They're strongest at branching, density and millisecond wake-ups.
+icon: GitFork
+---
+
+The hosts on this page either don't say which hypervisor they use or have built a substantial layer of their own on top of it. What you get from that layer is two things the [Firecracker hosts](/guide/hosts/firecracker) mostly don't offer: **branching** (clone a running machine, memory included, into many copies) and **extreme density** (thousands of mostly sleeping agents on one server).
+
+## At a glance
+
+| | [Morph Cloud](#morph-cloud) | [Unikraft Cloud](#unikraft-cloud) | [Daytona](#daytona) |
+|---|---|---|---|
+| **Underlying tech (as stated)** | "MorphVM" with its own snapshot stack, Infinibranch. Hypervisor not named | Its own microVM platform. The default `micro` instances run on Firecracker, `full` ones on QEMU | Containers by default, full VMs as an option |
+| **Sleep** | Pause on demand, or auto-sleep on devboxes | Scale to zero after a cooldown (1 s by default) | Auto-stop after 15 min (containers), auto-pause after 60 min (VMs) |
+| **Memory on wake** | Kept | Kept in *stateful* mode | Kept on VM pause only |
+| **Wakes on** | HTTP to an exposed service, SSH or `exec`, if enabled | The next connection | `start()` / API |
+| **Signature feature** | Branch one running VM into N copies | Thousands of instances per server, millisecond wake | Familiar dev-environment model |
+
+## Morph Cloud
+
+Morph's pitch is **"git for compute"**: snapshot a running VM, then start any number of copies from that snapshot with memory and processes intact. The vendor claims snapshot, branch and restore in under 250 ms ([developers](https://cloud.morph.so/docs/developers)). <Evidence level="anecdotal" />
+
+- **Get in:** create a free account at cloud.morph.so, make an API key (`MORPH_API_KEY`) and install the `morphcloud` Python package (which includes the CLI) or the TypeScript SDK.
+- **Two ways to use it.** **Devboxes** are ready-made development machines started from templates, with auto-sleep and TTL policies you can switch off to make one behave like a persistent server. **Instances** are the lower-level primitive: build a snapshot from a base image, start instances from it, pause, resume and branch them.
+- **Waking a paused machine:** turn on **wake-on-HTTP** (requests to an exposed service URL wake it) and/or **wake-on-SSH** (which also covers `exec` calls from the SDK or CLI). Without these, a paused instance stays paused until you resume it ([wake-on](https://cloud.morph.so/docs/documentation/instances/wake-on), [pause and resume](https://cloud.morph.so/docs/documentation/instances/pause-resume)).
+- **Harnesses:** Morph has a guide for running Claude Code on a devbox in tmux ([guide](https://cloud.morph.so/docs/examples/claude-code)). It recommends scoped "agent tokens" instead of handing the session your main API key. Its sample setup also writes the Anthropic key into `~/.bashrc`, which you shouldn't copy (see [Operations](/guide/hosts/operations#secrets)).
+- **Cost:** billed in "MCUs", where one MCU is 1 vCPU-hour plus 4 GB RAM-hours plus 16 GB disk-hours, at $0.05 each. A paused VM bills only for its snapshot; Morph's example puts a snapshot of an 8 vCPU / 8 GB VM at $0.12 a month ([pricing](https://cloud.morph.so/pricing)).
+
+**Where it shines for loops:** [maker/checker](/guide/patterns/maker-checker) and best-of-N patterns. Bring one environment to the interesting point (repo cloned, dependencies installed, tests half-run), then branch it so five agents try five fixes from the same state ([branching](https://cloud.morph.so/docs/documentation/instances/branch)).
+
+## Unikraft Cloud
+
+Unikraft comes from unikernel research and sells **density and speed**: instances that drop to zero resources when idle and wake on the next connection. The vendor claims about 10 ms for a stateful wake and "100K+" scale-to-zero instances per server ([Unikraft AI](https://unikraft.com/ai), [blog](https://unikraft.com/blog/ai-sandboxes-at-scale)). <Evidence level="anecdotal" />
+
+- **Get in:** create an account at console.unikraft.cloud, install the `unikraft` CLI (Homebrew, a shell installer or apt/rpm) and run `unikraft login`. SDKs exist for JavaScript, Python and Go.
+- **Run something:** `unikraft run` deploys an OCI image (for example one you built from a Dockerfile with your harness inside) to a region, with a public `*.unikraft.app` address.
+- **Scale to zero:** pick a policy per instance. `on` puts it in standby when there have been no connections or requests for the cooldown period, and `idle` also does so when connections stay open but go quiet. In **stateful** mode the platform snapshots memory before standby and pages it back in on wake, so the first requests after a wake can be slower. An app can temporarily block scale-down while it's busy, the same idea as Sprites' tasks ([scale to zero](https://unikraft.com/docs/features/scale-to-zero)).
+- **Templates and clones:** snapshot an instance as a template and clone it, skipping boot entirely. Useful for spinning up many identical agents.
+- **Cost:** "active vCPU" pricing, but no public rates on the pages we read. GPUs and nested virtualisation are enterprise-only.
+
+**Where it shines for loops:** large fleets of event-driven agents, such as one per user or per inbox, that sleep almost all the time. **Watch out for:** no ready-made harness guides yet, and pricing you have to ask for.
+
+## Daytona
+
+Daytona is the most conventional of the three: **development sandboxes** that run as containers by default, with full VMs available when you need memory snapshots ([sandboxes](https://www.daytona.io/docs/en/sandboxes), [isolation](https://www.daytona.io/docs/en/isolation)).
+
+- **Get in:** sign up at app.daytona.io, create an API key (`DAYTONA_API_KEY`) and use the Python or TypeScript SDK.
+- **Lifecycle defaults:** containers auto-stop after 15 minutes of inactivity (memory cleared, disk kept) and are archived to object storage after 7 days stopped. VMs auto-pause after 60 minutes with memory kept. Set auto-stop to 0 to run indefinitely ([persistence](https://www.daytona.io/docs/en/persistence)).
+- **Snapshots:** "cold" snapshots (disk) on any sandbox, and "hot" snapshots with memory on VMs only. Snapshots survive deletion of the original sandbox, and you can fork a sandbox.
+- **Preview URLs** expose ports with a token header, or publicly if you choose.
+- **Harnesses:** Hermes Agent supports Daytona natively as a terminal backend, so Hermes can run its commands in a Daytona sandbox that hibernates when idle (see [Running a harness](/guide/hosts/harnesses)).
+
+<Callout type="warn" title="Open source no more">
+  Daytona's GitHub README says core development moved to a private codebase in June 2026, and the public repository was
+  archived in October 2026. The old code remains available under its original license, but if self-hosting was a reason
+  to choose Daytona, it no longer is ([GitHub](https://github.com/daytonaio/daytona)).
+</Callout>
+
+## Further reading
+
+- [Morph Cloud docs](https://cloud.morph.so/docs/developers) and [AI Engineer talk on Infinibranch](https://ai.engineer/talks/the-infrastructure-for-the-singularity)
+- [Unikraft Cloud docs](https://unikraft.com/docs)
+- [Daytona docs](https://www.daytona.io/docs)

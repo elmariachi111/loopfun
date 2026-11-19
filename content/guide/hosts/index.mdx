@@ -1,0 +1,82 @@
+---
+title: Always on, mostly asleep
+description: Cloud computers for agents that look always on but sleep between tasks. Who offers them, how they differ and what they're good for.
+icon: Server
+---
+
+A [standing goal](/guide/goals/standing-goals) spends most of its life waiting: for the next heartbeat, a CI run, a reply or a webhook. On a normal VM you pay for every hour of that waiting. A new class of hosts, built for agents, changes that. You get **a full Linux machine per agent** with a URL, a CLI and an API. You install your harness on it as you would on a laptop. When nothing is happening, the machine **goes to sleep on its own**, and the next request or command **wakes it**, usually in well under a second and often with its running processes intact.
+
+From the outside it looks like an always-on computer. Underneath, it is a lightweight virtual machine (most often a **Firecracker microVM**) that the platform suspends, snapshots and resumes. This section is about **using** these hosts: how to sign up, how to put a harness like Claude Code, Codex, Hermes or OpenClaw on one, how to wake it, and where it saves money.
+
+<Flow steps={['Event arrives', 'Machine wakes', 'Harness works', 'Goes quiet', 'Machine sleeps']} repeat="until the next event" caption="The life of a standing goal on a hibernating host. You only pay for compute in the middle three steps." />
+
+## Hibernation saves on waiting, not on working
+
+<Callout type="warn" title="The one thing to remember">
+  A hibernating host makes **idle time** cheap. It does nothing for **busy time**. A `/goal` run that refactors a codebase
+  for three hours, a [Ralph loop](/guide/patterns/ralph) restarting the agent over and over, or any other goal-driven
+  payload is busy the whole time, so the machine never sleeps and you pay for every minute, the same as on any VM.
+  Per hour, these hosts are often *more* expensive than a plain server, and some cap how long a machine may run
+  without a break.
+</Callout>
+
+It helps to separate two kinds of loops:
+
+| | Working loop | Waiting loop |
+|---|---|---|
+| **Examples** | `/goal` until tests pass, a Ralph loop, a long migration, an overnight research run | A heartbeat every 30 min, "keep CI green", PR babysitting, inbox triage, waiting on a human |
+| **[Layer](/guide/foundations/four-layers)** | Layers 1 and 2: the inner loop and the goal loop | Layer 3: scheduled and ambient loops |
+| **Busy time** | Close to 100% | Often under 5% |
+| **Does hibernation help?** | **No.** Pick a fast machine and a hard budget. | **Yes**, and a lot if you run many of them |
+| **What matters most** | Machine size, runtime caps, token spend | Wake triggers, sleep behaviour, retention, cold-start cost |
+
+Most real setups mix the two: a waiting loop that wakes up, finds work and starts a working loop. The host saves money in the gaps between bursts. [Costs](/guide/hosts/costs) works through the numbers.
+
+## The landscape, grouped by technology
+
+You don't need to understand the virtualisation underneath, but it predicts a lot about how a host behaves. In particular, it predicts whether your agent's **running processes survive** a long sleep or only its **files** do.
+
+| Technology | What it means for you | Hosts covered |
+|---|---|---|
+| [**Firecracker microVMs**](/guide/hosts/firecracker) | A real VM with its own kernel that boots in a fraction of a second, which the platform can pause and snapshot. The most common base for agent hosts. | Fly.io Sprites, E2B, Blaxel, Vercel Sandbox |
+| [**Custom VM stacks**](/guide/hosts/custom-stacks) | Vendors that built their own layer for snapshots, branching or density, sometimes on top of Firecracker. Strong on parallel and branching work. | Morph Cloud, Unikraft Cloud, Daytona |
+| [**gVisor and Kubernetes**](/guide/hosts/gvisor-and-kubernetes) | A sandboxed kernel that can checkpoint a whole container. Used by Modal and by Google's Kubernetes projects, which you can run on your own cluster. | Modal, GKE Agent Sandbox, Agent Substrate with kagent |
+| [**Local and self-hosted microVMs**](/guide/hosts/self-hosted) | The same isolation on your own laptop or servers, with no vendor control plane (or an optional one). | Docker Sandboxes, E2B self-hosted, Microsandbox, Kata Containers |
+
+<Accordions>
+<Accordion title="Also in this space, not covered in depth yet">
+- **AWS Bedrock AgentCore Runtime** gives every agent session its own microVM, but sessions end after at most 8 hours and are not hibernated. It behaves more like a managed session service than a sleeping computer ([AWS docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html)). AWS originally built Firecracker for Lambda.
+- **Azure Container Apps Sandboxes** (Hyper-V isolation, built-in suspend and resume, reported GA in September 2026) and **Foundry hosted agents** (microVM isolation) ([Azure Updates](https://mc.merill.net/message/AZ561262), [Foundry blog](https://devblogs.microsoft.com/foundry/introducing-the-new-hosted-agents-in-foundry-agent-service-secure-scalable-compute-built-for-agents)). <Evidence level="secondary" />
+- **Cloudflare Sandbox** runs containers next to Durable Objects. It sleeps after 10 minutes by default but keeps no memory, and you restore the workspace from an R2 backup on wake ([docs](https://developers.cloudflare.com/sandbox/concepts/backup-restore/)). Cloudflare's real hibernation story is Durable Objects, which means writing your agent for that platform.
+- **Northflank**, **CodeSandbox SDK**, **Runloop** and **Koyeb** also offer isolated, agent-oriented machines.
+</Accordion>
+</Accordions>
+
+## What actually differs between hosts
+
+Every host on this list claims to be fast and secure. These are the differences that change how a loop behaves:
+
+<Defs
+  items={[
+    ['Memory across sleep', 'Does a sleeping machine wake with its processes still running (E2B, Blaxel, Morph, Unikraft in stateful mode, Daytona VMs, Sprites after a short nap), or does it reboot with only its disk (Vercel, Modal, Cloudflare, Sprites after a long sleep)? A harness that keeps important state only in memory needs the first kind.'],
+    ['Idle timer', 'How long until the machine sleeps: about a second (Unikraft), seconds (Sprites, Blaxel), minutes (Vercel, Daytona, Cloudflare), or a timeout you set yourself (E2B, Modal). A shorter timer saves money but means more wake-ups.'],
+    ['Wake triggers', 'What brings it back: an HTTP request to its URL, a command through the CLI or SDK, a schedule. This decides how your goal gets its next nudge.'],
+    ['Public URL', 'Whether webhooks from GitHub, Slack or Stripe can reach the machine directly, and how that URL is protected.'],
+    ['Runtime caps', 'Some hosts stop or pause a machine after a fixed time even if it is busy: 1 hour on E2B Hobby, 24 hours on E2B Pro and Modal. This matters for working loops.'],
+    ['Retention', 'How long a sleeping machine is kept. E2B keeps paused sandboxes indefinitely. Vercel and Modal snapshots expire after 30 days by default, Daytona archives stopped sandboxes after 7 days, and Blaxel\'s lower tiers enforce a TTL. A goal that sleeps longer than that loses its machine.'],
+    ['Billing basis', 'Per second of wall clock, per second of active CPU, or per hour. Storage is almost always billed while asleep.'],
+  ]}
+/>
+
+## Where to go next
+
+<Cards>
+  <Card title="Running a harness on a host" href="/guide/hosts/harnesses" description="The general recipe, and which harnesses (Claude Code, Codex, Hermes, OpenClaw, Kimi, DeepSeek) fit which host." />
+  <Card title="Costs" href="/guide/hosts/costs" description="A worked example, where hibernation wins, and where it doesn't." />
+  <Card title="Running them for months" href="/guide/hosts/operations" description="Updates, secrets, retention, reconnects and the other chores of a fleet of sleeping agents." />
+</Cards>
+
+<Callout type="info" title="Snapshot, not spec">
+  These platforms change monthly, and many of the prices and limits quoted here come from the vendors' own pages or
+  their competitors' comparisons. Check current docs before you commit. Every page has "Improve this page" at the bottom.
+</Callout>

@@ -1,0 +1,100 @@
+---
+title: Running a harness on a host
+description: The general recipe for putting Claude Code, Codex, Hermes, OpenClaw, Kimi or DeepSeek on a sleeping microVM, and what makes a harness sleep well.
+icon: PlugZap
+---
+
+Every host in this section gives you roughly the same thing: a Linux machine, a way to run commands on it, a URL and a pause button. Turning that into a standing agent is a recipe that barely changes from host to host. What does change is **how well your harness tolerates being put to sleep**.
+
+## The recipe
+
+<Steps>
+<Step>
+
+### Start from an image with the harness in it
+
+Use a ready-made template where one exists (E2B ships `claude` and `codex`, Docker Sandboxes ships about ten agents), or bake your own image or template with the harness, its config and its skills installed. Installing at every wake wastes time and tokens.
+
+</Step>
+<Step>
+
+### Give it credentials the right way
+
+Use an **API key, not a subscription login**. Browser-based logins are awkward on a headless machine (Kimi's CLI, for example, prints a URL you have to copy into a browser [[guide](https://www.kimi.com/zh-tw/help/kimi-code/cli-getting-started)]). Check your provider's terms before running subscription accounts on servers. Where the host can inject credentials from outside (Sprites connectors, Docker Sandboxes' proxy, a gateway), prefer that to environment variables. See [Operations](/guide/hosts/operations#secrets).
+
+</Step>
+<Step>
+
+### Put the goal on disk
+
+The goal, its memory and its progress belong in **files and git** inside the machine, or better, in a store outside it. A machine can always come back without its memory (a cold wake, an expired snapshot, a host migration), and the harness must be able to pick up from its files alone. See [Persistence](/guide/goals/budgets-and-lifecycle#persistence-where-does-the-goal-live).
+
+</Step>
+<Step>
+
+### Decide what wakes it
+
+This is the decision that matters most for a [standing goal](/guide/goals/standing-goals). Three options, from best to worst for cost:
+
+- **Push events.** Point a GitHub, Slack, Stripe or email webhook at the machine's URL. The machine sleeps until something actually happens.
+- **An external schedule.** A cron job elsewhere (GitHub Actions, a Cloudflare cron trigger, a Claude Code routine, Kubernetes) calls the host's API or the machine's URL every N minutes. The heartbeat lives outside the machine, so the machine can sleep between beats.
+- **An in-process timer.** The harness's own cron or heartbeat. Simple, but it **keeps the machine awake** (or wakes it on the platform's terms), which defeats the point of a hibernating host.
+
+</Step>
+<Step>
+
+### Hold the machine awake while it works, then let go
+
+While the harness is busy, it must not be put to sleep mid-turn. Sprites have **tasks** for this, Unikraft lets an app block scale-down, and E2B lets you extend the timeout. When the work is done, release the hold and let the idle timer do its job. A forgotten hold is the commonest way to pay for an always-on machine by accident.
+
+</Step>
+<Step>
+
+### Checkpoint before anything risky
+
+Take a snapshot before a large refactor, a dependency upgrade or a run with permissions switched off. Restoring a checkpoint is the "undo" that makes [YOLO-style](https://fly.io/sprites/yolo-mode) autonomy bearable. Keep code in git anyway: checkpoints are not version control.
+
+</Step>
+</Steps>
+
+## What makes a harness sleep well
+
+<Defs
+  items={[
+    ['A headless entry point', <>Something a script can call: <code>claude -p</code>, <code>codex exec</code>, <code>kimi -p</code>, an HTTP server or an ACP endpoint. Without it, a wake-up can't hand the agent its next instruction.</>],
+    ['State in files', 'Goals, memory and sessions on disk, so a cold wake loses nothing important. Codex threads, Hermes session stores and OpenClaw\'s markdown files all qualify. Purely in-memory state only survives on hosts that keep memory.'],
+    ['Inbound by push', 'Webhooks, HTTP or ACP rather than connections the agent holds open. Telegram long-polling, the Discord gateway, Slack Socket Mode and stdio MCP servers all break when the machine is paused, or keep it from sleeping at all.'],
+    ['Timers outside the process', 'A heartbeat the host or an external scheduler fires, instead of one the harness runs itself.'],
+    ['Reconnect logic', 'After a wake, the harness re-opens its MCP servers, database sessions and chat connections without a human.'],
+  ]}
+/>
+
+## Harness by harness
+
+| Harness | Headless mode | Known paths onto these hosts | Sleeps well? |
+|---|---|---|---|
+| [**Claude Code**](/guide/environments/claude-code) and the Agent SDK | `claude -p`, `/goal`, session resume | E2B `claude` template, Docker Sandboxes, Vercel and Morph guides, Agent SDK hosting guide (Modal, E2B, Vercel, Daytona and others) | **Yes.** Sessions and goals resume from disk. Anthropic's hosting guide notes that tokens, not containers, dominate the bill ([hosting](https://code.claude.com/docs/en/agent-sdk/hosting)). |
+| [**Codex CLI**](/guide/environments/codex) | `codex exec`, thread resume | E2B `codex` template, Docker Sandboxes | **Yes.** Goals persist on the thread. Beware fast re-firing while a goal waits ([Pacing](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits)). |
+| [**Hermes Agent**](/guide/environments/hermes) | CLI plus a messaging **gateway** | kagent `AgentHarness`; native terminal backends for Docker, SSH, Singularity, **Modal** and **Daytona** ([backends](https://www.mintlify.com/NousResearch/hermes-agent/user-guide/features/terminal-backends)) <Evidence level="secondary" />; E2B guide | **Best split.** Keep the gateway, which holds chat connections, on a small always-on machine, and let Hermes run commands in a sandbox that hibernates. With these backends the sandbox is the security boundary, so Hermes skips its dangerous-command prompt. |
+| [**OpenClaw**](/guide/environments/openclaw) | Gateway plus heartbeat | kagent `AgentHarness`, Fly.io blueprint, Cloudflare's experimental Moltworker | **Partly.** Its 30-minute heartbeat is an in-process timer, and Fly reports that OpenClaw "is more stable" on an always-on machine ([Fly.io](https://fly.io/customer-stories/kiloclaw/)). To hibernate it, fire the heartbeat from outside. |
+| **Kimi Code CLI** (Moonshot) | `kimi -p`, ACP over stdio ([review](https://dev.to/andrew-ooo/kimi-code-cli-review-moonshots-terminal-ai-agent-fa7)) <Evidence level="secondary" /> | E2B guide; any Linux host | **Yes.** It speaks ACP, which is also how kagent reaches harnesses. |
+| **DeepSeek Harness** (official, MIT) and **DeepSeek-TUI** (community) | Plugin-based loop with a swappable model adapter ([The New Stack](https://thenewstack.io/deepseek-harness-open-source-plugins/)) <Evidence level="secondary" /> | Any Linux host | **Yes**, for the harness. If you also self-host DeepSeek's open-weight models, keep model serving on separate GPU machines: no host here can snapshot a GPU. |
+| **OpenCode, Gemini CLI, Copilot CLI, Kiro, Droid, Docker Agent** | Headless modes | Docker Sandboxes, E2B guides | Generally yes. Check where each keeps its state. |
+
+<Callout type="info" title="Two always-on assistants you can't host">
+  **Claude Duet** (Anthropic, research preview since October 21, 2026) and **dots** (OpenAI, announced at DevDay on
+  September 29, 2026) are consumer and workplace assistants that each get **their own cloud computer and browser**,
+  keep working after you close the app, and check in on a cadence or when something needs you
+  ([Claude Duet](https://claude.com/blog/claude-duet), [VentureBeat on dots](https://venturebeat.com/ai/openai-launches-dots-always-on-ai-agent-coworkers-and-chatgpt-space-where-they-can-collaborate-with-human-teams)).
+  They are vendor-run versions of exactly the setup on this page: a waiting loop on a cloud machine, with approvals
+  before consequential actions. Neither offers a way to bring your own harness or runtime. They're a useful benchmark
+  for what a self-built standing agent should feel like.
+</Callout>
+
+## Further reading
+
+- E2B agent guides: [Claude Code](https://docs.e2b.dev/agents/claude-code), [Codex](https://docs.e2b.dev/agents/codex) and the [full list](https://docs.e2b.dev/agents/)
+- [Docker Sandboxes: supported agents](https://docs.docker.com/ai/sandboxes/agents/)
+- [kagent agent harnesses](https://kagent.dev/docs/kagent/0.x/concepts/agent-harness/)
+- [Running Hermes Agent in the cloud safely](https://dev.to/node9_ai/running-hermes-agent-in-the-cloud-safely-a-readers-guide-to-their-trust-model-1ac9) (DEV)
+- [How OpenAI turned its coding tools into dots](https://techcrunch.com/2026/10/26/how-openai-turned-its-coding-tools-into-dots-an-always-on-personal-assistant/) (TechCrunch)

@@ -1,0 +1,62 @@
+---
+title: Local and self-hosted
+description: Docker Sandboxes, the open-source E2B runtime, Microsandbox and Kata give you microVM isolation on your own laptop or servers, with no vendor control plane.
+icon: HardDrive
+---
+
+You don't need a cloud account to give an agent its own microVM. The same isolation now runs **on a laptop, a home server or your own data centre**. What you give up is the control plane: the part of a hosted platform that decides when to sleep, when to wake, where to store snapshots and how to route a webhook to the right machine. With self-hosting, that's either a small part of the open-source project or something you build.
+
+## At a glance
+
+| | Runs on | Hibernation | Best for |
+|---|---|---|---|
+| [**Docker Sandboxes**](#docker-sandboxes) | Your Mac, Windows or Linux machine (optional experimental cloud) | Stop and restart keep the disk | Letting a coding agent run unsupervised on your own machine |
+| [**E2B runtime**](#e2b-self-hosted) | One Linux box with KVM, or your cloud via Terraform | Yes: Firecracker snapshots with pause and resume | The E2B API, but on your hardware |
+| [**Microsandbox**](#microsandbox-and-opensandbox) | Linux or macOS | Not a focus | Lightweight local isolation for tool calls |
+| [**OpenSandbox, Kata, Agent Sandbox**](#microsandbox-and-opensandbox) | Your Kubernetes cluster | Via the cluster (see [Kubernetes](/guide/hosts/gvisor-and-kubernetes)) | Platform teams |
+
+## Docker Sandboxes
+
+Docker's `sbx` CLI runs each coding agent in a **microVM with its own kernel and its own Docker daemon**, so the agent can build and run containers without touching your machine. It doesn't need Docker Desktop, and local use is free, commercial use included ([docs](https://docs.docker.com/ai/sandboxes/), [Docker blog](https://www.docker.com/blog/docker-sandboxes-run-claude-code-and-other-coding-agents-unsupervised-but-safely/)). <Evidence level="primary" />
+
+- **Supported agents:** Claude Code, Codex, Copilot, Cursor, Devin, Docker Agent, Droid, Kiro, OpenCode, plus a plain shell ([agents](https://docs.docker.com/ai/sandboxes/agents/)). Start one with `sbx run claude`.
+- **Network and secrets:** all outbound traffic goes through a proxy on the host, with presets such as "balanced" and "locked down" and per-host allow rules. The proxy **injects credentials**, so your real API key stays on the host and never enters the VM. This is the pattern we recommend everywhere (see [Operations](/guide/hosts/operations#secrets)).
+- **Persistence:** a sandbox lasts until you remove it. Stopping and restarting keeps packages, images and files. By default your project folder is mounted into the sandbox, or you can give the agent a private clone.
+- **Cloud mode:** `sbx --cloud` runs the same sandboxes on Docker's experimental agentic platform, pay-as-you-go. Cloud sandboxes expire after one hour by default and can't mount your local folder.
+
+**For loops:** it gives your laptop a safe place for long `/goal` runs with permissions switched off. It is not a hibernating host. When your machine sleeps, so does the agent.
+
+## E2B self-hosted
+
+The engine behind E2B is open source under Apache-2.0 (the `e2b-dev/infra` repository now redirects to `e2b-dev/runtime`). Its README describes "Firecracker microVMs that resume from a snapshot". You can run it two ways ([GitHub](https://github.com/e2b-dev/infra)):
+
+- **Embed:** a single Linux machine with KVM, started with Docker Compose. One machine by design, which is enough for a home lab or a small team.
+- **Cluster:** Terraform for GCP, AWS and Azure, plus a Kubernetes manifest. A comparison describes this path as heavy, with a Nomad and Consul control plane underneath ([Helix](https://helix.ml/blog/self-hosted-agent-sandboxes)). <Evidence level="secondary" />
+
+Because it's the same engine, the E2B SDKs, templates (including the `claude` and `codex` ones) and pause and resume work against your own installation. If you want E2B's operations team rather than your own, E2B also offers **BYOC**, a managed deployment in your own cloud account, for enterprise customers ([BYOC](https://docs.e2b.dev/byoc)).
+
+## Microsandbox and OpenSandbox
+
+- **Microsandbox** runs microVMs through libkrun, under Apache-2.0. It claims start times under 100 ms (self-reported) and suits fast, throwaway isolation for an agent's tool calls more than resident agents ([Beam comparison](https://www.beam.cloud/blog/how-to-self-host-code-sandbox)). <Evidence level="secondary" />
+- **OpenSandbox**, released by Alibaba in March 2026 under Apache-2.0, is a self-hosted sandbox platform that can use gVisor, Kata Containers or Firecracker underneath ([Northflank](https://northflank.com/blog/opensandbox-alternatives)). <Evidence level="secondary" />
+- **Kata Containers** run each pod in a lightweight VM, and can use Firecracker or Cloud Hypervisor underneath. On Kubernetes, pair them with [Agent Sandbox](/guide/hosts/gvisor-and-kubernetes#agent-sandbox-one-isolated-pod-per-agent) to get one isolated, stateful pod per agent.
+
+## When self-hosting makes sense
+
+<Accordions>
+<Accordion title="You need the data to stay put">
+Code, credentials or customer data that may not leave your network. Self-hosting is often the only option here, and microVM isolation keeps a misbehaving agent from reaching the rest of the host.
+</Accordion>
+<Accordion title="You have one agent and a spare machine">
+An always-on Mac mini, a home server or a small VPS running one harness in a Docker Sandbox or a plain VM is hard to beat for a single personal agent. Hibernation saves little when there's only one machine (see [Costs](/guide/hosts/costs)).
+</Accordion>
+<Accordion title="You're running hundreds of agents on your own iron">
+Then you want the scheduling that hosted platforms sell: sleep, wake, snapshot storage, routing. The E2B runtime or [Agent Substrate on Kubernetes](/guide/hosts/gvisor-and-kubernetes#agent-substrate-many-agents-few-pods) give you that. Expect to own it like any other piece of infrastructure.
+</Accordion>
+</Accordions>
+
+## Further reading
+
+- [Self-hosted E2B alternatives: 6 AI agent sandboxes compared](https://helix.ml/blog/self-hosted-agent-sandboxes) (Helix)
+- [Self-hosting an AI agent code execution sandbox on bare metal](https://openmetal.io/resources/blog/self-hosting-an-ai-agent-code-execution-sandbox-on-bare-metal/) (OpenMetal)
+- [How to sandbox AI agents in 2026: Firecracker, gVisor and runtimes](https://dev.to/aiagentengineering/how-to-sandbox-ai-agents-in-2026-firecracker-gvisor-runtimes-isolation-strategies-14pk) (DEV)
