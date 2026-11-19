@@ -1,0 +1,68 @@
+---
+title: Where the leverage is
+description: What teams running factories say actually moved the needle. Rarely the model; mostly verification, environments, scaffolding, context and attention.
+icon: Gauge
+---
+
+Ask the people who run factories what made theirs work and you rarely hear about the model. You hear about **everything around it**. OpenAI's own summary of its million-line experiment is that the engineers' job became enabling the agents to do useful work ([OpenAI](https://openai.com/index/harness-engineering/)). Spotify's is that its agent sits on top of years of fleet tooling ([Tech Trenches](https://techtrenches.dev/p/honk-is-not-magic-its-15-years-of)).
+
+Here are the levers practitioners point to, roughly in the order they cite them.
+
+## 1. Verification, not review
+
+The single most repeated claim: **a factory is only as fast as it can tell whether its output works.** Dex Horthy's October 2026 talk title puts it flatly: "There Is No Software Factory Without Better Verifiers" ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)).
+
+What that looks like in practice:
+
+- **Holdout scenarios.** StrongDM keeps end-to-end user stories outside the codebase so the coding agents can't see (or game) them, and scores **satisfaction**: "of all the observed trajectories through all the scenarios, what fraction of them likely satisfy the user?" ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). <Evidence level="primary" />
+- **Digital twins of dependencies.** StrongDM's "Digital Twin Universe" contains behavioural clones of Okta, Jira, Slack and Google Docs, Drive and Sheets, built by agents from public API docs. Scenarios run against the twins thousands of times an hour without rate limits or API bills ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)).
+- **Reproduce before you fix.** Cloudflare's fix agent turns the reproduction into tests first; Vercel's analysis agent writes a probe that proves a feature is missing ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/), [Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)).
+- **Let the reporter verify.** Cloudflare publishes a preview release and waits for the person who filed the issue to confirm before opening a PR.
+- **An evidence chain for the human.** At Vercel the human merger reviews the evidence chain the agents produced, not just the diff ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)).
+
+Thoughtworks frames the same idea as **feedforward controls** (specs, skills, guidelines given before the agent acts) and **feedback sensors** (tests, mutation testing, linters that check after). Its November 2026 radar has "feedback sensors for coding agents" at Trial ([Thoughtworks](https://www.thoughtworks.com/radar/techniques)). Birgitta Böckeler's harness-engineering model uses the same guides-and-sensors split ([Archcore summary](https://archcore.ai/learn/harness-engineering/)). This is [maker/checker](/guide/patterns/maker-checker) applied at the scale of a whole pipeline.
+
+## 2. Environments that are ready before the agent is
+
+An agent that spends its first ten minutes installing dependencies is slow; one that can't run the service it's changing is blind.
+
+- Stripe's Minions run on **devboxes**, "cloud machines pre-loaded with the entire codebase, tools, and services", that "spin up in ten seconds" from a pre-warmed pool. Because each box is isolated, the agents run with full permissions and no confirmation prompts ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs)). <Evidence level="secondary" />
+- Port lists **ephemeral environments** (a pool of pre-warmed, disposable sandboxes) as one of nine recurring factory patterns ([Port](https://software-factories.port.io/)).
+- Ona built its whole pitch on this: each agent gets a full dev environment defined by a standard `devcontainer.json`, in the vendor's cloud or the customer's VPC ([Ona](https://githits.com/software-factories/ona/)).
+
+Isolation does double duty. It's what makes speed safe: an agent you can't harm anything with is an agent you don't need to supervise.
+
+## 3. Deterministic scaffolding and bounded retries
+
+Agents are put only where judgment is needed. Everything else is plain code.
+
+- Stripe's **blueprints** mix deterministic nodes (lint, push) with agentic nodes (fix CI), and cap the agent at **two CI rounds** before handing back to a human ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs)).
+- Port lists **spend control** (caps in dollars, tokens or iterations) and a **guardrail layer** that enforces rules "as code an agent can't get past, rather than asking in a prompt" ([Port](https://software-factories.port.io/)).
+
+Bounded retries are the factory version of a [budget](/guide/goals/budgets-and-lifecycle). At a thousand runs a week, an unbounded retry loop isn't an annoyance, it's the bill.
+
+## 4. Context as a maintained artifact
+
+- OpenAI's harness repo uses a short `AGENTS.md`, roughly 100 lines, that works as **a map** to deeper documentation rather than one giant instruction file ([InfoQ](https://www.infoq.com/news/2026/02/openai-harness-engineering-codex/)). The harness also includes recurring **garbage collection**: agents that clean up drift and dead code so the next agent reads a tidy repo ([Martin Fowler](https://x.com/martinfowler/status/2023756519305867550)). <Evidence level="primary" />
+- Port's **shared agent context** pattern treats what an agent knows about the codebase as "a versioned artifact" ([Port](https://software-factories.port.io/)).
+- PostHog argues the most valuable missing context is **production context**: usage, logs, traces and user feedback, so agents can make design decisions, not just implement them ([PostHog](https://newsletter.posthog.com/p/software-factories)). Sentry makes the same case for error data ([Sentry](https://blog.sentry.io/agents-need-production-context/)).
+
+## 5. The tracker as the control plane
+
+The bottleneck OpenAI says it hit wasn't model quality, it was **human attention**: "Engineers could manage only three to five sessions before context switching became painful" ([InfoWorld](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html)). Symphony's answer is to stop treating people as the scheduler. The issue tracker becomes the control plane; people move cards, and the orchestrator starts, restarts and retires agents. <Evidence level="primary" />
+
+Cloudflare does the same with GitHub labels, Gas Town with Beads, Hermes with [kanban goals](/guide/patterns/graphs-and-teams). The insight is the same each time: **the queue of work should be machine-readable, and agents should pull from it**.
+
+## 6. Existing engineering hygiene
+
+Factories amplify whatever is already there. OpenAI says Symphony works best in codebases that have already invested in automated tests and documentation ([Help Net Security](https://www.helpnetsecurity.com/2026/04/28/openai-symphony-codex-orchestration-linear/)). BCG's March 2026 report says a factory can't run until basic processes and governance are in order ([BCG Platinion](https://www.bcgplatinion.com/insights/the-agentic-software-factory)). Google's 2026 DORA research is widely summarised as "AI is an amplifier": strong foundations see returns, weak ones see more instability ([InfoQ](https://www.infoq.com/news/2026/05/dora-roi-ai-assisted-dev-report/)). <Evidence level="secondary" />
+
+## 7. Spending on tokens as an input, not a cost
+
+StrongDM's most quoted rule: "If you haven't spent at least $1,000 on tokens today per human engineer, your software factory has room for improvement." Willison notes that's about $20,000 per engineer per month, which makes it "more of a business model exercise" for most teams ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). <Evidence level="contested" />
+
+Whatever you think of the number, the framing is the lever: if a factory converts tokens into verified changes, **the question is the conversion rate**, not the spend. That's only knowable if you measure cost per merged change, which few teams do (see [Loop-native reporting](/guide/remedies/loop-reporting)).
+
+## Improve the factory, not the output
+
+Underneath all seven is one habit. When a run fails, the fix goes into the factory (a new eval case, a better prompt, a missing permission, a new scenario) rather than into a hand-edited PR. Vercel's outcome taxonomy formalises it ([Inside the factory](/guide/factories/anatomy#how-a-run-ends)). It's what makes the 1,000th run better than the 10th.

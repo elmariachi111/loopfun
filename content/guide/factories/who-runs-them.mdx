@@ -1,0 +1,58 @@
+---
+title: Who runs one
+description: The published factories of 2026, side by side. What triggers them, how much they produce, and who still reads the code.
+icon: Building
+---
+
+The public examples come from three kinds of organisation:
+
+1. **Large engineering companies with strong platform teams** (Stripe, Ramp, Spotify, Shopify, Uber, DoorDash). They build in-house because they already own the environments, CI and fleet tooling a factory needs. Port's index lists 13 such companies and refers to more than 30 ([Port](https://software-factories.port.io/companies)).
+2. **Maintainers of busy open-source projects** (Vercel's AI SDK, Cloudflare's work on Astro). Their bottleneck is an issue queue that grows faster than people can triage it.
+3. **Small, very senior teams** going for "lights off" (StrongDM's three-person AI team, HumanLayer's experiment). They test how far autonomy can go.
+
+## The comparison
+
+| Factory | Triggered by | Output reported | Who reads the code | Evidence |
+|---|---|---|---|---|
+| **Stripe Minions** | An engineer tags the bot in Slack | 1,300+ PRs per week, "zero human-written code" | Engineers review every PR | <Evidence level="secondary" /> |
+| **Ramp Inspect** | Engineer requests to a background agent | About 75% of merged PRs | Engineers review | <Evidence level="secondary" /> |
+| **Spotify Honk** | Fleet migrations, engineer requests | ~1,000 merged PRs in ten days (March 2026) | Engineers review; "PR review is the new bottleneck" | <Evidence level="secondary" /> |
+| **Vercel AI SDK factory** | GitHub webhooks into an issue queue | 25–35% of weekly merged PRs; 70–80% of issues closed | A human approves every merge | <Evidence level="primary" /> |
+| **Cloudflare / Astro** | `triage needed` label | Open issues from 200+ to about 30 | Reporter verifies a preview; humans merge | <Evidence level="secondary" /> |
+| **OpenAI harness team** | Engineers, later Linear via Symphony | ~1M lines in five months, none hand-written | Humans steer and QA; QA became the bottleneck | <Evidence level="primary" /> |
+| **StrongDM** | Specs and scenarios | Not disclosed | **Nobody.** "Code must not be reviewed by humans" | <Evidence level="primary" /> |
+| **PostHog** | Mixed | Agents write ~70% of PRs | Humans "still skim at least 80%" of those | <Evidence level="primary" /> |
+| **HumanLayer** | Experiment, 2025 | 30–40k lines over 3–4 months | Lightly supervised; codebase archived | <Evidence level="anecdotal" /> |
+
+## Notes on each
+
+<Accordions>
+<Accordion title="Stripe: Minions">
+Started as an internal fork of Block's Goose agent. An engineer tags the bot in a Slack thread; a devbox from a pre-warmed pool spins up in about ten seconds; a **blueprint** runs deterministic steps (lint, push) and agentic steps (fix CI), with at most two CI rounds before the branch goes back to the human ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs), [Lenny's Newsletter](https://www.lennysnewsletter.com/p/how-stripe-built-minionsai-coding)). Reported volume rose from about 1,000 to over 1,300 merged PRs a week ([InfoQ](https://infoq.com/news/2026/03/stripe-autonomous-coding-agents/)). The code they touch supports more than $1 trillion a year in payment volume, which is why "no human-written code" never meant "no human review".
+</Accordion>
+<Accordion title="Ramp: Inspect">
+An in-house background agent that grew from about 30% of merged frontend and backend PRs in January 2026 to a reported 74–75% later in the year, with almost all of engineering, design and product using it ([Linear](https://linear.app/customers/ramp), [Pragmatic Engineer](https://newsletter.pragmaticengineer.com/p/why-ramp-built-inspect), [InfoQ](https://infoq.com/news/2026/01/ramp-coding-agent-platform/)). As one summary notes, that is **adoption evidence, not a measured productivity gain**.
+</Accordion>
+<Accordion title="Spotify: Honk">
+Runs Claude Code via the Claude Agent SDK in sandboxed Kubernetes jobs, on top of the Fleet Management system Spotify has used for automated code changes since 2022. 1,500+ merged PRs by November 2025; at QCon in March 2026 the team said they now land about a thousand in ten days ([InfoQ talk](https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/), [Ry Walker](https://rywalker.com/research/spotify-honk)). The most useful commentary is "Honk is not magic, it's 15 years of infrastructure" ([Tech Trenches](https://techtrenches.dev/p/honk-is-not-magic-its-15-years-of)).
+</Accordion>
+<Accordion title="Vercel: AI SDK factory">
+The best-documented factory with a primary source. Webhooks fill an issue queue; dedicated agents classify, reproduce, fix, review, backport and update docs, each in an isolated Vercel Sandbox with only the secrets it needs. Four weeks in, it authored 25–35% of merged PRs and closed 70–80% of issues; open issues fell from a peak of 1,022 to 844 ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk), August 2026). Vercel later said v0's factory, rebuilt on Vercel Board, merges over half of v0's PRs ([Vercel](https://vercel.com/blog/introducing-vercel-board)).
+</Accordion>
+<Accordion title="Cloudflare: Astro issue triage">
+Four isolated subagents in GitHub Actions (reproduce, diagnose, verify, fix), handing off through a `report.md` file and moved along by issue labels. A preview release goes to the reporter before any PR. Open issues fell from more than 200 to about 30, with zero as the target ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/)). The workflow was later released as `triagebot-action` ([ai-tldr](https://ai-tldr.dev/releases/astro-triagebot-action/)).
+</Accordion>
+<Accordion title="OpenAI: the harness engineering team">
+Over five months a small team (reportedly three engineers growing to seven) built an internal beta of roughly a million lines with "0 lines of manually-written code", including tests, CI config and docs ([OpenAI](https://openai.com/index/harness-engineering/), [InfoQ](https://www.infoq.com/news/2026/02/openai-harness-engineering-codex/)). The lessons became the vocabulary of **harness engineering**, and the orchestration layer became [Symphony](/guide/factories/tools#open-source-orchestrators-and-specs).
+</Accordion>
+<Accordion title="StrongDM: the dark factory">
+The reference level-5 example. Founded July 2025 by three engineers, with two rules, "Code must not be written by humans" and "Code must not be reviewed by humans", and a validation system of holdout scenarios, a satisfaction score and a Digital Twin Universe ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). Willison's question is the one everyone asks: how can no human review "possibly be a sensible strategy" when models make "inhuman mistakes"? StrongDM's answer is that the verification is stronger than review would have been. Some members of the team had 20+ years of experience building high-reliability systems ([Simon Willison](https://simonwillison.net/2026/Jan/28/the-five-levels/)).
+</Accordion>
+<Accordion title="HumanLayer: the cautionary tale">
+HumanLayer ran a lightly supervised factory for three or four months, deliberately letting questionable code stay. It produced 30,000–40,000 lines, including "an insanely complicated state machine" across four Unix processes, and the team eventually archived the whole codebase ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). HumanLayer sells human-in-the-loop tooling, which Dex Horthy acknowledges. See [Pitfalls](/guide/factories/pitfalls#slop-accumulates).
+</Accordion>
+</Accordions>
+
+## What the numbers do and don't say
+
+Every figure above is **self-reported by the company that built the factory**, and almost all of them measure *share of merged PRs*. That's a measure of adoption, not of value: a PR that bumps a dependency and a PR that ships a feature count the same. None of the sources we found publishes cost per merged change, defect rates for factory PRs against human PRs, or what happened to review time. Those are the numbers that would settle the debate on the [next pages](/guide/factories/pitfalls).
