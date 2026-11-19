@@ -1,0 +1,83 @@
+---
+title: Inside the factory
+description: The stations most factories share, the state machine that moves work between them, and the four ways a run can end.
+icon: Workflow
+---
+
+No two factories are built the same way, but the published ones converge on a similar line of **narrow stations**, each a small loop with one job, joined by a state machine that lives outside any agent's context.
+
+## The stations
+
+<Flow
+  steps={['Intake', 'Classify', 'Reproduce / analyse', 'Plan', 'Implement', 'Verify', 'Review', 'Merge / release', 'Monitor']}
+  repeat="production signals and reporter feedback become new intake"
+  caption="A composite of the published factories. Few have every station; most have intake, implement, verify and a human gate."
+/>
+
+<Accordions>
+<Accordion title="Intake and classify">
+Turn an event into a work item and decide whether it's worth a run. Vercel's AI SDK factory classifies every issue first ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)). See [What starts a factory](/guide/factories/triggers).
+</Accordion>
+<Accordion title="Reproduce or analyse">
+Prove the problem exists before fixing it. Cloudflare's Astro factory has a reproduction agent and a diagnosis agent that "instruments the code"; the fix agent then "converts the reproduction into tests before implementing a solution" ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/)). Vercel's analysis step writes a probe to confirm a feature is really missing. This station is what stops a factory from "fixing" bugs that aren't there.
+</Accordion>
+<Accordion title="Plan">
+Break the work into buildable units. Heavier at the enterprise end: 8090's line runs Refinery (requirements into a PRD), Foundry (PRD into architecture), then Planner (architecture into agent tasks) before any code is written ([Ry Walker](https://rywalker.com/research/8090-software-factory)). Lighter factories skip it for small fixes.
+</Accordion>
+<Accordion title="Implement">
+The goal loop proper: edit, run tests, iterate until checks pass. Usually one agent in an isolated sandbox. This is the part every coding agent already does, which is why vendors insist that "the agent is one component inside a factory" ([Mastra](https://mastra.ai/articles/best-software-factory)).
+</Accordion>
+<Accordion title="Verify">
+Check the change against something the implementing agent didn't write. StrongDM runs end-to-end **scenarios** stored outside the codebase "similar to a 'holdout' set in model training", against behavioural clones of third-party services ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). Cloudflare ships a **preview release** and asks the original reporter to confirm the fix before a PR is even opened ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/)). See [Where the leverage is](/guide/factories/leverage#1-verification-not-review).
+</Accordion>
+<Accordion title="Review">
+A separate agent reviews the diff, then (almost everywhere) a human approves it. At Vercel, "nothing is merged without approval from a human on the AI SDK team" ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)). Stripe's Minions produce PRs with "zero human-written code" that engineers still review ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs)).
+</Accordion>
+<Accordion title="Merge, release and backport">
+Shepherding the PR through CI, rebasing and resolving conflicts is its own station in Symphony ([InfoWorld](https://www.infoworld.com/article/4164173/openais-symphony-spec-pushes-coding-agents-from-prompts-to-orchestration.html)). Vercel has a dedicated backport agent. Gas Town has a "Refinery" role that only handles merges ([Echofold](https://echofold.ai/articles/gas-town-multi-agent-orchestrator-claude-code)).
+</Accordion>
+<Accordion title="Monitor">
+Watch what shipped and feed problems back into intake. Factory's "Factory 2.0" pitch is exactly this closed loop: bug reports and customer feedback become planned changes, code, tests, reviews, deployments and monitoring ([Factory](https://factory.ai/news/software-factory)). PostHog argues it's the station most factories are missing ([PostHog](https://newsletter.posthog.com/p/software-factories)).
+</Accordion>
+</Accordions>
+
+## One agent per station
+
+The strongest shared design choice: **many narrow agents beat one capable generalist.** Vercel built dedicated agents for bug reproduction, bug fixes, PR review, backports, docs updates, feature analysis and feature implementation. Their advice is "Build one agent per task"; a single agent equipped with every skill "would come with a higher maintenance and troubleshooting burden" ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)). <Evidence level="primary" />
+
+Factory's product moved the same way, from one generalist Droid to a coordinator handing work to role-specific Droids for code, review, docs, test and knowledge ([Masuda](https://daisuke.masuda.tokyo/article-2026-08-11-1401)). <Evidence level="secondary" />
+
+## State lives outside the agents
+
+Stations hand off through something durable and inspectable, never through one long shared context:
+
+| Factory | Where state lives |
+|---|---|
+| Cloudflare Astro | Issue **labels** as a state machine (`triage needed` … `fix verified`), plus a `report.md` file each subagent reads and appends to ([InfoQ](https://www.infoq.com/news/2026/08/cloudflare-astro-ai-agents/)) |
+| OpenAI Symphony | The **Linear board**. Each issue maps to a workspace; the orchestrator restarts agents that stall or crash ([Help Net Security](https://www.helpnetsecurity.com/2026/04/28/openai-symphony-codex-orchestration-linear/)) |
+| Gas Town | **Beads**, a git-backed issue ledger Yegge calls the atomic unit of work; "convoys" bundle related beads ([Yegge](https://steve-yegge.medium.com/gas-town-emergency-user-manual-cf0e4556d74b)) |
+| 8090 | A **knowledge graph** linking requirements, architecture and implementation ([Ry Walker](https://rywalker.com/research/8090-software-factory)) |
+| Vercel Board | A shared **message board** agents post to and read from ([Vercel](https://vercel.com/blog/introducing-vercel-board)) |
+
+This is the [context-and-memory](/guide/shortcomings/context-and-memory) problem solved by brute force: if each station starts fresh and reads the ticket, nothing rots.
+
+## Deterministic where possible, agentic where needed
+
+Stripe calls its pipelines **blueprints**: "a sequence of nodes where some nodes run deterministic code, and other nodes run an agentic loop". Running linters and pushing the branch are hard-coded; fixing CI failures gets an agent. And the agent gets a fixed budget: "At most two rounds of CI. If the code doesn't pass after the second push, the branch goes back to the human engineer" ([ByteByteGo](https://blog.bytebytego.com/p/how-stripes-minions-ship-1300-prs)). <Evidence level="secondary" />
+
+The same instinct appears in GitHub's guidance for its Markdown-defined Agentic Workflows: use them for tasks that benefit from flexibility, **not** for core build and release processes that need strict reproducibility ([htek.dev](https://htek.dev/articles/github-agentic-workflows-hands-on-guide)).
+
+## How a run ends
+
+Vercel sorts every run into one of four outcomes, and only one of them ships ([Vercel](https://vercel.com/blog/building-a-software-factory-for-ai-sdk)):
+
+<Defs
+  items={[
+    ['Success', 'The change is correct and goes to human review.'],
+    ['Flawed', 'The agent produced something wrong. Fix the factory: better prompts, context or eval cases.'],
+    ['Blocked', 'The agent lacked something it needed. Fix the environment: provision the missing access, data or tool.'],
+    ['Manual', 'The work needs a person. Hand it back.'],
+  ]}
+/>
+
+The point of the taxonomy is that **failures are bug reports against the factory, not the product.** A flawed run isn't patched by hand and forgotten; it becomes a new eval case so the next run doesn't fail the same way. That's the loop *around* the factory, and it's what separates a factory from a cron job that calls an agent.
