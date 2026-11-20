@@ -1,6 +1,6 @@
 # loop.fun
 
-**A field guide to agentic loops.** It covers what loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short. It's written for people who already know what an AI agent is. The guide explains concepts rather than documenting commands, and links every claim to its source.
+**A field guide to loop engineering.** Patterns, hints and tools for designing agentic loops: goals that can be checked, the harnesses that run them (Claude Code, Codex, Hermes, Antigravity, OpenClaw), microVM hosts that sleep between tasks, software factories, and the failure modes to plan for. Written for people who already work with AI agents; every claim links to its source.
 
 Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a fully static site.
 

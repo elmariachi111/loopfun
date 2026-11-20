@@ -5,9 +5,9 @@ export const revalidate = false;
 /** Share card for the landing page, served at /og/home/image.png. */
 export function GET() {
   return renderOgImage({
-    title: 'Loops, goals and harnesses, explained',
+    title: 'Loop engineering, in the field',
     description:
-      'How goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short.',
+      'Patterns, hints and tools for designing agentic loops: checkable goals, harnesses, microVM hosts, software factories and the failure modes to plan for.',
   });
 }
 

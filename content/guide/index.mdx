@@ -1,12 +1,12 @@
 ---
 title: Start here
-description: A conceptual guide to agentic loops. It covers what they are, how they run in today's harnesses, and why they still fall short.
+description: A field guide to loop engineering. Patterns, hints and tools for designing agentic loops, where to run them, and the failure modes to plan for.
 icon: Flag
 ---
 
-This guide is for people who already know what an AI agent is. You've used a coding agent, you know it calls tools and you know roughly how a model decides what to do next. You may still not have a clear picture of what everyone has meant by **"loops"** since mid-2026.
+A field guide for people who already work with AI agents and want to design better **loops** around them. Each section collects patterns, hints and tools you can take into your own loops: how to phrase a goal a machine can check, which shapes recur, where loops run, what they cost, and what tends to break.
 
-It is not reference documentation. You won't find command flags here (each tool's own docs are linked instead). It explains **concepts** at length: what a loop is, the layers it comes in, how goals relate to it, how different environments implement it, and where it breaks. Every claim links to the source it came from.
+Command flags live in each tool's own docs, linked from the pages. Every claim links to the source it came from.
 
 ## Why loops matter now
 
@@ -18,27 +18,27 @@ Over roughly a year, an idea went from a joke to a product category:
 - **July 2026.** The backlash: "it's just a while loop with an LLM call", plus a rebrand attempt as "[graph engineering](https://towardsdatascience.com/graph-engineering-for-ai-agents-from-prompts-and-loops-to-workflows/)".
 - **Now.** Loops are standard harness features, and the hard questions have moved elsewhere: *how do you know the loop is done, what does it cost, and who reviews what it produced?*
 
-<Callout title="The one-sentence version">
+<Callout title="The working definition">
   An agentic loop is a program that keeps an agent working toward an outcome by deciding, after every
   step, whether to continue. Almost everything interesting about loops is in how that decision gets made.
 </Callout>
 
-## How to read this guide
+## Where to go
 
 <Cards>
-  <Card icon={<span>①</span>} title="Foundations" href="/guide/foundations/what-is-a-loop" description="Start here if 'loop' still feels fuzzy. Definitions, the four layers, building blocks, history." />
-  <Card icon={<span>②</span>} title="Goals" href="/guide/goals" description="The objective that steers a loop and decides when it stops. This is where most of the open problems are." />
-  <Card icon={<span>③</span>} title="Patterns" href="/guide/patterns" description="Ralph, maker/checker, metric loops, heartbeats, graphs: the recurring shapes." />
+  <Card icon={<span>①</span>} title="Foundations" href="/guide/foundations/what-is-a-loop" description="The vocabulary: definitions, the four layers, building blocks, history." />
+  <Card icon={<span>②</span>} title="Goals" href="/guide/goals" description="The objective that steers a loop and decides when it stops. Most open problems sit here." />
+  <Card icon={<span>③</span>} title="Patterns" href="/guide/patterns" description="Ralph, maker/checker, metric loops, heartbeats, graphs: shapes to borrow and recombine." />
   <Card icon={<span>④</span>} title="Environments" href="/guide/environments" description="How Claude Code, Codex, Hermes, Google's Antigravity, OpenClaw and the SDKs implement all of the above." />
   <Card icon={<span>⑤</span>} title="MicroVM hosts" href="/guide/hosts" description="Cloud machines for agents that look always on but sleep between tasks, and how to run a harness on one." />
   <Card icon={<span>⑥</span>} title="Software factories" href="/guide/factories" description="When loops become infrastructure: triggers, stations, leverage, who runs them and where they break." />
-  <Card icon={<span>⑦</span>} title="Shortcomings" href="/guide/shortcomings" description="What holds people back: verification, cost, memory, model choice, security and human attention." />
+  <Card icon={<span>⑦</span>} title="Shortcomings" href="/guide/shortcomings" description="Failure modes to design around: verification, cost, memory, model choice, security and human attention." />
   <Card icon={<span>⑧</span>} title="Field notes" href="/guide/field-notes" description="Loops people have run in public, and a place for yours." />
 </Cards>
 
-If you only have ten minutes, read [The four layers](/guide/foundations/four-layers), [What is a goal?](/guide/goals) and [Shortcomings](/guide/shortcomings), in that order.
+Short on time? Read [The four layers](/guide/foundations/four-layers), [What is a goal?](/guide/goals) and [Shortcomings](/guide/shortcomings), in that order, then sketch your own loop against them.
 
-## A note on evidence
+## Reading the evidence
 
 The 2026 discourse about loops is loud and young. Much of it consists of practitioner blogs, vendor content and posts on X. Where a claim rests on thin ground, you'll see a badge:
 
@@ -47,4 +47,16 @@ The 2026 discourse about loops is loud and young. Much of it consists of practit
 - <Evidence level="anecdotal" /> one person's numbers or story
 - <Evidence level="contested" /> sources disagree
 
-As the [August 2026 study of loop engineering](https://arxiv.org/abs/2608.21884) puts it, the claims attached to the practice "rest almost entirely on anecdotes and self-reported productivity numbers." This guide tries to be honest about that. [How this guide was made](/guide/about) explains the method.
+As the [August 2026 study of loop engineering](https://arxiv.org/abs/2608.21884) puts it, the claims attached to the practice "rest almost entirely on anecdotes and self-reported productivity numbers."
+
+<Callout type="warn" title="Before you rely on a number">
+  - **Follow the link.** Pages summarize their sources; where a detail matters, read the original.
+  - **Dates, versions and prices disagree** between sources. Many are SEO content or vendor blogs with a stake in the topic.
+  - **Tools change weekly.** The environment and host pages are snapshots and will drift.
+</Callout>
+
+All sources are collected in the [source library](/guide/sources).
+
+## Add what you know
+
+The most useful additions come from people who run loops. Every page ends with links to share a field note, improve the page or start a discussion. See [How to contribute](/guide/field-notes/how-to-contribute).
