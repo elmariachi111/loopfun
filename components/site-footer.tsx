@@ -40,7 +40,12 @@ export function SiteFooter({ inColumn = false }: { inColumn?: boolean } = {}) {
               GitHub
             </a>
           </nav>
-          <p>© 2026 {appName}</p>
+          <p>
+            © 2026 {appName} ·{' '}
+            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer license" className={linkClass}>
+              CC BY 4.0
+            </a>
+          </p>
         </div>
       </div>
     </footer>

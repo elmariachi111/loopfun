@@ -16,3 +16,7 @@ We collect stories from people running agentic loops so we can learn from each o
 - **Share a field report:** use the "Share your story" button on [loop.fun/guide/field-reports](https://loop.fun/guide/field-reports). It opens GitHub with a short template, and reports land in `content/guide/field-reports/`.
 - **Fix or extend a page:** use "Improve this page" at the bottom of any page.
 - **Argue with something:** use "Disagree? Discuss" to open an issue.
+
+## License
+
+By contributing, you agree that your contribution is published under [CC BY 4.0](LICENSE), so others can share and build on it with credit.

@@ -54,3 +54,7 @@ brand/STYLEGUIDE.md       # self-contained style guide (incl. logo SVGs) for con
 ## Deploy
 
 `npm run build` produces a static `out/` directory. Host it anywhere (Vercel, Netlify, GitHub Pages, S3, …) and point the loop.fun DNS at it.
+
+## License
+
+Content and code are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE). Share and adapt it freely, with credit to loop.fun. By contributing, you agree to license your contribution the same way.
