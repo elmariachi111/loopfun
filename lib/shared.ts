@@ -33,7 +33,8 @@ harness: "Claude Code / Codex / Hermes / Antigravity / OpenClaw / custom"
 ---
 
 {/* Write it the way you'd tell a colleague. Failures are as welcome as wins.
-    Leave out secrets, customer data and internal hostnames. */}
+    Leave out secrets, customer data and internal hostnames.
+    Ground rules (short): ${repoUrl}/blob/${gitConfig.branch}/CONTRIBUTING.md */}
 
 ## What I set up
 What starts the loop, what it does each round, and how it knows it's done.

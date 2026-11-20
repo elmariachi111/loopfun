@@ -10,7 +10,7 @@ Ran a loop? Write a field report. Wins and failures are both welcome, and rough 
 
 **[→ Share your story](https://loop.fun/guide/field-reports)**. The button there opens GitHub with a short template.
 
-Reports live in [`content/guide/field-reports/`](content/guide/field-reports) and show up on the site once merged. Please leave out secrets, customer data and internal hostnames, and say so if you work for a tool you're writing about.
+Reports live in [`content/guide/field-reports/`](content/guide/field-reports) and show up on the site once merged. Please skim the short [ground rules](CONTRIBUTING.md) first: no secrets, failures welcome, disclose interests.
 
 You can also fix any page with its "Improve this page" link, or argue with it via "Disagree? Discuss".
 
