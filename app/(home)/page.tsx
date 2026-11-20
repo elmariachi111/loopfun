@@ -204,11 +204,7 @@ export default function HomePage() {
         </div>
         <FieldReportCTA />
         <p className="text-center text-xs text-fd-muted-foreground">
-          Built from public sources, with every claim linked. See{' '}
-          <Link href={`${docsRoute}/about`} className="underline underline-offset-2">
-            how this guide was made
-          </Link>{' '}
-          and the{' '}
+          Built from public sources, with every claim linked. See the{' '}
           <Link href={`${docsRoute}/sources`} className="underline underline-offset-2">
             full source library
           </Link>
