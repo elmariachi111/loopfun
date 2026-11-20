@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { appName, getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
 import { PageContribute } from '@/components/contribute';
+import { FieldReports } from '@/components/field-reports';
 
 export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
   const params = await props.params;
@@ -38,6 +39,7 @@ export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
+            FieldReports,
           })}
         />
         <PageContribute path={page.path} title={page.data.title} />

@@ -1,18 +1,22 @@
 # loop.fun
 
-**A field guide to agentic loops.** It covers what loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short. It's written for people who already know what an AI agent is. The guide explains concepts rather than documenting commands, and links every claim to its source.
+**Stories and a field guide for people running agentic loops.** Everyone running loops (Claude Code `/goal`, Codex, Hermes, Ralph loops, scheduled agents, software factories) is figuring it out as they go. This repo collects what people actually tried, what worked, what broke and what it cost, so we can learn from each other.
 
-Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a fully static site.
+Read it at **[loop.fun](https://loop.fun)**.
 
-## Contributing
+## Share your story
 
-The guide is meant to grow from people's real experience running loops.
+Ran a loop? Write a field report. Wins and failures are both welcome, and rough numbers are fine.
 
-- **Field notes:** write up a loop you've run (what worked, what hurt, numbers) as an MDX file in `content/guide/field-notes/`. The "Start a field note" button on the site opens GitHub with a template. New notes show up in the sidebar automatically.
-- **Corrections and sources:** every page has an "Improve this page" link to its MDX source.
-- **Discussion:** "Disagree? Discuss" opens an issue for that page.
+**[→ Share your story](https://loop.fun/guide/field-reports)**. The button there opens GitHub with a short template.
 
-There is intentionally no in-site submission feature yet. See `content/guide/field-notes/how-to-contribute.mdx`.
+Reports live in [`content/guide/field-reports/`](content/guide/field-reports) and show up on the site once merged. Please leave out secrets, customer data and internal hostnames, and say so if you work for a tool you're writing about.
+
+You can also fix any page with its "Improve this page" link, or argue with it via "Disagree? Discuss".
+
+## What's in the guide
+
+The guide explains concepts rather than documenting commands, and links every claim to its source: what loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short. Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a static site.
 
 ## Development
 
@@ -34,14 +38,16 @@ content/guide/            # all guide pages (MDX) + meta.json sidebar order
   hosts/                  # microVM hosts: Firecracker, custom stacks, gVisor/k8s, self-hosted, harnesses, costs, ops
   factories/              # software factories: triggers, stations, leverage, cases, tools, pitfalls
   shortcomings/           # verification, cost, memory, models, security, humans…
-  field-notes/            # community notes, public record, idea board
+  field-reports/          # community stories + summaries of public ones
+  idea-board.mdx          # open problems waiting for someone to try them
   remedies/               # speculative service proposals (collapsed, end of sidebar)
 app/(home)/page.tsx       # landing page
 app/guide/                # guide layout and page renderer
 components/diagrams.tsx   # Cycle, Flow, LoopLayers, Quote, Evidence, Defs
-components/contribute.tsx # per-page contribution links (GitHub only)
+components/contribute.tsx # "share your story" CTA and per-page links
+components/field-reports.tsx # auto-generated list of field reports
 app/global.css            # silver / graphite theme, lobster red + hermes blue
-lib/shared.ts             # site config, GitHub links, field-note template
+lib/shared.ts             # site config, GitHub links, field-report template
 brand/STYLEGUIDE.md       # self-contained style guide (incl. logo SVGs) for content authors
 ```
 

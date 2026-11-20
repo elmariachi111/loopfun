@@ -10,7 +10,7 @@ import {
   Server,
   TriangleAlert,
 } from 'lucide-react';
-import { FieldNoteCTA } from '@/components/contribute';
+import { FieldReportCTA } from '@/components/contribute';
 import { docsRoute } from '@/lib/shared';
 
 const sections = [
@@ -51,10 +51,10 @@ const sections = [
     body: 'Verification, cost, memory, model choice, security and the people stuck reviewing it all.',
   },
   {
-    href: `${docsRoute}/field-notes`,
+    href: `${docsRoute}/field-reports`,
     icon: NotebookPen,
-    title: 'Field notes',
-    body: 'Loops that people have run in public, plus an open invitation to add yours.',
+    title: 'Field reports',
+    body: 'Stories from people running loops: what worked, what broke, what it cost. Share yours.',
   },
 ];
 
@@ -202,7 +202,7 @@ export default function HomePage() {
             ))}
           </ul>
         </div>
-        <FieldNoteCTA />
+        <FieldReportCTA />
         <p className="text-center text-xs text-fd-muted-foreground">
           Built from public sources, with every claim linked. See{' '}
           <Link href={`${docsRoute}/about`} className="underline underline-offset-2">

@@ -4,7 +4,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import type { MDXComponents } from 'mdx/types';
 import { Cycle, Defs, Evidence, Flow, LoopLayers, Quote } from './diagrams';
-import { FieldNoteCTA } from './contribute';
+import { FieldReportCTA } from './contribute';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -21,7 +21,9 @@ export function getMDXComponents(components?: MDXComponents) {
     Flow,
     LoopLayers,
     Quote,
-    FieldNoteCTA,
+    FieldReportCTA,
+    // Injected by the guide page renderer, which has access to the page source.
+    FieldReports: () => null,
     ...components,
   } satisfies MDXComponents;
 }

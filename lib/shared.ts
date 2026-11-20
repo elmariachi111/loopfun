@@ -15,35 +15,34 @@ export const gitConfig = {
 
 export const repoUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}`;
 
-/** Where field notes live in the repository. */
-export const fieldNotesDir = 'content/guide/field-notes';
+/** Where field reports live in the repository. */
+export const fieldReportsDir = 'content/guide/field-reports';
 
-const fieldNoteTemplate = `---
+const fieldReportTemplate = `---
 title: "Your loop, in one line"
-description: "What the loop does and where it runs"
+description: "What it does and where it runs"
 author: "your name or handle"
 harness: "Claude Code / Codex / Hermes / Antigravity / OpenClaw / custom"
 ---
 
-## The loop
-What triggers it, what it does each iteration, and when it stops.
+{/* Write it the way you'd tell a colleague. Failures are as welcome as wins.
+    Leave out secrets, customer data and internal hostnames. */}
 
-## The goal
-The exact goal or completion condition you used.
+## What I set up
+What starts the loop, what it does each round, and how it knows it's done.
 
-## What worked
+## What happened
 
-## What hurt
-Cost, verification, state, review, security, anything else.
+## What I learned
 
-## Numbers (optional)
-Iterations, runtime, tokens or dollars, success rate.
+## Numbers
+Optional and rough is fine: runtime, iterations, cost, how often it worked.
 `;
 
-/** Opens GitHub's "new file" editor with the field-note template pre-filled. */
-export const newFieldNoteUrl = `${repoUrl}/new/${gitConfig.branch}/${fieldNotesDir}?filename=${encodeURIComponent(
+/** Opens GitHub's "new file" editor with the field-report template pre-filled. */
+export const newFieldReportUrl = `${repoUrl}/new/${gitConfig.branch}/${fieldReportsDir}?filename=${encodeURIComponent(
   'my-loop.mdx',
-)}&value=${encodeURIComponent(fieldNoteTemplate)}`;
+)}&value=${encodeURIComponent(fieldReportTemplate)}`;
 
 /** Opens a GitHub issue, optionally about a specific page. */
 export function discussUrl(topic?: string) {

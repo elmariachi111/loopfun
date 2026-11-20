@@ -71,7 +71,7 @@ Dollar budgets per goal that count model tokens, SMS segments, call minutes and 
 Ingest webhooks (CI finished, customer replied, payment cleared) and **wake** the loop, rather than letting it re-read its context every few seconds to check. This is the [pacing problem](/guide/goals/budgets-and-lifecycle#pacing-what-a-goal-costs-while-it-waits) solved outside the harness.
 </Accordion>
 <Accordion title="A state-machine sink">
-An append-only event log per goal: state transitions, intents executed, judge verdicts. The loop can write to it and resume from it; the operator can export it to their own warehouse. It's a concrete answer to the idea board's [minimum resumable state](/guide/field-notes/idea-board) question, and it keeps loop state out of an uncommitted local file.
+An append-only event log per goal: state transitions, intents executed, judge verdicts. The loop can write to it and resume from it; the operator can export it to their own warehouse. It's a concrete answer to the idea board's [minimum resumable state](/guide/idea-board) question, and it keeps loop state out of an uncommitted local file.
 </Accordion>
 <Accordion title="Approval gates for high-blast-radius actions">
 Hold selected intents (outbound calls, payments, messages to new recipients) for human approval, with the evidence attached. The loop keeps working on other things while it waits.
