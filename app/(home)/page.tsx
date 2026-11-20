@@ -5,12 +5,12 @@ import {
   Boxes,
   Compass,
   Crosshair,
-  Library,
+  Factory,
   NotebookPen,
   Server,
   TriangleAlert,
 } from 'lucide-react';
-import { FieldNoteCTA } from '@/components/contribute';
+import { FieldReportCTA } from '@/components/contribute';
 import { docsRoute } from '@/lib/shared';
 
 const sections = [
@@ -18,43 +18,49 @@ const sections = [
     href: `${docsRoute}/foundations/what-is-a-loop`,
     icon: Compass,
     title: 'Foundations',
-    body: 'What a loop actually is, the four layers people mean by it, the building blocks, and how we got here.',
+    body: 'The vocabulary for designing a loop: the four layers, the building blocks and how the practice got here.',
   },
   {
     href: `${docsRoute}/goals`,
     icon: Crosshair,
     title: 'Goals',
-    body: 'The objective a loop works toward: writing goals you can check, who judges them, budgets and lifecycles.',
+    body: 'Write goals a machine can check, pick who judges them, and set budgets and lifecycles before the loop starts.',
   },
   {
     href: `${docsRoute}/patterns`,
     icon: Boxes,
     title: 'Patterns',
-    body: 'Ralph loops, maker/checker, metric loops, heartbeats and graphs. These are the shapes that keep recurring.',
+    body: 'Ralph loops, maker/checker, metric loops, heartbeats and graphs: shapes to borrow and recombine.',
   },
   {
     href: `${docsRoute}/environments`,
     icon: BookOpenText,
     title: 'Environments',
-    body: 'How Claude Code, Codex, Hermes, Antigravity, OpenClaw and the SDKs each implement loops.',
+    body: 'Where loops run today: Claude Code, Codex, Hermes, Antigravity, OpenClaw and the SDKs, side by side.',
   },
   {
     href: `${docsRoute}/hosts`,
     icon: Server,
     title: 'MicroVM hosts',
-    body: 'Cloud machines for agents that look always on but sleep between tasks, and how to put a harness on one.',
+    body: 'Firecracker-style machines that sleep between tasks: providers, costs, self-hosting and how to put a harness on one.',
+  },
+  {
+    href: `${docsRoute}/factories`,
+    icon: Factory,
+    title: 'Software factories',
+    body: 'Loops as infrastructure: triggers, stations, leverage, who runs them, the tools and where they break.',
   },
   {
     href: `${docsRoute}/shortcomings`,
     icon: TriangleAlert,
     title: 'Shortcomings',
-    body: 'Verification, cost, memory, model choice, security and the people stuck reviewing it all.',
+    body: 'Known failure modes to design around: verification, cost, memory, model choice, security and review load.',
   },
   {
-    href: `${docsRoute}/field-notes`,
+    href: `${docsRoute}/field-reports`,
     icon: NotebookPen,
-    title: 'Field notes',
-    body: 'Loops that people have run in public, plus an open invitation to add yours.',
+    title: 'Field reports',
+    body: 'Stories from people running loops: what worked, what broke, what it cost. Share yours.',
   },
 ];
 
@@ -108,30 +114,30 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-4 py-16 sm:px-6 md:flex-row md:py-24">
           <div className="flex-1">
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.25em] text-fd-primary">
-              a field guide · researched November 2026
+              field guide · loop engineering · November 2026
             </p>
             <h1 className="mb-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
-              Agentic loops,
+              Loop engineering,
               <br />
-              <span className="text-fd-primary">explained.</span>
+              <span className="text-fd-primary">in the field.</span>
             </h1>
             <p className="mb-8 max-w-xl text-lg text-fd-muted-foreground text-pretty">
-              In 2026 the industry went from prompting agents to designing the loops that prompt them. This site explains
-              what those loops are, how today&apos;s harnesses run them, what &ldquo;goals&rdquo; have to do with it, and
-              why most loops still need a human nearby.
+              Patterns, hints and tools for designing the loops that keep agents working: goals that can be checked,
+              hosts that sleep between tasks, factories that run loops as infrastructure, and the failure modes to plan
+              for. Use it to widen the set of loops you can think of, then go build one.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href={docsRoute}
                 className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
               >
-                Start reading <ArrowRight className="size-4" />
+                Start here <ArrowRight className="size-4" />
               </Link>
               <Link
                 href={`${docsRoute}/shortcomings`}
                 className="inline-flex items-center gap-2 rounded-lg border bg-fd-card px-5 py-2.5 font-medium transition-colors hover:bg-fd-accent"
               >
-                Skip to the problems
+                Known failure modes
               </Link>
             </div>
           </div>
@@ -144,7 +150,7 @@ export default function HomePage() {
       <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
         <h2 className="mb-2 text-2xl font-semibold tracking-tight">Four words to keep apart</h2>
         <p className="mb-6 max-w-2xl text-fd-muted-foreground">
-          Most confusion about agentic loops comes from blending these together. This guide keeps them separate.
+          Name these separately when you sketch a loop. Most confusion about loops comes from blending them.
         </p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {terms.map(([t, d]) => (
@@ -158,7 +164,7 @@ export default function HomePage() {
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-6 sm:px-6">
         <h2 className="mb-6 text-2xl font-semibold tracking-tight">Explore</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {sections.map(({ href, icon: Icon, title, body }) => (
             <Link
               key={title}
@@ -179,36 +185,30 @@ export default function HomePage() {
       <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-6 rounded-2xl border bg-fd-card p-6 md:grid-cols-[1fr_1.3fr] md:p-8">
           <div>
-            <p className="mb-2 font-mono text-xs uppercase tracking-widest text-loop-blue">state of play</p>
-            <h2 className="mb-3 text-2xl font-semibold tracking-tight">Embraced, but no longer naive</h2>
+            <p className="mb-2 font-mono text-xs uppercase tracking-widest text-loop-blue">state of play · November 2026</p>
+            <h2 className="mb-3 text-2xl font-semibold tracking-tight">Where we stand</h2>
             <p className="text-sm text-fd-muted-foreground">
-              Within about six months, every major coding agent shipped a built-in goal loop. The hype peaked in June and the
-              backlash came in July. What remains is a practice that is focused on what surrounds the loop rather than the
-              loop itself.
+              Every major coding agent ships a goal loop. The open work has moved to what surrounds it.
             </p>
           </div>
           <ul className="grid gap-3 text-sm">
             {[
-              ['Loved', 'unattended overnight progress, loops that prompt for you, fresh context with state kept in files, loops that optimise a measurable number'],
-              ['Root problem', 'checking that the goal is really done. Agents game weak checks and declare victory early.'],
-              ['Expensive', 'context re-read on every turn, poll loops that spin while waiting, weekly quotas gone in a day'],
-              ['Human bottleneck', 'reviewing the output, comprehension debt, "cognitive surrender"'],
-              ['Open frontier', 'goals that can be checked, independent judges, goal state that persists across tools and devices'],
+              ['Works', 'unattended overnight runs, fresh context with state in files, loops that push a measurable number'],
+              ['Unsolved', 'checking that a goal is really met; weak checks get gamed and loops stop early'],
+              ['Cost', 'context re-read every turn and idle polling; hosts that sleep between tasks cut the idle part'],
+              ['Bottleneck', 'human review of what loops produce'],
+              ['Next', 'checkable goals, independent judges, factories that run loops as infrastructure'],
             ].map(([k, v]) => (
               <li key={k} className="flex gap-3">
-                <span className="w-32 shrink-0 font-mono text-xs uppercase tracking-wider text-fd-primary">{k}</span>
+                <span className="w-28 shrink-0 font-mono text-xs uppercase tracking-wider text-fd-primary">{k}</span>
                 <span className="text-fd-muted-foreground">{v}</span>
               </li>
             ))}
           </ul>
         </div>
-        <FieldNoteCTA />
+        <FieldReportCTA lead={{ href: docsRoute, label: 'Learn about loops' }} />
         <p className="text-center text-xs text-fd-muted-foreground">
-          Built from public sources, with every claim linked. See{' '}
-          <Link href={`${docsRoute}/about`} className="underline underline-offset-2">
-            how this guide was made
-          </Link>{' '}
-          and the{' '}
+          Every claim links to its source. Browse the{' '}
           <Link href={`${docsRoute}/sources`} className="underline underline-offset-2">
             full source library
           </Link>

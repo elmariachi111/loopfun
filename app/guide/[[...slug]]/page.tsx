@@ -13,6 +13,8 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { appName, getPageImageUrl, getPageMarkdownUrl, gitConfig } from '@/lib/shared';
 import { PageContribute } from '@/components/contribute';
+import { SiteFooter } from '@/components/site-footer';
+import { FieldReports } from '@/components/field-reports';
 
 export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
   const params = await props.params;
@@ -23,7 +25,9 @@ export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
   const markdownUrl = getPageMarkdownUrl(page).url;
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
+    // The docs layout is a fixed CSS grid with no footer row, so the site footer goes
+    // into the page's own footer slot, below the previous/next links.
+    <DocsPage toc={page.data.toc} full={page.data.full} footer={{ children: <SiteFooter inColumn /> }}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       <div className="flex flex-row gap-2 items-center border-b pb-6">
@@ -38,6 +42,7 @@ export default async function Page(props: PageProps<'/guide/[[...slug]]'>) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
+            FieldReports,
           })}
         />
         <PageContribute path={page.path} title={page.data.title} />

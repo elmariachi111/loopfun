@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: `%s | ${appName}`,
   },
   description:
-    'What agentic loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short.',
+    'A field guide to loop engineering: patterns, hints and tools for designing agentic loops, where to run them (harnesses, microVM hosts, software factories) and the failure modes to plan for.',
   openGraph: {
     type: 'website',
     siteName: appName,

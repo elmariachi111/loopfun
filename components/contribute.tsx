@@ -1,17 +1,15 @@
-import { MessageSquarePlus, NotebookPen, PencilLine } from 'lucide-react';
-import { discussUrl, editUrl, newFieldNoteUrl } from '@/lib/shared';
+import Link from 'next/link';
+import { BookOpen, MessageSquarePlus, NotebookPen, PencilLine } from 'lucide-react';
+import { discussUrl, editUrl, newFieldReportUrl } from '@/lib/shared';
 
-/**
- * Footer shown on every guide page. These are plain links into GitHub. There is
- * deliberately no in-site submission feature yet.
- */
+/** Footer shown on every guide page. */
 export function PageContribute({ path, title }: { path: string; title: string }) {
   const links = [
     {
-      href: newFieldNoteUrl,
+      href: newFieldReportUrl,
       icon: NotebookPen,
-      label: 'Share a field note',
-      hint: 'Your own loop: what worked and what hurt',
+      label: 'Share your story',
+      hint: 'A loop you ran: what worked, what broke',
     },
     {
       href: editUrl(path),
@@ -31,8 +29,8 @@ export function PageContribute({ path, title }: { path: string; title: string })
     <aside className="not-prose mt-14 rounded-xl border border-dashed bg-fd-card/60 p-5">
       <p className="mb-1 font-mono text-xs uppercase tracking-widest text-fd-primary">This page is a living draft</p>
       <p className="mb-4 text-sm text-fd-muted-foreground">
-        Everything here is built from public reporting and is expected to go stale. If you run loops yourself, your
-        experience is the most valuable thing you can add.
+        It's built from public reporting and will go stale. If you run loops yourself, your experience is the most
+        valuable thing you can add.
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         {links.map(({ href, icon: Icon, label, hint }) => (
@@ -55,25 +53,41 @@ export function PageContribute({ path, title }: { path: string; title: string })
   );
 }
 
-/** Larger call-to-action used on the home page and the field notes index. */
-export function FieldNoteCTA() {
+type CTALink = { href: string; label: string };
+
+const primaryButton =
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90';
+const secondaryButton =
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border bg-fd-card px-4 py-2 text-sm font-medium transition-colors hover:bg-fd-accent';
+
+/**
+ * The main "share your story" call to action, used on the home page and in the field reports.
+ * With `lead`, an internal link is shown first as the primary button and "Share your story"
+ * becomes secondary.
+ */
+export function FieldReportCTA({ lead }: { lead?: CTALink } = {}) {
   return (
     <div className="not-prose my-8 flex flex-col gap-4 rounded-2xl border border-fd-primary/40 bg-fd-accent p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-lg font-semibold">Run loops? Write a field note.</p>
+        <p className="text-lg font-semibold">{lead ? 'New to loops, or running them already?' : 'Running loops? Share your story.'}</p>
         <p className="text-sm text-fd-muted-foreground">
-          The button opens GitHub with a template, so contributing is a pull request. No accounts or forms on this site.
+          {lead
+            ? "Start with the basics, or share a loop you've run so we can learn from each other."
+            : "What you set up, what happened, what it cost. Failures teach as much as wins. Let's learn from each other."}
         </p>
       </div>
-      <a
-        href={newFieldNoteUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
-      >
-        <NotebookPen className="size-4" />
-        Start a field note
-      </a>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {lead ? (
+          <Link href={lead.href} className={primaryButton}>
+            <BookOpen className="size-4" />
+            {lead.label}
+          </Link>
+        ) : null}
+        <a href={newFieldReportUrl} target="_blank" rel="noreferrer" className={lead ? secondaryButton : primaryButton}>
+          <NotebookPen className={lead ? 'size-4 text-fd-primary' : 'size-4'} />
+          Share your story
+        </a>
+      </div>
     </div>
   );
 }

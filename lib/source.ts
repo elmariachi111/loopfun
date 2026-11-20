@@ -3,11 +3,16 @@ import { lucideIconsPlugin } from 'fumadocs-core/source/plugins/lucide-icons';
 import { docsRoute } from './shared';
 import { defineDocs } from 'fumadocs-mdx/macro';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { z } from 'zod';
 
 const docs = defineDocs({
   dir: 'content/guide',
   docs: {
-    schema: pageSchema,
+    // `author` and `harness` are used by field reports; other pages leave them out.
+    schema: pageSchema.extend({
+      author: z.string().optional(),
+      harness: z.string().optional(),
+    }),
     postprocess: {
       includeProcessedMarkdown: true,
     },

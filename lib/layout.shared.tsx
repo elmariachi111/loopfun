@@ -15,7 +15,7 @@ export function baseOptions(): BaseLayoutProps {
     links: [
       { text: 'Guide', url: docsRoute, active: 'nested-url' },
       { text: 'Shortcomings', url: `${docsRoute}/shortcomings` },
-      { text: 'Field notes', url: `${docsRoute}/field-notes` },
+      { text: 'Field reports', url: `${docsRoute}/field-reports` },
       { text: 'Sources', url: `${docsRoute}/sources` },
     ],
     githubUrl: repoUrl,
