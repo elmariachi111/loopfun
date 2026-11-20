@@ -1,6 +1,6 @@
 # loop.fun
 
-**Stories and a field guide for people running agentic loops.** Everyone running loops (Claude Code `/goal`, Codex, Hermes, Ralph loops, scheduled agents, software factories) is figuring it out as they go. This repo collects what people actually tried, what worked, what broke and what it cost, so we can learn from each other.
+**A field guide to loop engineering, and the stories of the people doing it.** Everyone running agentic loops (Claude Code `/goal`, Codex, Hermes, Ralph loops, scheduled agents, software factories) is figuring it out as they go. This repo collects what people actually tried, what worked, what broke and what it cost, so we can learn from each other.
 
 Read it at **[loop.fun](https://loop.fun)**.
 
@@ -16,7 +16,7 @@ You can also fix any page with its "Improve this page" link, or argue with it vi
 
 ## What's in the guide
 
-The guide explains concepts rather than documenting commands, and links every claim to its source: what loops are, how goal loops, scheduled loops and harnesses work across Claude Code, Codex, Hermes, Antigravity and OpenClaw, and where they still fall short. Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a static site.
+Patterns, hints and tools for designing agentic loops: goals that can be checked, the harnesses that run them (Claude Code, Codex, Hermes, Antigravity, OpenClaw), microVM hosts that sleep between tasks, software factories, and the failure modes to plan for. Every claim links to its source. Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a static site.
 
 ## Development
 

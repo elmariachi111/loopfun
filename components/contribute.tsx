@@ -1,4 +1,5 @@
-import { MessageSquarePlus, NotebookPen, PencilLine } from 'lucide-react';
+import Link from 'next/link';
+import { BookOpen, MessageSquarePlus, NotebookPen, PencilLine } from 'lucide-react';
 import { discussUrl, editUrl, newFieldReportUrl } from '@/lib/shared';
 
 /** Footer shown on every guide page. */
@@ -52,25 +53,41 @@ export function PageContribute({ path, title }: { path: string; title: string })
   );
 }
 
-/** The main "share your story" call to action, used on the home page and in the field reports. */
-export function FieldReportCTA() {
+type CTALink = { href: string; label: string };
+
+const primaryButton =
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90';
+const secondaryButton =
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border bg-fd-card px-4 py-2 text-sm font-medium transition-colors hover:bg-fd-accent';
+
+/**
+ * The main "share your story" call to action, used on the home page and in the field reports.
+ * With `lead`, an internal link is shown first as the primary button and "Share your story"
+ * becomes secondary.
+ */
+export function FieldReportCTA({ lead }: { lead?: CTALink } = {}) {
   return (
     <div className="not-prose my-8 flex flex-col gap-4 rounded-2xl border border-fd-primary/40 bg-fd-accent p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-lg font-semibold">Running loops? Share your story.</p>
+        <p className="text-lg font-semibold">{lead ? 'New to loops, or running them already?' : 'Running loops? Share your story.'}</p>
         <p className="text-sm text-fd-muted-foreground">
-          What you set up, what happened, what it cost. Failures teach as much as wins. Let's learn from each other.
+          {lead
+            ? "Start with the basics, or share a loop you've run so we can learn from each other."
+            : "What you set up, what happened, what it cost. Failures teach as much as wins. Let's learn from each other."}
         </p>
       </div>
-      <a
-        href={newFieldReportUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
-      >
-        <NotebookPen className="size-4" />
-        Share your story
-      </a>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {lead ? (
+          <Link href={lead.href} className={primaryButton}>
+            <BookOpen className="size-4" />
+            {lead.label}
+          </Link>
+        ) : null}
+        <a href={newFieldReportUrl} target="_blank" rel="noreferrer" className={lead ? secondaryButton : primaryButton}>
+          <NotebookPen className={lead ? 'size-4 text-fd-primary' : 'size-4'} />
+          Share your story
+        </a>
+      </div>
     </div>
   );
 }

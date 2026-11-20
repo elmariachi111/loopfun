@@ -1,7 +1,14 @@
 import { createGetUrl } from 'fumadocs-core/source';
 
 export const appName = 'loop.fun';
-export const appTagline = 'A field guide to agentic loops';
+export const appTagline = 'A field guide to loop engineering';
+/** One-line mission, repeated in the site footer. */
+export const missionStatement =
+  'Patterns, hints and tools for designing the loops that keep agents working, and for widening the set of loops you can think of.';
+export const socialLinks = [
+  { label: 'Bluesky', href: 'https://bsky.app/profile/loopfun.bsky.social' },
+  { label: 'X', href: 'https://x.com/loop_dot_fun' },
+] as const;
 export const siteUrl = 'https://loop.fun';
 export const docsRoute = '/guide';
 export const docsImageRoute = '/og/guide';
