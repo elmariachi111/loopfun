@@ -1,0 +1,75 @@
+---
+title: Versioning a goal loop
+description: How the new tools support goal-driven, self-improving systems, and a reference setup you can assemble today from open-source parts.
+icon: Workflow
+---
+
+The earlier pages describe tools by layer. This one starts from the loop. A goal-driven system has a few moments where versioning matters, and each maps to a capability the new tools add on top of git.
+
+<Cycle steps={['Set goal', 'Fork attempts', 'Work and record', 'Judge', 'Merge winner', 'Learn']} center="versioned" highlight={5} />
+
+## What a goal loop needs, step by step
+
+| Loop step | What can go wrong with plain git | What the new tools add | Tools |
+|---|---|---|---|
+| **Set goal** | The goal lives in a prompt or chat and is lost | Goal and constraints stored with the work and linked from every commit | Entire Trails, Agent Trace metadata, a `GOAL.md` in the branch |
+| **Fork attempts** | One checkout, so attempts run one after another or collide | Cheap parallel workspaces, each with its own branch (and database branch) | Worktrees, GitButler, AgentFS, VM forks, Neon or Dolt branches |
+| **Work and record** | Only final commits survive; the agent's own git mistakes destroy work | Every intermediate state kept; any operation undoable; session linked to each commit | jj op log, GitButler oplog, Entire CLI, git-ai, re_gent |
+| **Judge** | The judge sees a diff with no context | The judge (and later the human) reads the session, the evals and the diff together | Entire Trails, `entire checkpoint explain`, session trailers |
+| **Merge winner** | Big agent diffs are unreviewable; parallel merges conflict | Stacked PRs, structural merges, per-branch write throughput | GitHub stacked PRs, Graphite, Mergiraf, GitHub's new storage |
+| **Learn** | Skill and memory edits overwrite the old version with no review | Skills and memory as files in git, changed on a branch, gated by evals | Agent Skills, Letta, Hermes self-evolution, Copilot Dreaming |
+
+## How the new services change the loop
+
+**Sessions become the review surface.** With the session stored next to the commit, a [judge](/guide/goals/judges) can check not just *whether* tests pass but *how* the agent got there: did it delete the failing test, or fix the bug? That's one of the most common [verification failures](/guide/shortcomings/verification), and provenance makes it visible after the fact. Entire's Trails take this furthest, running evals on every push and presenting the run, not the diff, as the thing to approve.
+
+**Undo becomes cheap enough to let the loop take risks.** An operation log means a loop can try a big rebase or a sweeping refactor knowing that the whole repository can be rolled back to any earlier point. That makes [Ralph-style](/guide/patterns/ralph) "try, check, revert" loops much safer to leave running overnight.
+
+**Exploration becomes a fork-and-judge pattern.** Instead of one agent retrying in place, a goal loop forks N attempts, each on its own branch and workspace, and a judge merges the best one. The [maker/checker](/guide/patterns/maker-checker) pattern with N makers. Headless git services and VM forks make N large; worktrees and GitButler make it work on a laptop.
+
+**Self-improvement becomes reviewable.** When skills and memory are files in git, the "learn" step of the loop produces a PR like any other. You can measure whether a skill change helped, revert it when it didn't, and see which run taught the agent what. GitHub's Dreaming and Hermes's self-evolution pipeline already work this way.
+
+**History becomes something agents query, not just humans.** Entire's MCP server, git-ai's blame, Copilot Memory and Letta's context repositories all let the *next* run read what previous runs did and why, which is a form of long-term memory grounded in the repository rather than in a vector store.
+
+## A reference setup from open-source parts
+
+A setup you can assemble today with no vendor lock-in, for one goal loop on your own machine or [host](/guide/hosts):
+
+<Steps>
+<Step>
+**Git stays the system of record.** Any forge: GitHub, GitLab, or a self-hosted Forgejo.
+</Step>
+<Step>
+**Record every session next to its commits.** Install the Entire CLI (sessions as git refs, pushed with your code) or git-ai (line-level authorship as git notes). At minimum, have the harness add a session ID trailer to each commit.
+</Step>
+<Step>
+**Give the agent an undo button.** Colocate jj with git, or use GitButler, so every agent operation is in an op log you can roll back.
+</Step>
+<Step>
+**One workspace per attempt.** Worktrees (built into Claude Code) for files; a Dolt or Neon branch per attempt if the goal touches a database.
+</Step>
+<Step>
+**Skills and memory in their own repo.** Agent Skills format, auto-committed per agent write, changed on a branch, merged only when a replay of past tasks doesn't regress. Lock the judge's instructions.
+</Step>
+<Step>
+**Small, stacked merges.** Ask the loop to land work as a stack of small PRs, not one giant diff. Add Mergiraf as a merge driver if many branches land at once.
+</Step>
+</Steps>
+
+If you'd rather buy than build, the hosted equivalents are the **Entire forge** (sessions, Trails and memory in one place), **GitHub** with stacked PRs, Agent HQ and Copilot Memory, or **GitLab Duo** if you need it self-managed.
+
+<Callout type="warn" title="Sessions are sensitive">
+  A stored session contains everything the agent saw: file contents, tool output, sometimes secrets pasted into a
+  prompt or printed by a command. Pushing sessions to a shared remote widens who can read them. Check redaction
+  settings (Entire has some), keep sessions in a **separate private repository** when in doubt, and read
+  [Security](/guide/shortcomings/security) before you turn this on for a team.
+</Callout>
+
+## Open questions
+
+- **Will a standard for attribution emerge?** Agent Trace, git-ai's notes spec and a dozen trailers coexist. None has won.
+- **How much session is enough?** Full transcripts are huge and sensitive. Summaries lose exactly the detail you need when something goes wrong. Nobody has a good answer to retention yet.
+- **Can review keep up?** Trails and eval-gated merges assume the evals are good. If they aren't, versioning only makes it easier to see, after the fact, how the loop fooled itself. See [Judges](/guide/goals/judges).
+- **Is git the end state?** The labs kept the protocol and replaced everything behind it. Pablo Santos Luaces calls it the most open moment in version control for twenty years ([psantosl](https://psantosl.github.io/posts/version-control-second-coming/)).
+
+Running a loop with any of these tools? [Share a field report](/guide/field-reports): what you kept, what you could reconstruct afterwards, and what you wished you'd saved.

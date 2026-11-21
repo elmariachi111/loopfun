@@ -1,0 +1,76 @@
+---
+title: Local history
+description: Operation logs, undo for anything, parallel branches without clones, and copy-on-write workspaces. Jujutsu, GitButler, Sapling, worktrees, AgentFS and Zed Delta.
+icon: Undo2
+---
+
+The second layer sits on the machine where the agent works. Its job is to make sure **no intermediate state is lost**, that **any mistake can be undone**, and that **several agents can work in parallel** without stepping on each other. Everything here can push to an ordinary git remote. Most of it is open source and runs locally.
+
+## Operation logs: undo for anything
+
+The key idea is an **operation log**. Instead of only recording commits, the tool records every change to the repository: each commit, rebase, amend, branch move and checkout. Any of them can be undone, in any order. For a loop that runs unsupervised for hours, this works like a flight recorder plus a rewind button.
+
+### Jujutsu (jj)
+
+[Jujutsu](https://github.com/jj-vcs/jj) is a git-compatible version control system. It can live in the same folder as git (`.jj` next to `.git`), so the agent uses jj while your remote, PRs and CI still see git. It's open source (Apache-2.0); 0.46 came out in October 2026, and there's no 1.0 yet.
+
+- **The working copy is a commit.** It is snapshotted automatically on every command. There's no staging area and no stash, so an agent's half-finished edit is **always saved**.
+- **Operation log.** `jj op log` lists every change to the repository, and `jj undo` or `jj op restore` returns the whole repository to any earlier point ([docs](https://docs.jj-vcs.dev/latest/operation-log/)).
+- **Conflicts are stored, not blocking.** A rebase never stops halfway. Conflicts become part of the commit and can be resolved later, by the agent or a person.
+- **Workspaces** give parallel agents separate working copies.
+
+**Caveats for agents:** since 0.46, `jj undo` refuses to undo operations made in *another* workspace, which matters when agents share a repository ([changelog](https://github.com/jj-vcs/jj/blob/main/CHANGELOG.md)). In GitButler's own benchmark, agents were **slower** with jj than with plain git on history clean-up tasks, mostly because models know git's commands better (see below). <Evidence level="anecdotal" />
+
+### GitButler
+
+[GitButler](https://gitbutler.com) is a git client built around **parallel (virtual) and stacked branches in one working directory**. It has a desktop app, a `but` CLI and, since 0.23 (October 2026), a TUI and worktree support ([blog](https://blog.gitbutler.com/)).
+
+- **Several agents, one folder.** Agent sessions can each own a branch without separate worktrees. Changes are assigned to branches by file or hunk.
+- **Agent-friendly commands.** Agents address files and hunks by ID, and `but amend`, `squash` and `uncommit` rewrite history without interactive rebases. `but oplog` restores any earlier state.
+- **Merging needs permission.** `but pr` and `but merge` publish work, and merge only when you explicitly allow it.
+- **Setup:** `but agent setup` installs a skill and instructions for Claude Code, Codex, Amp, Pi and others ([AI agents docs](https://docs.gitbutler.com/ai-agents/overview)). The older Claude Code hooks integration is no longer recommended.
+
+GitButler runs a public benchmark of agents doing history clean-up (split, reorder, squash, selective commit). Claude Code and Codex were about **60% faster with about 80% fewer commands** using GitButler than plain git ([vcbench](https://blog.gitbutler.com/vcbench)). <Evidence level="anecdotal" /> GitButler built and runs the benchmark, so treat the numbers as a vendor claim. The broader point stands: **tools designed for agents (fewer, higher-level, ID-addressed commands) beat CLIs designed for human fingers.**
+
+**License:** Fair Source (FSL-1.1-MIT). Free to use and source-available; each version becomes MIT after two years. Not OSI open source.
+
+### Sapling
+
+Meta's [Sapling](https://sapling-scm.com) (GPL-2.0) works against git repositories and organizes work as **stacks of draft commits with no branch names**. Amending a commit restacks everything on top of it. Edward Yang describes running three agent streams as worktrees at different points of one Sapling stack, and prefers it to jj for that ([ezyang](https://blog.ezyang.com/2026/03/parallel-agents-heart-sapling/)). <Evidence level="anecdotal" />
+
+## Parallel agents: one workspace each
+
+| Approach | How it works |
+|---|---|
+| **Git worktrees** | The default. Each agent gets its own checkout of the same repository on its own branch. Claude Code has it built in (`claude --worktree`, `isolation: worktree` for subagents, `.worktreeinclude` for files to copy) and removes clean worktrees on exit. Conductor and the community-maintained Vibe Kanban put a UI on top. |
+| **container-use** (Dagger) | An MCP server that gives each agent a container plus a git branch. Review with `git checkout`, discard by deleting the branch. Apache-2.0, though development has slowed. |
+| **Turso AgentFS** | A copy-on-write overlay filesystem. Your project is the read-only base and every write lands in a SQLite file. A whole agent session is one `.db` file: checkpointing is a file copy, every file operation can be queried with SQL, and discarding the work means deleting the file. |
+| **VM and sandbox forks** | Fork the whole machine, memory included, and hand one snapshot to N agents. Morph Cloud, E2B and Daytona do this (see [MicroVM hosts](/guide/hosts)). |
+
+Worktrees fork the files. AgentFS forks the filesystem. VM snapshots fork **everything**, including the running database and the dev server. The further out you go, the more of the agent's world you can roll back, and the less git knows about it.
+
+See [AgentFS docs](https://docs.turso.tech/agentfs/introduction), [container-use](https://github.com/dagger/container-use), [Claude Code worktrees](https://code.claude.com/docs/en/worktrees) and [Custom VM stacks](/guide/hosts/custom-stacks) for VM branching.
+
+## Between commits: Zed Delta
+
+[Delta](https://delta.dev/blog/fine-grained-version-control-for-agents) (DeltaDB) from the makers of the Zed editor versions **everything between git commits**. It stores fine-grained edits as CRDT operations ("deltas") in a DAG. An agent **thread** holds its conversation, files and state. A subagent forks a new **timeline** from its parent, and timelines merge later. A git commit is itself a delta, which ties the fine-grained history back to git.
+
+It entered public beta in September 2026, with a Claude Code multiplayer integration in October, hosted or in your own Cloudflare account ([Zed](https://zed.dev/blog/delta-public-beta)). <Evidence level="primary" /> We couldn't find a license for Delta itself.
+
+## Merges that don't block
+
+Many agent branches landing at once means many merge conflicts. Three approaches avoid stopping the loop:
+
+- **Structural merge.** [Mergiraf](https://mergiraf.org) is a git merge driver that understands syntax (via tree-sitter) and resolves conflicts a line-based merge can't. Cheap, deterministic and easy to add to any repository.
+- **Conflicts as data.** jj stores conflicts inside commits so work continues. Bram Cohen's [Manyana](https://bramcohen.com/p/manyana) demo goes further: a CRDT-based version control system where **merges never fail** and conflicts become annotations describing what each side did. It's a 470-line demo, not a tool, but it shows the direction. <Evidence level="anecdotal" />
+- **Patch theory.** [Pijul](https://pijul.org) treats changes as patches that commute, so independent changes apply in any order. Still in beta, with no agent tooling yet.
+
+## Which one for your loop?
+
+| If your loop… | Start with |
+|---|---|
+| Runs one agent for hours and sometimes wrecks the repo | **jj** colocated with git, for `jj undo` and the op log |
+| Runs several agents in one checkout and you want clean, reviewable branches | **GitButler** |
+| Runs several agents and you want the simplest thing that works | **Git worktrees** (built into Claude Code) |
+| Touches files outside the repo, or you want to throw whole sessions away | **AgentFS** or a VM snapshot |
+| Lands many parallel branches | **Mergiraf** as a merge driver, plus stacked PRs |

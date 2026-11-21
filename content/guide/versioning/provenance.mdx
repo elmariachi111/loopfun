@@ -1,0 +1,101 @@
+---
+title: Sessions and provenance
+description: Keeping the why next to the what. Entire, git-ai, Agent Trace, re_gent and the vendor trailers that link commits to the agent sessions behind them.
+icon: ScrollText
+---
+
+The first and most mature layer answers one question: **for this commit, or this line, which agent wrote it, from which prompt, and what was it thinking?** All the tools here keep git as it is and attach the session somewhere git can find it. They differ in **where** that session lives, and that decides who can read it, whether it survives a rebase and whether it leaves your infrastructure.
+
+## Four places to keep a session
+
+From least to most git-native:
+
+| Where the session lives | How the commit points to it | Example | Survives the vendor going away? |
+|---|---|---|---|
+| **The vendor's cloud** | A URL in a commit trailer | GitHub `Agent-Logs-Url:`, Claude Code `Claude-Session:`, Cursor cloud agent links | No |
+| **A local or private store** | Session ID in a trailer, transcript on disk or in SQLite | Claude Code JSONL, re_gent `.regent/`, git-ai's prompt store | Yes, if you back it up |
+| **Git notes** | Notes attached to the commit under a dedicated ref | git-ai (`refs/notes/ai`) | Yes, travels with the repo |
+| **Git refs or a side branch** | A trailer plus refs pushed alongside the code | Entire Checkpoints (`refs/entire/checkpoints/…`) | Yes, travels with the repo |
+
+<Callout title="Rule of thumb">
+  If a session explains *why the code is the way it is*, it belongs **in the repository** (notes or refs), not only
+  in a vendor's dashboard. A URL in a trailer is a good index. It is a poor archive.
+</Callout>
+
+## Entire
+
+**[Entire](https://entire.com)** is the company Thomas Dohmke founded after leaving his job as GitHub's CEO. It launched in February 2026 with a $60M seed round and one open-source tool, and by November it had grown into a full forge ([launch post](https://entire.com/blog/hello-entire-world), [funding](https://entire.com/news/former-github-ceo-thomas-dohmke-raises-60-million-seed-round)). <Evidence level="primary" /> It's the most complete answer to "store the reasoning with the code" available today.
+
+### The CLI (open source, MIT)
+
+The [Entire CLI](https://github.com/entireio/cli), first called Checkpoints, hooks into both your agent and git. It's at v0.13.4 as of 13 November 2026 ([releases](https://entire.com/releases)).
+
+- **What it captures:** the prompts, transcript, tool calls, changed files and token usage of each agent session.
+- **How it links:** a git hook adds an `Entire-Checkpoint:` trailer to each commit. The checkpoint data is stored in the **same repository** and pushed with a pre-push hook. Entire "never adds commits to your branch." You can send checkpoints to a separate private repo instead, or keep them local.
+- **Storage, version 1:** a single orphan branch, `entire/checkpoints/v1`, which works as an append-only audit log.
+- **Storage, version 2 (default since 0.10):** one git ref per checkpoint under `refs/entire/checkpoints/<shard>/<id>`. Entire moved to refs so that **many concurrent agents don't fight over one branch** and pushes stay fast ([Entire blog](https://entire.com/blog/introducing-ref-based-checkpoint-storage), [storage docs](https://docs.entire.com/guides/checkpoints/checkpoint-storage)).
+- **Reading it back:** `entire checkpoint explain` and `search`, `entire blame` (git blame plus the session behind each line), `entire session resume <branch>` to pick up where an agent left off, and an MCP server so other agents can query the history.
+- **Redaction:** recent versions blank injected system prompts, CLAUDE.md contents and memory notes from stored transcripts. Read the redaction settings before you push sessions to a shared remote.
+- **Agents:** Claude Code (the default), Codex, Cursor, Copilot CLI, Antigravity, Factory Droid, OpenCode, Pi and more. Support for import and resume varies by agent, and any `entire-agent-<name>` executable can plug in a new one ([agents](https://docs.entire.com/agents/overview)).
+
+### The forge (hosted)
+
+On 26 October 2026 Entire launched a git-compatible forge "available to every developer today" ([announcement](https://entire.com/news/entire-launches-an-independent-git-forge-for-agent-human-collaboration)). <Evidence level="primary" />
+
+- **Trails replace pull requests.** A trail spans repos, sessions and reviews, and runs **agent-scored evals on every push**. The pitch: once the evals pass, you can merge without reading every line.
+- **Continuous Memory** syncs agent sessions into the repository and builds a codebase graph and an "agentic brain" from them that later agents can query, "to stop repeating mistakes."
+- **Regional git hosting** (US, EU, India, Australia and more), with CI gates through Buildkite, Depot, Dagger and RWX.
+- **Pricing (early access, November 2026):** hosting, Trails, session storage and memory are free. Agent runs are billed at model-provider token rates after a promotional credit ([pricing](https://entire.com/pricing)).
+- **Self-hosting:** not yet. Self-hosted git nodes are "upcoming." The CLI and its in-repo checkpoints work with any git host today.
+
+**For loops:** Entire maps neatly onto a goal loop. Every iteration's session lands next to its commit, a Trail plays the role of the [judge](/guide/goals/judges), and Continuous Memory turns past runs into context for the next one. The open-source CLI is a low-risk start because the data stays in your repo.
+
+Critics call the design a "clever abuse of git internals" and expect plain git plus hooks to be enough for years ([Danjou](https://julien.danjou.info/blog/github-wont-work-for-ai-agents)). <Evidence level="contested" />
+
+## git-ai
+
+**[git-ai](https://github.com/git-ai-project/git-ai)** (Apache-2.0) records **line-level AI authorship** reported by the agents themselves, rather than guessed after the fact.
+
+- **Mechanism:** git notes under `refs/notes/ai`, following an open specification (Git AI Standard v3.0.0). Each note maps line ranges to the session and prompt that produced them. Notes survive rebase, squash and amend ([spec](https://github.com/git-ai-project/git-ai/blob/main/specs/git_ai_standard_v3.0.0.md), [how it works](https://usegitai.com/docs/get-started/how-git-ai-works)).
+- **Tools:** `git ai blame` is a drop-in for `git blame`. It supports more than a dozen agents, including Claude Code, Codex, Cursor, Copilot, OpenCode and Gemini.
+- **Transcripts** are kept outside git, locally or in a prompt store. A paid "Teams" tier adds cross-repo stats and cost tracking, **self-hosted or cloud**.
+
+**For loops:** the lightest-weight option. It answers "how much of this codebase did the loop write, and from which prompts?" without changing your workflow.
+
+## Agent Trace
+
+**[Agent Trace](https://agent-trace.dev/)** is an open data spec that Cursor published in January 2026 (v0.1.0, an RFC, CC BY 4.0). A **trace record** is JSON that maps file line ranges to a contributor (human, AI, mixed or unknown), the model and the conversation. It works with git, Jujutsu, Mercurial or SVN, and **deliberately doesn't say where traces are stored** ([GitHub](https://github.com/cursor/agent-trace), [InfoQ](https://www.infoq.com/news/2026/02/agent-trace-cursor/)).
+
+Partners include Cloudflare, Cognition, Vercel, Amp, Cline, OpenCode and git-ai. Thoughtworks put it at "Assess" in April 2026. <Evidence level="secondary" /> We found no update since v0.1, and couldn't confirm that Cursor's own product writes Agent Trace records. Treat it as a schema to align with, not yet a standard.
+
+## re_gent
+
+**[re_gent](https://github.com/regent-vcs/re_gent)** (`rgt`, Apache-2.0) is the most "version control" of the bunch: a separate, content-addressed store (`.regent/`) next to git. **Every tool-using agent turn becomes a step** that records the workspace tree, the tool call and its result. Steps form a DAG with one ref per session, and `rgt blame` traces a line back to the prompt that wrote it. Hooks exist for Claude Code, Codex and OpenCode, and rewind and fork are on the roadmap. It's young (around 800 stars), but its model of history as a **log of agent steps** is where loops seem to be heading.
+
+## What the big vendors do
+
+<Tabs items={['GitHub', 'Anthropic', 'Cursor', 'GitLab']}>
+<Tab value="GitHub">
+Since March 2026, commits from the Copilot coding agent show **Copilot as author and the human as co-author**, and carry an **`Agent-Logs-Url:` trailer** linking to the session log ([changelog](https://github.blog/changelog/2026-03-20-trace-any-copilot-coding-agent-commit-to-its-session-logs/)). The log is hosted by GitHub, not stored in git. Third-party agents (Claude, Codex) run through Agent HQ and show up in a repository's Agents tab. <Evidence level="primary" />
+</Tab>
+<Tab value="Anthropic">
+- **Claude Code** takes a checkpoint at every prompt and keeps file snapshots for the last 100. `/rewind` restores code, conversation or both. It doesn't track files changed through Bash, and the docs say it's "not a replacement for version control" ([checkpointing](https://code.claude.com/docs/en/checkpointing)).
+- **Sessions** are local JSONL files. You can resume, branch and fork them, and `claude --from-pr` opens sessions linked to a PR ([sessions](https://code.claude.com/docs/en/sessions)).
+- **Cloud sessions** push branches and, by default, add a **`Claude-Session:` trailer** with the session URL to commits and PR descriptions (`attribution.sessionUrl`, [settings](https://code.claude.com/docs/en/settings-reference)).
+- **Self-hosted Managed Agents** (November 2026, on request) keep sessions and their history on your own infrastructure ([release notes](https://platform.claude.com/docs/en/release-notes/overview)).
+</Tab>
+<Tab value="Cursor">
+- **IDE checkpoints** are taken before significant agent edits. They are "stored locally and separate from Git" and aren't meant as permanent history ([docs](https://cursor.com/docs/agent/chat/checkpoints)).
+- **Cloud agents** work on their own branch and open PRs. Each run has a shareable URL with the conversation and diffs, which other tools can read over MCP ([docs](https://cursor.com/docs/cloud-agent)).
+- Cursor publishes **Agent Trace** (above), but we found no Cursor feature that stores sessions **in git**.
+</Tab>
+<Tab value="GitLab">
+Duo Agent Platform (GA January 2026) uses a **composite identity**: a service account commits and opens the merge request, and the human who started the flow counts as author. Sessions are visible under AI > Sessions but are **deleted after a retention period**, so they aren't durable provenance ([docs](https://docs.gitlab.com/user/duo_agent_platform/composite_identity/)). <Evidence level="primary" />
+</Tab>
+</Tabs>
+
+## Trailers: no standard yet
+
+There's no cross-vendor convention for marking agent commits. Claude Code writes `Co-Authored-By` and `Claude-Session`, Entire writes `Entire-Checkpoint`, GitHub writes `Agent-Logs-Url`, and projects like Fedora and LLVM ask for `Assisted-by:`. The Linux kernel's guidance says agents **must not** add `Signed-off-by` and sets no format of its own ([kernel docs](https://docs.kernel.org/process/coding-assistants.html)). <Evidence level="primary" />
+
+**The cheapest useful habit**, whatever tools you choose: have your harness add a **session ID trailer** to every commit it makes, and keep the transcripts somewhere durable. That's what Danjou does with a single Claude Code hook ([Danjou](https://julien.danjou.info/blog/github-wont-work-for-ai-agents)), and every richer tool on this page builds on the same link.

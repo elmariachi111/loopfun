@@ -1,0 +1,48 @@
+---
+title: Versioning agent work
+description: Self-improving loops rewrite their code, skills and memory all day. Why git alone no longer captures that, and the new tools that do.
+icon: GitBranch
+---
+
+A goal loop that improves itself is a **machine for producing diffs**. It edits code, rewrites its own skills, adjusts its memory and tries again, often hundreds of times before a human looks. Each of those changes was made for a reason: a failing test, a judge's verdict, a lesson from the last run. Plain git records **what** changed. It does not record **why**, **who** (which agent, which model, which prompt) or **what was tried and thrown away**. For a loop, that missing context is the part you most need when something goes wrong.
+
+In 2026 this stopped being a theoretical complaint. GitHub reported **7.38 billion commits in September 2026, more than five times the year before**, and says agents "commit or checkpoint after nearly every action" ([GitHub engineering](https://github.blog/engineering/architecture-optimization/building-git-infrastructure-for-agent-scale-development/)). <Evidence level="primary" /> Anthropic and OpenAI both rebuilt the server side of source control for their own monorepos, and a wave of startups now sells version control **for agents**: Entire, GitButler, Pierre, Freestyle, Zed's Delta and more.
+
+<Flow
+  steps={['Goal', 'Attempt', 'Judge', 'Lesson', 'Skill or code change']}
+  repeat="every iteration leaves a diff and a reason"
+  caption="A self-improving loop. Git keeps the last box. The new tools try to keep all five."
+/>
+
+## Four layers of the new stack
+
+No single product covers everything. The tools fall into four layers, and most real setups pick one from each.
+
+| Layer | What it versions | Examples | Page |
+|---|---|---|---|
+| **Provenance** | The session, prompt, reasoning and agent behind each commit or line | Entire Checkpoints, git-ai, Agent Trace, re_gent, GitHub's `Agent-Logs-Url` trailer | [Sessions and provenance](/guide/versioning/provenance) |
+| **Local history** | Every intermediate state of the working copy, with undo and parallel branches | Jujutsu, GitButler, Sapling, worktrees, AgentFS, Zed Delta | [Local history](/guide/versioning/local-history) |
+| **Forges and storage** | The shared, hosted copy, at agent write volume | GitHub's new storage, Entire forge, Cursor Origin, Pierre, Freestyle, Tangled | [Forges at agent scale](/guide/versioning/forges) |
+| **Skills, memory and state** | What the agent has learned, plus the data it changes | Agent Skills, Letta context repositories, Hermes skills, Dolt, lakeFS, Neon | [Skills, memory and state](/guide/versioning/skills-and-memory) |
+
+<Callout title="Git isn't going away">
+  Almost every tool on these pages keeps **git as the interchange format**. They add a layer on top (session refs,
+  notes, an operation log) or rebuild the server underneath while keeping the protocol. Even Anthropic, which replaced
+  git internally, says its system "is by no means a suitable replacement for git for general use"
+  ([Anthropic](https://www.anthropic.com/engineering/redesigning-source-control)). The question is not *whether* to use
+  git, but what to keep **next to** it.
+</Callout>
+
+## Where to go next
+
+<Cards>
+  <Card title="Why git stops being enough" href="/guide/versioning/why-git-breaks" description="The primer: six ways goal-driven, self-modifying agents break the assumptions git was built on." />
+  <Card title="Landscape" href="/guide/versioning/landscape" description="Every tool in one place, split into self-hosted and open source, generally available, and preview." />
+  <Card title="Versioning a goal loop" href="/guide/versioning/goal-loops" description="How the new tools fit a goal-driven, self-improving loop, with a reference setup you can copy." />
+</Cards>
+
+<Callout type="warn" title="A market a few months old">
+  Most of these products launched, pivoted or were acquired in 2026. OpenAI agreed to buy Pierre in November, Cursor
+  bought Graphite and launched its own forge, and Entire went from a CLI to a full forge in eight months. This is a
+  snapshot from November 2026. Check each vendor's docs before you build on a detail.
+</Callout>
