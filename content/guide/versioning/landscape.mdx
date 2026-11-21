@@ -1,0 +1,71 @@
+---
+title: Landscape
+description: Every tool in this section on one page, split into self-hosted and open source, generally available services, and previews. November 2026.
+icon: Map
+---
+
+<Callout type="warn" title="Snapshot, November 2026">
+  Statuses and licences change fast in this space. "GA" means the vendor calls it generally available or open to
+  everyone without a waitlist. Where we couldn't confirm a detail, the table says so.
+</Callout>
+
+## Self-hosted and open source
+
+Tools you can run entirely on your own machines, with no vendor in the loop. The safest place to start if sessions, code or memory must stay inside your network.
+
+| Tool | Layer | What it gives a loop | Licence |
+|---|---|---|---|
+| [**Entire CLI**](https://github.com/entireio/cli) | Provenance | Sessions, prompts and tool calls stored as git refs in your own repo, linked by a commit trailer. Works with any git host | MIT |
+| [**git-ai**](https://github.com/git-ai-project/git-ai) | Provenance | Line-level AI authorship in git notes, `git ai blame` | Apache-2.0 (Teams tier self-hostable, paid) |
+| [**re_gent**](https://github.com/regent-vcs/re_gent) | Provenance | Every agent step recorded in a content-addressed store next to git | Apache-2.0 |
+| [**Agent Trace**](https://agent-trace.dev/) | Provenance (spec) | A JSON schema for attribution, storage left to you | CC BY 4.0 |
+| [**Jujutsu**](https://github.com/jj-vcs/jj) | Local history | Working copy as commit, operation log, undo anything, stored conflicts | Apache-2.0 |
+| [**GitButler**](https://gitbutler.com) | Local history | Parallel and stacked branches in one folder, agent-friendly CLI, op log | FSL-1.1-MIT (source-available) |
+| [**Sapling**](https://sapling-scm.com) | Local history | Stacks of draft commits without branch names | GPL-2.0 |
+| [**Mergiraf**](https://mergiraf.org) | Local history | Syntax-aware merge driver for many parallel branches | Open source (Codeberg) |
+| [**Turso AgentFS**](https://docs.turso.tech/agentfs/introduction) | Local history | Copy-on-write session filesystem in one SQLite file | Open source |
+| [**container-use**](https://github.com/dagger/container-use) | Local history | Container plus git branch per agent | Apache-2.0 |
+| [**Forgejo / Gitea**](https://forgejo.org) | Forge | A plain self-hosted forge; agents via community MCP servers | GPL-3.0+ / MIT |
+| [**GitLab Duo Agent Platform**](https://about.gitlab.com/blog/gitlab-duo-agent-platform-is-generally-available/) | Forge | Agent flows on a self-managed GitLab | Commercial (Premium/Ultimate) |
+| [**Tangled**](https://tangled.org/) | Forge | Federated forge, signed records, agents as first-class accounts | Open source (licence not stated on site) |
+| [**Radicle**](https://radicle.xyz) | Forge | Peer-to-peer forge, everything stored as git objects | Open source |
+| [**Hermes Agent**](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills) | Skills | Self-editing Agent Skills with approval queue and locks | MIT |
+| [**gitagent**](https://github.com/open-gitagent/gitagent) | Skills and memory | The agent as a git repository | MIT |
+| [**Dolt / Doltgres**](https://www.dolthub.com) | State | Version-controlled SQL with branches and merges | Apache-2.0 |
+| [**lakeFS**](https://lakefs.io) | State | Branches over object storage (agent features in Enterprise) | Apache-2.0 core |
+| [**E2B runtime**](https://github.com/e2b-dev/infra) | Environment | Self-hosted microVMs with snapshot and fork (see [Hosts](/guide/hosts/self-hosted)) | Apache-2.0 |
+| **Claude Managed Agents, self-hosted** | Sessions | Agent sessions and history on your own infrastructure ([release notes](https://platform.claude.com/docs/en/release-notes/overview)) | Commercial, on request |
+
+## Generally available services
+
+Hosted, open to everyone, no waitlist.
+
+| Service | Layer | What it gives a loop |
+|---|---|---|
+| [**Entire forge**](https://entire.com) | Forge and provenance | Git hosting with Trails (eval-scored, replaces PRs), session storage and Continuous Memory. Free hosting, agent runs at token rates. Self-hosting upcoming |
+| [**GitHub**](https://github.com) | Forge | Native stacked PRs (GA October 2026), `Agent-Logs-Url` trailers, custom agents in `.github/agents/`, Copilot Memory, Agentic Workflows, Enterprise AI Controls |
+| [**GitLab.com**](https://about.gitlab.com) | Forge | Duo Agent Platform with composite identity |
+| [**Graphite**](https://graphite.com) | Forge add-on | Stacked PRs, merge queue, Cursor cloud agents |
+| [**Pierre Code Storage**](https://code.storage/) | Git API | Unlimited repos by API for platforms. Being acquired by OpenAI |
+| [**Freestyle Git**](https://docs.freestyle.sh) | Git API | Repos by API next to microVM sandboxes |
+| [**Relace Repos**](https://relace.ai/blog/relace-repos), [**Morph Git**](https://docs.morphllm.com/sdk/components/repos/git) | Git API | Repos by API with built-in code search |
+| [**Claude Skills API**](https://platform.claude.com/docs/en/build-with-claude/skills-guide) | Skills | Immutable, pinnable skill versions |
+| [**Claude Code**](https://code.claude.com/docs/en/checkpointing) | Sessions | Checkpoints and `/rewind`, session resume and fork, `Claude-Session` trailer from cloud sessions |
+| [**Letta**](https://www.letta.com/blog/context-repositories/) | Memory | Memory as an auto-committed git repo |
+| [**Neon / Lakebase**](https://neon.com/branching/branching-for-agents) | State | Postgres branch per agent attempt |
+
+## Preview, beta and internal
+
+Worth watching, not yet something to build a loop on.
+
+| Thing | Status | Why it matters |
+|---|---|---|
+| [**GitHub's new git storage**](https://github.blog/engineering/architecture-optimization/inside-githubs-new-git-storage-architecture/) | Limited private preview, broader rollout early 2027 | Per-branch writes, clone-free work and an atomic multi-file commit API for agents |
+| [**Cursor Origin**](https://cursor.com/changelog/origin-code-hosting) | Early beta (paid plans) | Cursor's own forge with GitHub sync; agent features still to come |
+| [**Zed Delta**](https://zed.dev/blog/delta-public-beta) | Public beta | Fine-grained, forkable history between commits, per agent thread |
+| [**Copilot Dreaming**](https://github.blog/changelog/2026-10-28-github-intelligence-puts-your-code-context-and-history-to-work/) | Preview | Learned behaviour proposed back as PRs to skills and instructions |
+| [**Claude Dreams**](https://platform.claude.com/docs/en/managed-agents/memory) | Research preview | Memory consolidation from past sessions into a new, versioned store |
+| [**Anthropic Scion**](https://www.anthropic.com/engineering/redesigning-source-control) | Internal only | Server-side, always-online source control for 30,000+ merges a day |
+| [**OpenAI Pando**](https://openai.com/index/scaling-git-at-openai/) | Internal only | A git backend with per-branch consistency, same clients |
+| [**Manyana**](https://bramcohen.com/p/manyana), [**Pijul**](https://pijul.org) | Demo / beta | Merges that never block |
+| [**AVCS**](https://github.com/izagood/avcs) | Research prototype | Intent, session and decision as first-class objects; code as a projection |

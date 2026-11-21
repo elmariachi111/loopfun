@@ -1,0 +1,16 @@
+{
+  "title": "Versioning agent work",
+  "icon": "GitBranch",
+  "pages": [
+    "index",
+    "why-git-breaks",
+    "---The layers---",
+    "provenance",
+    "local-history",
+    "forges",
+    "skills-and-memory",
+    "---Choosing---",
+    "landscape",
+    "goal-loops"
+  ]
+}

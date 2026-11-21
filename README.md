@@ -16,7 +16,7 @@ You can also fix any page with its "Improve this page" link, or argue with it vi
 
 ## What's in the guide
 
-Patterns, hints and tools for designing agentic loops: goals that can be checked, the harnesses that run them (Claude Code, Codex, Hermes, Antigravity, OpenClaw), microVM hosts that sleep between tasks, software factories, and the failure modes to plan for. Every claim links to its source. Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a static site.
+Patterns, hints and tools for designing agentic loops: goals that can be checked, the harnesses that run them (Claude Code, Codex, Hermes, Antigravity, OpenClaw), microVM hosts that sleep between tasks, software factories, how to version what self-improving agents change, and the failure modes to plan for. Every claim links to its source. Built with [Fumadocs](https://fumadocs.dev) on Next.js and exported as a static site.
 
 ## Development
 
@@ -37,6 +37,7 @@ content/guide/            # all guide pages (MDX) + meta.json sidebar order
   environments/           # Claude Code, Codex, Hermes, Google, OpenClaw, SDKs
   hosts/                  # microVM hosts: Firecracker, custom stacks, gVisor/k8s, self-hosted, harnesses, costs, ops
   factories/              # software factories: triggers, stations, leverage, cases, tools, pitfalls
+  versioning/             # versioning agent work: provenance, local history, forges, skills and memory
   shortcomings/           # verification, cost, memory, models, security, humans…
   field-reports/          # community stories + summaries of public ones
   idea-board.mdx          # open problems waiting for someone to try them

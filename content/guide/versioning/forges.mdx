@@ -1,0 +1,71 @@
+---
+title: Forges at agent scale
+description: GitHub's storage rebuild, Anthropic's Scion, OpenAI's Pando, the new agent forges from Entire and Cursor, and git-as-an-API services for platforms that create a repo per user.
+icon: Warehouse
+---
+
+The third layer is the shared copy: where code is hosted, reviewed and merged. In 2026 two things changed here. The incumbents found that their storage **couldn't keep up with agent write volume**, and a set of new services appeared that treat **repositories as a programmable resource**, created by the thousand for agents rather than by hand for people.
+
+## The incumbents rebuild
+
+### GitHub: a new storage layer
+
+In October and November 2026 GitHub published a three-part engineering series on rebuilding its git infrastructure "for agent-scale development" ([part 1](https://github.blog/engineering/architecture-optimization/building-git-infrastructure-for-agent-scale-development/), [part 2](https://github.blog/engineering/architecture-optimization/the-bridge-to-agent-scale-git-infrastructure/), [part 3](https://github.blog/engineering/architecture-optimization/inside-githubs-new-git-storage-architecture/)). <Evidence level="primary" /> It's the biggest change to how GitHub stores code since it launched.
+
+- **Why:** git events more than doubled in a year (218 billion to 473 billion a month), pushes grew almost fivefold, and commits fivefold. GitHub says agents "commit or checkpoint after nearly every action."
+- **What was wrong:** the old system (Spokes) kept five full copies of each repository on local disks and **coordinated every write per repository**. Thousands of agent branches pushing to one repo queued behind each other.
+- **What changes:** writes are coordinated **per ref** (branch) instead of per repository. Packs and indexes move to Azure Blob Storage. A new log service, Ref-CAS, versions refs, and disposable "virtual replicas" serve reads with local disk used only as a cache. In an internal benchmark, one repository handled **5,000 concurrent agents and 7,200 pushes a second**.
+- **New for agents:** working without a clone, an **atomic multi-file commit API**, event streams and single-object fetch.
+- **Status:** limited private preview, with broader rollout planned for early 2027. Push, fetch and branch workflows stay the same, as do branch protection, required reviews and audit logs.
+
+Around it, GitHub reshaped the product for agents through 2026:
+
+| Feature | What it does | Status |
+|---|---|---|
+| [**Agent HQ**](https://github.blog/news-insights/company-news/pick-your-agent-use-claude-and-codex-on-agent-hq/) | Run Copilot, Claude and Codex agents on GitHub. Sessions show up in a repository's Agents tab | Public preview since February 2026, widened since |
+| [**Stacked pull requests**](https://github.blog/changelog/2026-10-06-stacked-pull-requests-generally-available/) | Native stacks via `gh stack`, the web UI and Copilot agents. Approvals survive restacks. Pitched as the way to make big agent diffs reviewable | GA 6 October 2026 |
+| [**Agent-Logs-Url trailer**](https://github.blog/changelog/2026-03-20-trace-any-copilot-coding-agent-commit-to-its-session-logs/) | Links each Copilot commit to its session log | Shipped March 2026 |
+| [**Custom agents**](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-custom-agents) | Agent profiles as Markdown in `.github/agents/`, versioned with the code; admins can protect the path with a push rule | GA |
+| [**Enterprise AI Controls**](https://github.blog/changelog/2026-02-26-enterprise-ai-controls-agent-control-plane-now-generally-available/) | Agent control plane and agent activity in audit logs | GA February 2026 |
+| [**Copilot Memory and Dreaming**](https://github.blog/changelog/2026-10-28-github-intelligence-puts-your-code-context-and-history-to-work/) | Memories stored by GitHub. Dreaming reflects on past sessions and **proposes changes to checked-in skills and instructions as PRs** | Memory GA October 2026, Dreaming in preview |
+| [**Agentic Workflows**](https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/) | Markdown-defined agent automations compiled to Actions (see [Software factories](/guide/factories/tools)) | GA October 2026 |
+
+GitHub Universe (28 October) added more, including multi-agent "Projects", an "Agent Merge" button and multi-agent code review. We've only seen these in secondary coverage so far. <Evidence level="secondary" />
+
+### Anthropic Scion and OpenAI Pando: what the labs built for themselves
+
+Both big labs hit the same wall in their own monorepos, and both published what they built. **Neither is available to use**, but they show where hosted git is heading.
+
+- **Anthropic Scion** (October 2026) replaced git in Anthropic's monorepo after merges grew from about 2,500 to more than 30,000 a day in four months. It assumes **clients are always online** (they are mostly agents and jobs), moves commits, merges, rebases and blame to the server, makes checkouts sparse and optional, and exposes history through an API so many jobs need no checkout at all. "Scion is by no means a suitable replacement for git for general use" ([Anthropic](https://www.anthropic.com/engineering/redesigning-source-control)). <Evidence level="primary" />
+- **OpenAI Pando** (November 2026) is a new **git backend** that keeps the git protocol and clients. It uses causal rather than repository-wide consistency, so each branch updates independently. Pushes stream into blob storage, and stored packfiles are shared across readers. Median push latency fell by nearly 80%. In production since April 2026 ([OpenAI](https://openai.com/index/scaling-git-at-openai/)). <Evidence level="primary" />
+
+The common design, at GitHub and both labs: **coordinate per branch, keep data in object storage, make compute disposable, and let agents query history without cloning.**
+
+### GitLab
+
+[GitLab Duo Agent Platform](https://about.gitlab.com/blog/gitlab-duo-agent-platform-is-generally-available/) became generally available in January 2026 for Premium and Ultimate, **on GitLab.com and self-managed**. It's billed in usage-based GitLab Credits and includes agentic chat, planner and security agents, and flows such as issue-to-merge-request and code review. Agent commits use a [composite identity](https://docs.gitlab.com/user/duo_agent_platform/composite_identity/) (service account commits, human is author). For teams that must self-host, it's the most complete agent platform attached to a forge. <Evidence level="primary" />
+
+## New forges built for agents
+
+| Forge | Idea | Status |
+|---|---|---|
+| [**Entire**](https://entire.com/news/entire-launches-an-independent-git-forge-for-agent-human-collaboration) | Git hosting where **Trails** (eval-scored, cross-repo) replace PRs and agent sessions are stored with the code. Covered in [Sessions and provenance](/guide/versioning/provenance#entire) | Open to all since October 2026. Free hosting, agents billed at token rates. Self-hosting "upcoming" |
+| [**Cursor Origin**](https://cursor.com/changelog/origin-code-hosting) | Cursor's own git host: repos, PRs, branch rules, CLI and API, with **two-way GitHub sync** (GitHub stays the source of truth for synced repos). "Agent-native features ship soon" | Early beta since August 2026 on paid plans |
+| [**Graphite**](https://graphite.com/blog/cursor-cloud-agents) (Cursor) | Stacked PRs and a merge queue on top of GitHub, now with Cursor cloud agents that open draft PRs | Acquired by Cursor (December 2025), still sold standalone |
+| [**Tangled**](https://tangled.org/) | An open-source forge on the AT Protocol. Repos live on self-hostable "knots", issues and PRs are **signed records** owned by their author, stacked PRs come from Jujutsu, and **agents get their own accounts** that produce the same records as people | Open source, self-hostable, early |
+| [**Radicle**](https://radicle.xyz/2026/03/30/radicle-1.8.0) | Peer-to-peer forge where repos, issues and patches are all git objects | Open source, steady releases, no agent features yet |
+
+Forgejo and Gitea have no official agent features. Agents reach them through community MCP servers, some of which deliberately leave out merge and delete tools. Both remain the obvious **self-hosted** base if you want a plain forge under your control.
+
+## Git as an API: a repo per user, per app, per attempt
+
+App builders like Lovable and Bolt create a repository for every app a user makes and a branch for every agent attempt. Running that on a normal forge doesn't work, so a category of **headless git services** appeared.
+
+| Service | What you get | Status |
+|---|---|---|
+| [**Pierre Code Storage**](https://code.storage/) | Unlimited repos behind an API key, native clone and push endpoints, SDKs, webhooks, grep and glob over files, GitHub sync. Customers include Lovable, Bolt and Amp. Public usage pricing (storage per GB-hour, ingress and egress per GB) | GA. **OpenAI agreed to acquire Pierre on 4 November 2026**; existing customers continue and Code Storage moves into Codex ([OpenAI](https://openai.com/index/openai-to-acquire-pierre/)) |
+| [**Freestyle Git**](https://www.freestyle.sh/blog/engineering/version-control-for-ai-agents) | API-first repos next to Freestyle's microVM sandboxes: scoped tokens, branch compare without checkout, push webhooks, GitHub sync | GA, pricing not published for git |
+| [**Relace Repos**](https://relace.ai/blog/relace-repos) | Git-compatible repos created by API, scoped keys for short-lived sandboxes, automatic code indexing for retrieval | Available since late 2025 |
+| [**Morph Git**](https://docs.morphllm.com/sdk/components/repos/git) | Git hosting for coding agents with GitHub mirroring and fast code search on push | Available, free tier |
+
+Freestyle's write-up names the pattern most of them share: **a repo per app or tenant, a branch per agent attempt, commits as snapshots**, and rollback by revert, reset or abandoning the branch ([Freestyle](https://www.freestyle.sh/blog/engineering/version-control-for-ai-agents)). If your goal loop spawns many attempts, the same pattern works on any forge at a smaller scale.

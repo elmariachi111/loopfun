@@ -1,0 +1,89 @@
+---
+title: Skills, memory and state
+description: A self-improving agent's real source code is its skills, memory and instructions. How Agent Skills, Letta, Hermes, Claude and GitHub version them, plus Dolt, lakeFS and Neon for data.
+icon: BrainCircuit
+---
+
+For a self-improving loop, the project repository is only half the picture. The other half is **what the agent has learned**: its skills, its memory, its instructions and lessons. That is the part the loop rewrites most often, and historically the part with the **least version control**. If the agent rewrites a skill and the next fifty runs get worse, you want to know what changed, when, why, and how to put it back.
+
+The good news from 2026: **skills and memory are becoming plain files in git repos**, which means everything on the previous pages applies to them too.
+
+## Skills as files
+
+[**Agent Skills**](https://agentskills.io) is the format most harnesses now share. A skill is a folder with a `SKILL.md` (YAML frontmatter plus instructions) and optional scripts and resources, loaded only when needed. Anthropic published the spec in December 2025 and **donated it to the Agentic AI Foundation**, a Linux Foundation body, in October 2026, alongside MCP ([Anthropic](https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation)). <Evidence level="primary" /> Because a skill is just files, it diffs, reviews and reverts like code.
+
+How the main harnesses version skills:
+
+<Tabs items={['Claude', 'Hermes', 'GitHub Copilot', 'gitagent']}>
+<Tab value="Claude">
+- **Skills API** (out of beta August 2026): every upload creates an **immutable version** (`skver_…`), a full snapshot. Pin a version or use `latest` ([skills guide](https://platform.claude.com/docs/en/build-with-claude/skills-guide)).
+- **Managed Agents** load skills from a mounted repository's `.claude/skills`, so the repo *is* the skill store.
+- **`ant apply`** manages agents, skills and memory stores as code, with a committed lock file.
+- **Plugin marketplaces** are git repositories. If a plugin doesn't declare a version, the **commit SHA** is its version ([plugins](https://code.claude.com/docs/en/plugins/publish)).
+</Tab>
+<Tab value="Hermes">
+[Hermes Agent](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills) (MIT) stores skills under `~/.hermes/skills/` in the Agent Skills format, and the agent edits them itself with targeted patches.
+
+- **Guardrails:** optional write approval stages agent edits in a pending folder; `hermes curator lock` stops the agent changing a skill; hub installs record their source and hash in a lock file; `hermes skills reset --restore` returns to the bundled version.
+- **The gap:** there's no built-in history or rollback for skills the agent wrote itself. Put `~/.hermes/skills` in git yourself.
+- **The good pattern:** Nous's separate [hermes-agent-self-evolution](https://github.com/NousResearch/hermes-agent-self-evolution) evolves skills against evals offline (DSPy and GEPA), and every change goes through a **PR with human review, never a direct commit**.
+</Tab>
+<Tab value="GitHub Copilot">
+Custom agents live as Markdown in `.github/agents/`. **Copilot Dreaming** (preview) reflects on past sessions and **opens PRs that change checked-in skills and instruction files**, so learned behaviour flows back into the repository through review ([GitHub](https://github.blog/changelog/2026-10-28-github-intelligence-puts-your-code-context-and-history-to-work/)). <Evidence level="primary" />
+</Tab>
+<Tab value="gitagent">
+[gitagent](https://github.com/open-gitagent/gitagent) (MIT) goes all the way: **the agent is a repository**. Its config, persona, rules, memory (committed on every save) and skills are files. Lessons are applied only after two tasks agree, and in repo mode the agent works on its own branch and never pushes to the base branch.
+</Tab>
+</Tabs>
+
+## Memory as a repository
+
+<Defs
+  items={[
+    ['Letta context repositories', 'Since February 2026, Letta agents keep memory as a git repository of Markdown files, auto-committed with a message on every change. Memory subagents and background reflection each work in their own git worktree and merge back through git. The clearest example of memory managed exactly like code.'],
+    ['Claude Managed Agents memory', 'Every write creates an immutable memory version attributed to the session that wrote it. You can audit, redact and restore versions, kept for 30 days. A research preview called Dreams reads memory plus past transcripts and writes a reorganized store.'],
+    ['Claude Code auto memory', 'A local MEMORY.md per project, outside git. CLAUDE.md is the layer you commit.'],
+    ['GitHub Copilot Memory', 'Stored by GitHub as repo-scoped facts, not in git. GA on paid plans since October 2026.'],
+  ]}
+/>
+
+Sources: [Letta](https://www.letta.com/blog/context-repositories/), [Managed Agents memory](https://platform.claude.com/docs/en/managed-agents/memory), [Copilot Memory](https://github.blog/changelog/2026-10-28-github-intelligence-puts-your-code-context-and-history-to-work/).
+
+The trend is clear: **reflection and consolidation (Letta's sleep-time agents, Claude Dreams, Copilot Dreaming) are the self-improvement step**, and the vendors that take it seriously route the result through versions or PRs instead of overwriting memory in place.
+
+## Governing self-modification
+
+A loop that edits its own skills needs the same discipline as a loop that edits production code. The patterns that work:
+
+<Steps>
+<Step>
+**Keep skills, memory and instructions in git.** In the project repo if they belong to the project, in their own repo if they belong to the agent. Auto-commit every agent write with a message that names the session.
+</Step>
+<Step>
+**Write to a branch, not to main.** The agent proposes skill changes on a branch, exactly like code changes.
+</Step>
+<Step>
+**Gate the merge on evals.** Replay a fixed set of past tasks with the old and new skill. Merge only if the score doesn't drop. This is a [metric loop](/guide/patterns/metric-loops) pointed at the agent itself.
+</Step>
+<Step>
+**Lock what must not drift.** Safety rules, credentials handling and the judge's own instructions should be read-only to the agent (Hermes `curator lock`, a protected path, a push rule on `.github/agents/`).
+</Step>
+<Step>
+**Keep the session with the change.** A skill edit with no record of the run that motivated it is impossible to review. Use the [provenance](/guide/versioning/provenance) tools here too.
+</Step>
+</Steps>
+
+Research backs the caution: work on **skill misevolution** shows self-written skills can drift and degrade ([arXiv 2608.12851](https://arxiv.org/abs/2608.12851)). <Evidence level="secondary" />
+
+## Versioned data and state
+
+Loops also change **data**: tables they migrate, datasets they clean, eval sets they grow. Git can't hold those, but git-like tools for data can.
+
+| Tool | What it versions | Agent angle | Self-host |
+|---|---|---|---|
+| [**Dolt / Doltgres**](https://www.dolthub.com/blog/2025-10-31-agentic-systems-need-version-control/) | SQL databases with branch, diff, merge and log at row and cell level (MySQL- or Postgres-compatible) | Each agent writes on a branch; a human or CI reviews the diff before merging. MCP server available. Doltgres 1.0 shipped August 2026 | Yes, Apache-2.0 |
+| [**lakeFS**](https://lakefs.io/agentic-ai/) | Zero-copy branches over object storage | Each agent gets a data branch with tokens scoped to it; merges are policy-gated | Core yes (Apache-2.0); agent features are Enterprise |
+| [**Neon / Databricks Lakebase**](https://neon.com/branching/branching-for-agents) | Copy-on-write Postgres branches in under a second | Branch per agent attempt, snapshot as checkpoint. Databricks says **more than 80% of Neon databases are created by agents** | Storage engine Apache-2.0 |
+| [**Oxen**](https://github.com/Oxen-AI/Oxen) | Large datasets, git-like | Eval sets and agent trajectories rather than code | Yes, Apache-2.0 |
+
+**For loops:** if your goal touches a database, give each attempt its **own database branch** next to its git branch, and merge both or neither.

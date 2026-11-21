@@ -1,0 +1,66 @@
+---
+title: Why git stops being enough
+description: Git was designed for humans who commit a few times a day and explain themselves in a message. Goal loops break six of its assumptions.
+icon: GitCompareArrows
+---
+
+Git is a brilliant answer to a 2005 question: *how do a few thousand humans, mostly offline, share one codebase and agree on its history?* Every design choice follows from that. A commit is a deliberate act by a person, with a message they wrote. Everyone has a full copy. History is a short chain of meaningful snapshots. The interesting thinking happens in someone's head, and the commit message summarizes it.
+
+A goal-driven agent violates each of these assumptions at once. None of the breaks is fatal on its own, and you can patch most of them with hooks and conventions. Together, they explain why a new layer of tools appeared in 2026.
+
+## 1. The reasoning lives outside the commit
+
+A human commit message is a lossy summary of what the author was thinking, but the author is still around to ask. An agent's "thinking" is a **session**: the prompt, the plan, the tool calls, the tests it ran, the judge's verdict, the dead ends. When the session ends, that context is gone unless someone saved it. The diff alone can't tell a reviewer whether a change was the agent's first idea or its fifth after four failed tests.
+
+Julien Danjou puts it plainly: review needs the agent's **intent, the alternatives it weighed and the prompt**, none of which git stores ([Danjou](https://julien.danjou.info/blog/github-wont-work-for-ai-agents)). Thomas Dohmke, who left GitHub to found Entire, goes further and calls session logs **the most important artifact** in a repository ([Entire](https://entire.com/blog/how-version-control-will-evolve-for-the-agent-boom)). <Evidence level="primary" />
+
+**What the new tools do:** store the session next to the commit, as git refs, git notes or a linked log. See [Sessions and provenance](/guide/versioning/provenance).
+
+## 2. Authorship is no longer a person
+
+Git has an author and a committer, both people with an email address. Agent work has a **chain**: the human who set the goal, the harness, the model and version, the subagent that wrote a given function, and sometimes a second agent that reviewed it. Vendors are improvising. GitHub marks Copilot as author with the human as co-author ([GitHub](https://github.blog/changelog/2026-03-20-trace-any-copilot-coding-agent-commit-to-its-session-logs/)), while GitLab does the opposite and records the human as author with a service account committing ([GitLab](https://docs.gitlab.com/user/duo_agent_platform/composite_identity/)).
+
+Trailers are easy to get wrong. In spring 2026 VS Code started adding `Co-authored-by: Copilot` to commits **humans had written**, and reverted after a backlash ([The Register](https://theregister.com/software/2026/05/04/microsoft-fixes-vs-code-after-copilot-credited-human-code/5223936)). <Evidence level="secondary" /> Treat attribution metadata as **evidence, not proof**.
+
+## 3. Too many commits, too fast, in one place
+
+Git's server side assumes a modest write rate. Agents push after almost every step, and many agents work in one repository at the same time. The numbers from 2026:
+
+- **GitHub:** monthly pushes rose from 0.69 billion to 3.35 billion in a year ([GitHub](https://github.blog/engineering/architecture-optimization/building-git-infrastructure-for-agent-scale-development/)).
+- **Anthropic:** merges in its monorepo went from about 2,500 a day in May 2026 to more than 30,000 a day in September, which led it to build its own system, Scion ([Anthropic](https://www.anthropic.com/engineering/redesigning-source-control)).
+- **OpenAI:** built Pando, a new git backend, because Codex sped up concurrent work in its monorepo ([OpenAI](https://openai.com/index/scaling-git-at-openai/)).
+
+All three found the same bottleneck: classic git hosting **serializes writes per repository**, so a thousand agents pushing to different branches still queue behind each other. The fixes coordinate per branch instead, and keep data in object storage. See [Forges at agent scale](/guide/versioning/forges). <Evidence level="primary" />
+
+## 4. The interesting history is between commits
+
+A loop that runs for six hours might produce three commits and two thousand intermediate states. Git sees the three. The rest (the edit that broke the build, the revert, the half-finished refactor the judge rejected) is lost unless the agent commits obsessively, which makes the history unreadable for humans.
+
+Agents also make **mistakes in git itself**: a bad rebase, a reset that drops work, a stash that's never popped. Git's undo (`reflog`) is per ref and hard to use. Tools built on an **operation log**, where every change to the repository is recorded and any of them can be undone, fit loops much better. Jujutsu's `jj undo` and GitButler's `but oplog` are the best-known examples. See [Local history](/guide/versioning/local-history).
+
+## 5. Exploration is parallel and mostly discarded
+
+A goal loop often explores: five agents try five approaches, a judge picks one, four branches die. Git branches are cheap, but **working copies are not**. Each parallel agent needs its own checkout (a worktree, a container, a VM), and merging the winner back is a manual step. Even more of the state is outside git: the database the agent migrated, the running service, the files in `/tmp`.
+
+The new answer is to **fork the whole environment**, not just the branch: worktrees per agent, copy-on-write filesystems, VM snapshots, database branches.
+
+## 6. The agent edits itself
+
+This is the break that matters most for self-improving loops. An agent with a skill library, a memory file and a set of instructions **rewrites its own behaviour** between runs. That's code too, but it rarely lives in the project repo, rarely gets reviewed, and often has no history at all. Hermes Agent, one of the best-known self-improving harnesses, documents approval queues and locks for skills but **no built-in rollback** for agent-written skills ([Hermes docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills)). <Evidence level="primary" />
+
+Research is already measuring the risk: one 2026 paper names it **skill misevolution**, where an agent's self-written skills drift and get worse over time ([arXiv 2608.12851](https://arxiv.org/abs/2608.12851)). <Evidence level="secondary" /> If you can't diff, review and revert what the agent learned, you can't tell improvement from drift. See [Skills, memory and state](/guide/versioning/skills-and-memory).
+
+## The short version
+
+| Git assumes | What goal loops need |
+|---|---|
+| A human wrote it and can explain it | The session, prompt and verdict stored with the change |
+| The author is a person | A chain: human, harness, model, subagent |
+| A few writes a minute per repository | Thousands of writes a second, coordinated per branch |
+| Commits are the history | Every intermediate state, plus undo for any operation |
+| One checkout per developer | Cheap forks of the whole environment, merged by a judge |
+| Code is the thing that changes | Skills, memory and instructions versioned and gated like code |
+
+<Quote by="Pablo Santos Luaces" where="Version control second coming, September 2026" href="https://psantosl.github.io/posts/version-control-second-coming/">
+  What I do know is that the freeze is over.
+</Quote>
