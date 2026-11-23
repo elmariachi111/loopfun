@@ -41,7 +41,7 @@ This is the strongest argument against lights-off factories, made most forcefull
 - The benchmark he leans on, **SlopCodeBench**, reveals requirements one checkpoint at a time. In the paper, no agent solved any problem end to end, quality declined in most trajectories, and quality instructions in the prompt didn't slow the decline ([arXiv](https://arxiv.org/abs/2603.24755)). <Evidence level="primary" />
 - On his own small SlopCodeBench run, no Claude model finished any problem without defects, and Opus 5's lights-off output had **over 11 times** more slop triggers per thousand lines than HumanLayer's reviewed codebase, using a rough TypeScript port of the rules ([part 3](https://x.com/dexhorthy/status/2081797628552270027)). <Evidence level="anecdotal" />
 
-Horthy is candid that HumanLayer sells human-in-the-loop tooling, that his sample is small, and that he can't prove the RL explanation. But the argument explains something the PR-share numbers can't: a factory can look great for a quarter while making its own future runs worse. His alternative is to agree the design up front and build in reviewed vertical slices ([Turning the lights back on](/guide/factories/why-factories-fail#part-2-turning-the-lights-back-on)).
+Horthy is candid that HumanLayer sells human-in-the-loop tooling, that his sample is small, and that he can't prove the RL explanation. But the argument explains something the PR-share numbers can't: a factory can look great for a quarter while making its own future runs worse. His alternative is to agree the design up front and build in reviewed vertical slices ([Turning the lights back on](/guide/factories/why-factories-fail#2-put-the-human-back-before-the-code-not-after)).
 
 ## Prompt injection through the front door
 
