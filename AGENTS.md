@@ -44,7 +44,8 @@ There are no tests. `npm run build` fails on broken MDX or frontmatter, so it is
 
 ## Adding or changing pages
 
-1. **Frontmatter is required:** `title` (keep under ~45 chars, it's the OG card), `description` (one or two sentences, ideally under 125 chars) and `icon`.
+1. **Frontmatter is required:** `title` (keep under ~45 chars, it's the OG card), `description` (one or two sentences, ideally under 125 chars, **never over 160**: search engines cut it there) and `icon`. Optional `seoTitle` replaces only the `<title>` tag, for pages whose sidebar title is too short or playful to be found in search (e.g. "Start here", "Always on, mostly asleep"). Keep it plain and under ~50 chars.
+   SEO plumbing (canonical URLs, sitemap, robots.txt, JSON-LD) is generated from this frontmatter in `lib/seo.ts`, `app/sitemap.ts` and `app/robots.ts`; new pages need nothing extra.
 2. **List the page in its folder's `meta.json`**, or it won't appear in the sidebar. A new section also goes in `content/guide/meta.json`, needs its own `meta.json` with `title` and `icon`, a card on `content/guide/index.mdx` (renumber the cards after it), and a line in the README's structure block.
 3. **Icons must exist in `lucide-react`'s `icons` map**, or they silently render as nothing. Some names exported by the package (e.g. `Fingerprint`, `History`) are *not* in the map. Check every icon:
    ```sh

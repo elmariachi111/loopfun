@@ -9,6 +9,7 @@ export const socialLinks = [
   { label: 'Bluesky', href: 'https://bsky.app/profile/loopfun.bsky.social' },
   { label: 'X', href: 'https://x.com/loop_dot_fun' },
 ] as const;
+export const twitterHandle = '@loop_dot_fun';
 export const siteUrl = 'https://loop.fun';
 export const docsRoute = '/guide';
 export const docsImageRoute = '/og/guide';

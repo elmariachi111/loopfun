@@ -11,7 +11,14 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { FieldReportCTA } from '@/components/contribute';
+import type { Metadata } from 'next';
 import { docsRoute } from '@/lib/shared';
+import { siteJsonLd } from '@/lib/seo';
+import { JsonLd } from '@/components/json-ld';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 const sections = [
   {
@@ -110,6 +117,7 @@ function HeroLoop() {
 export default function HomePage() {
   return (
     <main className="flex flex-1 flex-col">
+      <JsonLd data={siteJsonLd()} />
       <section className="loop-hero-bg border-b">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-4 py-16 sm:px-6 md:flex-row md:py-24">
           <div className="flex-1">

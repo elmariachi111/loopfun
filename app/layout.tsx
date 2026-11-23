@@ -2,7 +2,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { Provider } from '@/components/provider';
-import { appName, appTagline, siteUrl } from '@/lib/shared';
+import { appName, appTagline, siteUrl, twitterHandle } from '@/lib/shared';
 import './global.css';
 
 const inter = Inter({
@@ -23,13 +23,17 @@ export const metadata: Metadata = {
   },
   description:
     'A field guide to loop engineering: patterns, hints and tools for designing agentic loops, where to run them (harnesses, microVM hosts, software factories) and the failure modes to plan for.',
+  applicationName: appName,
   openGraph: {
     type: 'website',
+    url: '/',
     siteName: appName,
+    locale: 'en_US',
     images: { url: '/og/home/image.png', width: 1200, height: 630, alt: `${appName}: ${appTagline}` },
   },
   twitter: {
     card: 'summary_large_image',
+    site: twitterHandle,
     images: { url: '/og/home/image.png', width: 1200, height: 630, alt: `${appName}: ${appTagline}` },
   },
 };

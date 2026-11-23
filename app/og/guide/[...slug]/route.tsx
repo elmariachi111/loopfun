@@ -1,22 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { source } from '@/lib/source';
 import { notFound } from 'next/navigation';
 import { renderOgImage } from '@/components/og-image';
 import { docsRoute, getPageImageUrl } from '@/lib/shared';
+import { sectionTitle } from '@/lib/seo';
 
 export const revalidate = false;
-
-/** The sidebar title of the section a page lives in, e.g. "Shortcomings". */
-function sectionTitle(slugs: string[]) {
-  if (slugs.length < 2) return 'Guide';
-  try {
-    const meta = JSON.parse(readFileSync(join(process.cwd(), 'content/guide', slugs[0], 'meta.json'), 'utf8'));
-    return typeof meta.title === 'string' ? meta.title : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 export async function GET(_req: Request, { params }: RouteContext<'/og/guide/[...slug]'>) {
   const { slug } = await params;
