@@ -1,5 +1,14 @@
 {
   "title": "Software factories",
   "icon": "Factory",
-  "pages": ["index", "triggers", "anatomy", "leverage", "who-runs-them", "tools", "pitfalls"]
+  "pages": [
+    "index",
+    "triggers",
+    "anatomy",
+    "leverage",
+    "who-runs-them",
+    "tools",
+    "pitfalls",
+    "why-factories-fail"
+  ]
 }

@@ -10,7 +10,7 @@ A line that keeps coming up in 2026 writing on agent loops: **the loop automates
 
 If a loop produces a PR every twenty minutes overnight, somebody has to look at them in the morning. Reported signals from 2026:
 
-- Faros telemetry, as cited by several write-ups: **median time in review up 441.5%**, and **31.3% more PRs merged without review** ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/), [Addy Osmani](https://addyo.substack.com/p/agentic-code-review)). <Evidence level="secondary" />
+- Faros telemetry, as cited by several write-ups: **median time in review up 441.5%**, and **31.3% more PRs merged without review** ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/), [Addy Osmani](https://addyo.substack.com/p/agentic-code-review); report: [Faros AI](https://www.faros.ai/research/ai-acceleration-whiplash)). <Evidence level="secondary" />
 - A study of 33,707 agent-authored PRs found **reviewer abandonment** behind 38% of rejected agent PRs ([O'Reilly: Agentic Code Review](https://www.oreilly.com/radar/agentic-code-review/)). <Evidence level="secondary" />
 - One estimate puts agent output at roughly 10× what review capacity can absorb, and argues more reviewers won't help, because the limit is cognitive bandwidth rather than headcount ([CodeRabbit](https://www.coderabbit.ai/guides/agentic-engineering)).
 
@@ -18,7 +18,7 @@ Osmani's framing: the bottleneck is no longer how fast you write code; it's how 
 
 ## Comprehension debt
 
-Addy Osmani coined **comprehension debt** in March 2026 for the gap between how much code a system contains and how much of it anyone understands. It doesn't show on a velocity chart; it shows up as an incident at 2 a.m. that nobody on call can debug ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/)). A [DEV essay](https://dev.to/gabrielanhaia/code-review-was-never-mostly-about-bugs-with-agents-its-how-you-learn-your-own-code-40ld) makes the related point that code review was never mostly about catching bugs; it was how a team learned its own code.
+Addy Osmani coined **comprehension debt** in March 2026 for the gap between how much code a system contains and how much of it anyone understands. It doesn't show on a velocity chart; it shows up as an incident at 2 a.m. that nobody on call can debug ([AgentConn](https://agentconn.com/blog/comprehension-debt-shipping-code-no-one-can-explain-2026/)). Dex Horthy's estimate of how fast it builds: an agent-built codebase "starts to struggle after maybe three to six months" ([Why factories fail](/guide/factories/why-factories-fail#brownfield-comes-faster-now)). <Evidence level="anecdotal" /> A [DEV essay](https://dev.to/gabrielanhaia/code-review-was-never-mostly-about-bugs-with-agents-its-how-you-learn-your-own-code-40ld) makes the related point that code review was never mostly about catching bugs; it was how a team learned its own code.
 
 ## Cognitive surrender
 
@@ -36,6 +36,7 @@ The other half of the human cost is up front. Writing a good goal, with checks, 
 
 - **Verify, don't review.** Invest in automated checks so humans review only what the checks can't see ([AgentConn](https://agentconn.com/blog/verify-dont-review-coding-agents-2026/)).
 - **Triage before review.** Predict high-maintenance PRs from cheap signals and fast-track trivial ones ([ReviewDebt talk, eBay](https://ai.engineer/talks/TJPInBjhE4Q-reviewdebt-practical-framework-scoring-every-pull)).
+- **Agree on the design before the code exists.** Product, architecture and program design (types, signatures, call stacks) settled with the agent up front, then built in thin vertical slices reviewed as they land. "30 minutes of planning saves hours of review" ([Why factories fail](/guide/factories/why-factories-fail#part-2-turning-the-lights-back-on)).
 - **Make loops produce reviewable output.** Small increments, clear summaries and links to evidence such as test runs and screenshots.
 - **Budget human attention like tokens.** A loop that finishes ten tasks nobody can review hasn't finished anything.
 

@@ -25,6 +25,8 @@ Run the app and click through it. Anthropic's long-running harness has its evalu
 ### A different model as judge
 
 A separate model reads the evidence and decides. Claude Code's `/goal` uses a separate evaluator (Haiku by default) after every turn ([docs](https://code.claude.com/docs/en/goal)). Hermes uses a `goal_judge` auxiliary model ([docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/goals)).
+
+A model judge works well for "is the goal met?" and much less well for "is this code well designed?". Dex Horthy argues that a judge trained the same way as the maker can't see what training never rewarded, so review bots **raise the floor but not the ceiling** of code quality ([Why factories fail](/guide/factories/why-factories-fail#why-more-judges-dont-fix-it)).
 </Step>
 <Step>
 ### The same agent judging itself

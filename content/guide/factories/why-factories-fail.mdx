@@ -1,0 +1,187 @@
+---
+title: Why factories fail
+description: A close reading of Dex Horthy's three-part critique of lights-off factories, the RL argument behind it and the data that came after.
+icon: Microscope
+---
+
+<Callout title="Research snapshot, November 2026">
+  This page summarises a three-part series Dex Horthy published on X between 24 and 27 July 2026, plus the
+  AI Engineer World's Fair keynote it grew out of. Horthy co-founded **HumanLayer**, which sells human-in-the-loop
+  tooling for coding agents, and each part ends with a pitch for it. He says so himself. We checked the benchmark he
+  relies on against its paper. The model names below are the ones he tested in July 2026.
+</Callout>
+
+The [Pitfalls page](/guide/factories/pitfalls#slop-accumulates) gives the short version of this argument. It deserves a page of its own for two reasons. It's the most detailed case **against** the lights-off [level 5 factory](/guide/factories#shapiros-five-levels), and it doesn't stop at "agents write bad code". It gives a reason why: how coding models are trained. It then offers a process for working with that limit and a benchmark for noticing when the limit goes away.
+
+<Quote by="Dex Horthy" where="Why Software Factories Fail, part 1" href="https://x.com/dexhorthy/status/2080697380379427275">
+  No amount of harness engineering or loopsmaxxing can solve what is fundamentally a model-training issue.
+</Quote>
+
+## The argument in one table
+
+| Part | Title | The claim |
+|---|---|---|
+| 1 | The harness is not enough | Models make codebases harder to maintain over time, because nothing in their training rewards maintainability. Harnesses, linters and review bots can't fix that. |
+| 2 | Turning the lights back on | Until that changes, a human is the judge. Make review cheap by agreeing on the design **before** the code exists. |
+| 3 | Benchmarking the new frontier | SlopCodeBench, a benchmark that reveals requirements over time, shows every tested model accumulating defects and complexity. |
+
+## Part 1: how the factory got here
+
+Horthy starts with a pre-AI factory from 2022: people decide what to build, a tracker holds the work, someone builds it, a human reviews the pull request, it ships, monitoring pages someone, users complain, and the complaints go back into the tracker. That picture already has several loops in it, and it maps neatly onto the [factory loop](/guide/factories#how-a-factory-relates-to-loops).
+
+Then each step gets automated in turn:
+
+<Flow
+  steps={['Agent builds', 'Review is the bottleneck', 'AI review and AI testing', 'Incidents and feedback routed in', 'Drop human review']}
+  caption="Horthy's account of how a factory drifts to lights-off. Each step removes the current bottleneck until the last one removes the reviewer."
+/>
+
+1. **An agent builds the thing.** Build time falls from days to hours, but review still takes days, so **review becomes the bottleneck** (the same finding as [The human bottleneck](/guide/shortcomings/humans#the-review-bottleneck)).
+2. **Review is automated too:** agentic code review for style, bugs and security; agentic regression testing with a browser.
+3. **More inputs are wired in:** incidents arrive as PRs instead of 3 a.m. pages, and user feedback goes straight into the queue (the [triggers](/guide/factories/triggers) of a modern factory).
+4. **The lights go off.** The human reading each change looks like the last obstacle, so it's removed and the effort moves to testing, sandboxes, monitoring and rollout. StrongDM is the reference case ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)).
+
+His one-line verdict: **"the lights-off factory does not work."**
+
+### "We tried this"
+
+HumanLayer went fully lights-off in July 2025: humans read specs and tickets, and background agents handled small and medium work. In his telling, every team that tries this for a few months hits a bug the agents can't fix, however good the context and however many reproduction attempts. Someone then has to dig through a codebase nobody has read in months while the site is down. After about the third such incident, in November 2025, the team decided a rewrite was easier, and his co-founder spent two weeks rebuilding the patterns by hand ([part 1](https://x.com/dexhorthy/status/2080697380379427275)). <Evidence level="anecdotal" />
+
+He backs the experience with outside signals:
+
+- The Faros AI report: since teams adopted coding agents in early 2026, **review quality dropped**, more PRs merged with no review, and incidents and bugs per developer rose ([Faros AI](https://www.faros.ai/research/ai-acceleration-whiplash)). Horthy calls this "more of a correlation signal than a verifiable smoking gun". <Evidence level="secondary" />
+- Reports of outages caused by coding agents, and Matt Pocock's observation that codebases are "falling apart faster than they ever have before".
+- Almost no public results from StrongDM's dark factory beyond a sparse "weather report" ([StrongDM](https://factory.strongdm.ai/weather-report)).
+
+### Why models erode codebases
+
+This is the centre of the series and the part the rest of the guide hadn't covered.
+
+**Labs train the model inside the harness.** Horthy's explanation for Claude Code's rise is that Anthropic trained the model against the exact tools it shipped with, so it became very good at using them in an agentic loop. Earlier CLI agents (aider, Cline, Codebuff) had similar tools but no control over the weights. Tool shape alone already matters a lot, as the 2024 [SWE-agent paper](https://arxiv.org/abs/2405.15793) showed.
+
+**Coding RL rewards the outcome, not the code.** In simplified form: generate agent traces for a task, score each trace with a verifier, update the weights to favour high-scoring traces, and repeat millions of times. The scoring is the weak point. In a SWE-bench-style task ([SWE-bench Multilingual](https://huggingface.co/datasets/SWE-bench/SWE-bench_Multilingual)), the score is 1 if the target test now passes and nothing else broke, otherwise 0. Horthy is careful that benchmarks and RL verifiers are not the same thing (they must be kept apart), but both have this shape.
+
+> How the model got to a correct answer doesn't matter. If the tests pass, we win, but **there is no penalty for eroding codebase maintainability**.
+
+**The feedback loops run at different speeds.** A test passes or fails in seconds, which is why RL can run millions of times. Bad architecture costs you weeks or months later, the first time someone tries a one-line change and has to make it in eleven places (Fowler's "shotgun surgery"). There is no fast, reliable oracle for maintainability, so it can't be rewarded during training. <Evidence level="contested" />
+
+That's why we tag the RL explanation as contested rather than settled. It's plausible and consistent with what the guide says about [reward hacking](/guide/shortcomings/verification) being learned in training, but labs don't publish their reward functions, and Horthy says himself: "I can't prove this. You can't prove it either."
+
+### Why more judges don't fix it
+
+The obvious fix is a model that judges code quality: an "adversarial review" bot, a stricter linter, a second agent. Horthy's objection has two parts:
+
+- **If a model could reliably tell good code from bad, it would probably have written the good version.** A judge from the same training process inherits the same blind spot.
+- **Review agents raise the floor, not the ceiling.** They catch the obvious problems. The ceiling is whatever RL taught the model, and good design is the part nobody yet knows how to teach.
+
+This sharpens the [judge hierarchy](/guide/goals/judges#a-hierarchy-of-judges). A different model as judge works well for "is the goal met?" and much less well for "will this code be easy to change in six months?"
+
+He names three efforts he thinks are heading the right way, while still not trusting them with his codebase: [SWE-Marathon](https://www.swe-marathon.org/) (very long tasks with a compound reward), [DeepSWE](https://deepswe.datacurve.ai/blog/deepswe) (large tasks that can't be in training data) and Cognition's [Frontier Code](https://cognition.com/blog/frontier-code) (multi-PR tasks; penalises tests that don't fail on the code before the patch, a form of [mutation testing](https://en.wikipedia.org/wiki/Mutation_testing)).
+
+### Brownfield comes faster now
+
+An aside worth keeping: the advice is for teams maintaining production code, not for vibe-coded side projects. "Brownfield" used to mean a ten-year-old Java system. At agent speed, Horthy reckons an agent-built codebase starts to struggle after **three to six months**. That's about how long the HumanLayer experiment lasted.
+
+## Part 2: turning the lights back on
+
+If the model can't be the judge of design, a human has to be. The trick is to make that cheap. Teams figured this out long before AI: **agree on the design before anyone writes code**, and review becomes fast because there are few surprises. "30 minutes of planning saves hours of review."
+
+Horthy's process has four phases. The model drafts each artefact and the human argues with it:
+
+| Phase | What gets agreed | Artefacts that work |
+|---|---|---|
+| **Product review** | The user's problem, and what success looks like after shipping | A short doc; rough HTML mockups instead of paragraphs |
+| **System architecture** | How services, endpoints, schemas, queues and stores fit together | Sequence diagrams, contract shapes, data models |
+| **Program design** | The shape of the code: types, signatures, layout, call stacks | Call-stack trees (as diffs), file-tree diffs, key type signatures |
+| **Vertical slices** | The order of building, so something works end to end early | A slice plan; one to three slices per agent run, reviewed as they land |
+
+Two of these deserve emphasis:
+
+- **Program design** is the step he calls "criminally underemphasised". Every type or call-stack decision you skip here gets made implicitly by the model and then debated in code review, the most expensive time to change your mind.
+- **Vertical slices** counter a model habit: plans in stack order (migrations, then services, then API, then frontend) that can't be tried until the end. A slice is a thin working path through every layer. Reviewing 100 to 200 lines and re-steering is far cheaper than reviewing 2,000 at the end.
+
+Not everything gets all four. His rough split: **about 40% of tasks are one-shot** with light feedback; medium tasks get one combined plan; large tasks go through every phase (minus product review for refactors). Ask yourself whether a misunderstanding by the agent would be expensive.
+
+This maps onto ideas elsewhere in the guide. It's the [planner role](/guide/patterns/maker-checker#planner) with a human co-signing the plan, the "small increments" advice in [The human bottleneck](/guide/shortcomings/humans#what-helps), and the opposite of the big-bang spec Thoughtworks warns about (see [Pitfalls](/guide/factories/pitfalls#the-split-between-deciding-and-building)): small slices keep the up-front spec short.
+
+### Too many bad PRs, not too many PRs
+
+> You don't have too many PRs. You have too many bad PRs.
+
+A clean PR is quick to review. One that needs 20% rework is a burden on everyone involved, and he puts AI one-shot PRs closer to 50% rework. <Evidence level="anecdotal" /> The goal isn't fewer PRs but PRs that need little rework, which is what the planning phases buy.
+
+### The theory-of-constraints conclusion
+
+Horthy frames the series as constraints, not pessimism. Models are good at some things and bad at others, so design the process around that. His closing claim: teams chasing 10 to 100x by pretending quality no longer matters would do better to **accept the constraints and go 2 to 3x faster, safely**. His closing advice is four lines: learn the constraints, optimise within them, seek leverage, read the code.
+
+## Part 3: measuring it
+
+Part 1 said there were no good benchmarks for maintainability. Part 3 admits that was overstated and turns to **SlopCodeBench** ([paper](https://arxiv.org/abs/2603.24755), [runner](https://github.com/SprocketLab/slop-code-bench), [problems](https://github.com/gabeorlanski/scb-problems)) from Gabe Orlanski's group at UW Madison.
+
+### What makes the benchmark different
+
+Most coding benchmarks hand the agent the whole problem at once. SlopCodeBench splits each problem into **checkpoints** revealed one at a time, so the agent keeps extending its own earlier code without knowing what comes next. That's what real feature work looks like. Black-box tests check every checkpoint, including all the tests inherited from earlier ones, so a design that can't absorb new requirements shows up as failing checkpoints later.
+
+The paper's own results, across 36 problems, 196 checkpoints and 15 agents ([arXiv](https://arxiv.org/abs/2603.24755)): <Evidence level="primary" />
+
+- **No agent solved any problem end to end.** The best passed 14.8% of checkpoints.
+- Structural erosion rose in **77%** of trajectories, and verbosity in **75.5%**.
+- Compared with 473 open-source Python repositories, agent code was **2.3x more verbose and 2.0x more eroded**, and the human repositories degraded less often across their git histories.
+- **Explicit quality instructions in the prompt cut initial verbosity and erosion by up to a third, but didn't change how fast it got worse.**
+
+The last finding matters most for factory builders: telling the model to write clean code makes the first version cleaner, but the code still degrades at the same rate.
+
+### Horthy's own run
+
+He ran three Claude models (Opus 4.8, Sonnet 5, Opus 5) in Claude Code on a subset: three problems, 17 checkpoints, a fresh context for each checkpoint, and the paper's plain "just solve" prompt. He counted a **strict pass** only when everything was green, including every inherited test ([part 3](https://x.com/dexhorthy/status/2081797628552270027)). <Evidence level="anecdotal" />
+
+| Model | Strict passes | Notes |
+|---|---|---|
+| Opus 5 | 4 of 17 (24%) | Three were the first three checkpoints of the easiest problem |
+| Opus 4.8 | 1 of 17 (6%) | Duplication rose from 4.6% to 16.8%; its worst function reached a cyclomatic complexity of 93 |
+| Sonnet 5 | 1 of 17 (6%) | Cheapest once the work became maintenance |
+
+- **No model finished any problem defect-free**, not even the one labelled easy.
+- **Complexity rose for every model.** Opus 4.8 and Sonnet 5 grew existing functions instead of restructuring. Opus 5 had the lowest average complexity, but wrote about five times as many functions.
+- **Opus 5's duplication stayed roughly flat** (2.41% to 2.64%), the one sign of progress between model generations, if you trust duplication as a measure.
+- Between 89% and 98% of lines tripped at least one of the benchmark's slop rules. Horthy thinks the rules are probably over-aggressive.
+- A rough port of the rules to TypeScript found **over 11 times** more slop triggers per thousand lines in Opus 5's lights-off output than in HumanLayer's reviewed monorepo. He lists the caveats himself: 76 rules instead of 200+, parity not checked.
+
+The sample is tiny and run by someone with a commercial interest. The paper's larger, independent results point the same way.
+
+### A better oracle
+
+His most useful idea for the rest of the field: **a benchmark that reveals requirements over time is a much better oracle for maintainability than a model judging code style.** It runs unattended, it's checked deterministically, and a codebase that's hard to change shows up as failing later checkpoints. Static quality metrics are repeatable, but none of them has yet been shown to measure "easy to change", and every one of them can be gamed.
+
+He proposes making the signal stronger: let a frontier model write checkpoints 1 to N, then see whether a **weaker model** can implement checkpoint N+1. If the cheap model succeeds, the strong model left a codebase that's easy to extend. Since frontier models can debug their way through almost anything, he also expects tokens and time per later checkpoint to become part of the score.
+
+His bar for turning the lights off: **80% or more on a well-held-out benchmark of this kind.** He won't guess when that happens; the point is to have a signal that says when it does.
+
+## What this changes in the rest of the guide
+
+| Guide idea | What the series adds |
+|---|---|
+| [Verification, not review](/guide/factories/leverage#1-verification-not-review) | Today's verifiers check behaviour, not design. For maintainability, the human review is still the only working verifier. |
+| [A different model as judge](/guide/goals/judges#a-different-model-as-judge) | Fine for "is it done?", weak for "is it well designed?". A judge from the same training can't see what that training never rewarded. |
+| [Reward hacking](/guide/shortcomings/verification) | The quiet version isn't editing the test. It's a passing test on top of code that makes the next change harder. |
+| [Comprehension debt](/guide/shortcomings/humans#comprehension-debt) | Horthy's three-to-six-month estimate gives the debt a timescale: the point where the codebase "starts to struggle". |
+| [Budgets](/guide/goals/budgets-and-lifecycle) | The planning phases are a budget for human attention, spent early when it's cheapest. |
+| [Improve the factory, not the output](/guide/factories/leverage#improve-the-factory-not-the-output) | Wiring complexity and duplication metrics into the loop as checks is the obvious next experiment. Neither the paper nor Horthy tested it with such checks in place. |
+
+## Open questions
+
+- **Will RL learn maintainability?** Benchmarks like SlopCodeBench could become training signals. If a lab reports a high, well-held-out score, this whole page may date fast. Watch for it, and for contamination.
+- **Do quality checks inside the loop change the rate of decay?** Prompting didn't. Complexity checks, duplication gates and adversarial review loops are untested on this benchmark.
+- **Is Python representative?** The slop detectors are Python-only, and Horthy suspects Python is more prone to slop than most languages.
+- **What does StrongDM's data show?** The strongest counter-example has published very little. A proper report would test this argument directly.
+
+If you run a factory and track complexity or duplication over months, a [field report](/guide/field-reports) would answer more than any of the above.
+
+## Read the series
+
+- **Part 1:** [Why Software Factories Fail (or: the harness is not enough)](https://x.com/dexhorthy/status/2080697380379427275), 24 July 2026. Also as a [Markdown mirror on GitHub](https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/wsff.md), which includes part 2.
+- **Part 2:** [Turning the lights back on](https://x.com/dexhorthy/status/2081058573556306030), 25 July 2026
+- **Part 3:** [Benchmarking the new frontier](https://x.com/dexhorthy/status/2081797628552270027), 27 July 2026
+- **The talk:** [Harness engineering is not enough](https://www.youtube.com/watch?v=Ib5GBkD555M), AI Engineer World's Fair 2026
+- **The benchmark:** [SlopCodeBench paper](https://arxiv.org/abs/2603.24755) · [runner](https://github.com/SprocketLab/slop-code-bench) · [problems](https://github.com/gabeorlanski/scb-problems)
+- **Follow-ups and coverage:** [AAIF: Dex still thinks long-running coding agents stink](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink) (October 2026 talk, "There Is No Software Factory Without Better Verifiers") · [Developers Digest](https://www.developersdigest.tech/blog/software-factories-fail-harness-engineering) · [daily.dev](https://daily.dev/posts/everyone-building-a-software-factory-wants-the-same-proof-tuygipxpv)
