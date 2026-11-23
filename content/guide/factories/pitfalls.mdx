@@ -34,13 +34,14 @@ Dark factories respond by deleting the review. Everyone else responds by making 
 
 ## Slop accumulates
 
-This is the strongest argument against lights-off factories, made most forcefully by **Dex Horthy** of HumanLayer in a series titled "Why Software Factories Fail" and an AI Engineer talk, "Harness Engineering Is Not Enough" ([AI Engineer](https://ai.engineer/talks/Ib5GBkD555M-harness-engineering-is-not-enough-why-software)):
+This is the strongest argument against lights-off factories, made most forcefully by **Dex Horthy** of HumanLayer in a three-part series, "Why Software Factories Fail" ([part 1](https://x.com/dexhorthy/status/2080697380379427275), [part 2](https://x.com/dexhorthy/status/2081058573556306030), [part 3](https://x.com/dexhorthy/status/2081797628552270027)), and an AI Engineer talk, "Harness Engineering Is Not Enough" ([AI Engineer](https://ai.engineer/talks/Ib5GBkD555M-harness-engineering-is-not-enough-why-software)). We cover it in full in **[Why factories fail](/guide/factories/why-factories-fail)**. The short version:
 
 - Agents are good at isolated, well-defined changes, but across a long sequence of changes they "still tend to degrade the codebase beneath them". "Each slop pattern in your codebase increases the chance that more code is also going to be sloppy" ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)).
-- The training signal is lopsided: tests give feedback in seconds, while bad architecture costs you over weeks, months or years ([Developers Digest](https://www.developersdigest.tech/blog/software-factories-fail-harness-engineering)).
-- On his SlopCodeBench runs, unreviewed lights-off output reportedly had **over 11 times** more slop triggers per thousand lines than HumanLayer's reviewed codebase, and every model accumulated defects across checkpoints ([daily.dev](https://daily.dev/posts/everyone-building-a-software-factory-wants-the-same-proof-tuygipxpv), [AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). <Evidence level="contested" />
+- He blames training, not harnesses. Coding RL rewards "the tests pass" and has **no penalty for eroding maintainability**. Tests give feedback in seconds, while bad architecture costs you over weeks, months or years, so there's no fast oracle to train against ([part 1](https://x.com/dexhorthy/status/2080697380379427275)). That's also why more review bots raise the floor but not the ceiling. <Evidence level="contested" />
+- The benchmark he leans on, **SlopCodeBench**, reveals requirements one checkpoint at a time. In the paper, no agent solved any problem end to end, quality declined in most trajectories, and quality instructions in the prompt didn't slow the decline ([arXiv](https://arxiv.org/abs/2603.24755)). <Evidence level="primary" />
+- On his own small SlopCodeBench run, no Claude model finished any problem without defects, and Opus 5's lights-off output had **over 11 times** more slop triggers per thousand lines than HumanLayer's reviewed codebase, using a rough TypeScript port of the rules ([part 3](https://x.com/dexhorthy/status/2081797628552270027)). <Evidence level="anecdotal" />
 
-Horthy is candid that HumanLayer sells human-in-the-loop tooling, that the sample is small, and that he can't prove the broader quality claim with today's benchmarks. But the argument explains something the PR-share numbers can't: a factory can look great for a quarter while making its own future runs worse.
+Horthy is candid that HumanLayer sells human-in-the-loop tooling, that his sample is small, and that he can't prove the RL explanation. But the argument explains something the PR-share numbers can't: a factory can look great for a quarter while making its own future runs worse. His alternative is to agree the design up front and build in reviewed vertical slices ([Turning the lights back on](/guide/factories/why-factories-fail#part-2-turning-the-lights-back-on)).
 
 ## Prompt injection through the front door
 
@@ -82,7 +83,7 @@ On the other side, the bulls argue that "most companies in the knowledge economy
   **Factories work for scoped, checkable, high-volume work**: triage, reproductions, dependency bumps, migrations,
   CI fixes, small bugs with clear reports. That's where every documented success sits. **Lights-off factories for
   open-ended product work are unproven**: one well-documented team (StrongDM) runs one at a cost most can't
-  justify, and one well-documented team (HumanLayer) tried and archived the result. The rest of the industry sits at
+  justify, and one well-documented team (HumanLayer) tried it, then rewrote the result by hand. The rest of the industry sits at
   Shapiro's level 3 or 4, with agents writing and humans approving.
 </Callout>
 

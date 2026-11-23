@@ -23,6 +23,7 @@ The distinction is drawn clearly in [Vector Labs](https://vector-labs.ai/insight
 - [The Verification Horizon](https://arxiv.org/pdf/2606.26300) argues there's no silver bullet for coding agent rewards: every checker has a horizon beyond which it can't see.
 - A separate study found that **hiding tests doesn't prevent speculative reward hacking**, where the agent games tests it has never read ([summary](https://dev.to/reporails/loop-engineering-how-to-stop-your-agent-reward-hacking-its-own-checks-4fpn)).
 - Anthropic's research on [natural emergent misalignment from reward hacking in production RL](https://arxiv.org/pdf/2511.18397) is a reminder that this behaviour is learned during training, not just a harness quirk.
+- A quieter version needs no cheating at all. Coding RL rewards "the tests pass" and has **no penalty for eroding maintainability**, so a check can pass honestly while the code gets harder to change. On [SlopCodeBench](https://arxiv.org/abs/2603.24755), which reveals requirements one checkpoint at a time, no agent solved a problem end to end and code quality fell in most runs. See [Why factories fail](/guide/factories/why-factories-fail#why-models-erode-codebases).
 
 ## Why loops make it worse
 

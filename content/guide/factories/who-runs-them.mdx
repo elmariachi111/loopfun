@@ -22,7 +22,7 @@ The public examples come from three kinds of organisation:
 | **OpenAI harness team** | Engineers, later Linear via Symphony | ~1M lines in five months, none hand-written | Humans steer and QA; QA became the bottleneck | <Evidence level="primary" /> |
 | **StrongDM** | Specs and scenarios | Not disclosed | **Nobody.** "Code must not be reviewed by humans" | <Evidence level="primary" /> |
 | **PostHog** | Mixed | Agents write ~70% of PRs | Humans "still skim at least 80%" of those | <Evidence level="primary" /> |
-| **HumanLayer** | Experiment, 2025 | 30–40k lines over 3–4 months | Lightly supervised; codebase archived | <Evidence level="anecdotal" /> |
+| **HumanLayer** | Experiment, July to November 2025 | 30–40k lines over 3–4 months | Humans read specs, not code; later rewritten by hand | <Evidence level="anecdotal" /> |
 
 ## Notes on each
 
@@ -49,7 +49,7 @@ Over five months a small team (reportedly three engineers growing to seven) buil
 The reference level-5 example. Founded July 2025 by three engineers, with two rules, "Code must not be written by humans" and "Code must not be reviewed by humans", and a validation system of holdout scenarios, a satisfaction score and a Digital Twin Universe ([Simon Willison](https://simonwillison.net/2026/Feb/7/software-factory/)). Willison's question is the one everyone asks: how can no human review "possibly be a sensible strategy" when models make "inhuman mistakes"? StrongDM's answer is that the verification is stronger than review would have been. Some members of the team had 20+ years of experience building high-reliability systems ([Simon Willison](https://simonwillison.net/2026/Jan/28/the-five-levels/)).
 </Accordion>
 <Accordion title="HumanLayer: the cautionary tale">
-HumanLayer ran a lightly supervised factory for three or four months, deliberately letting questionable code stay. It produced 30,000–40,000 lines, including "an insanely complicated state machine" across four Unix processes, and the team eventually archived the whole codebase ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). HumanLayer sells human-in-the-loop tooling, which Dex Horthy acknowledges. See [Pitfalls](/guide/factories/pitfalls#slop-accumulates).
+HumanLayer went "full lights-off" in July 2025: humans read the specs and tickets, background agents did the small and medium work, nobody read the code, and questionable code was deliberately left in. It produced 30,000–40,000 lines, including "an insanely complicated state machine" across four Unix processes ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). Each time a bug came up that the agents couldn't fix, someone had to dig through code nobody had read in months. After about the third such incident, in November 2025, the team decided a rewrite was easier, and a co-founder spent two weeks rebuilding the patterns by hand ([Dex Horthy, part 1](https://x.com/dexhorthy/status/2080697380379427275)). Earlier secondhand accounts, including ours, described the codebase as simply "archived". HumanLayer sells human-in-the-loop tooling, which Horthy acknowledges. See [Why factories fail](/guide/factories/why-factories-fail).
 </Accordion>
 </Accordions>
 

@@ -10,7 +10,7 @@ Here are the levers practitioners point to, roughly in the order they cite them.
 
 ## 1. Verification, not review
 
-The single most repeated claim: **a factory is only as fast as it can tell whether its output works.** Dex Horthy's October 2026 talk title puts it flatly: "There Is No Software Factory Without Better Verifiers" ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)).
+The single most repeated claim: **a factory is only as fast as it can tell whether its output works.** Dex Horthy's October 2026 talk title puts it flatly: "There Is No Software Factory Without Better Verifiers" ([AAIF](https://aaif.io/blog/dex-still-thinks-long-running-coding-agents-stink)). His caveat is the important part: today's verifiers check **behaviour**, not **design**, so for maintainability the human reviewer is still the only verifier that works ([Why factories fail](/guide/factories/why-factories-fail)).
 
 What that looks like in practice:
 
@@ -66,3 +66,5 @@ Whatever you think of the number, the framing is the lever: if a factory convert
 ## Improve the factory, not the output
 
 Underneath all seven is one habit. When a run fails, the fix goes into the factory (a new eval case, a better prompt, a missing permission, a new scenario) rather than into a hand-edited PR. Vercel's outcome taxonomy formalises it ([Inside the factory](/guide/factories/anatomy#how-a-run-ends)). It's what makes the 1,000th run better than the 10th.
+
+One limit: improving the factory improves what its checks can see. SlopCodeBench found that telling agents to write clean code made the first version cleaner but **didn't slow how fast quality declined** ([arXiv](https://arxiv.org/abs/2603.24755)). Whether complexity or duplication gates inside the loop do better is untested ([Why factories fail](/guide/factories/why-factories-fail#open-questions)).
