@@ -12,6 +12,9 @@ const docs = defineDocs({
     schema: pageSchema.extend({
       author: z.string().optional(),
       harness: z.string().optional(),
+      // Optional search-result title, when the sidebar title is too short or playful to rank
+      // ("Start here"). Only the <title> tag changes; the page heading and share card keep `title`.
+      seoTitle: z.string().optional(),
     }),
     postprocess: {
       includeProcessedMarkdown: true,
